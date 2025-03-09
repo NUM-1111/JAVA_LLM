@@ -37,7 +37,6 @@ func UserRegister(c *gin.Context) {
 		UserID:    GenerateSnowflakeID(), // int64
 		CreatedAt: time.Now(),
 	}
-
 	result := db.DB.Clauses(clause.OnConflict{DoNothing: true}).Create(&user)
 	if result.Error != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"msg": "数据库插入出错.", "err": result.Error})
@@ -131,9 +130,10 @@ func ChangeUserName(c *gin.Context) {
 			"msg": "session获取失败",
 		})
 	}
-	user_id := session.(models.Session).UserID
-	result := db.DB.Where("user_id=?", user_id).Update("username", userData.Username)
+	user_id := session.(*models.Session).UserID
+	result := db.DB.Model(&models.User{}).Where("user_id=?", user_id).Update("username", userData.Username)
 	if result.Error != nil {
+		fmt.Println(result.Error)
 		c.JSON(http.StatusInternalServerError, gin.H{"msg": "数据库更新出错", "err": result.Error})
 		return
 	}

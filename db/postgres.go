@@ -14,8 +14,8 @@ var DB *gorm.DB
 
 func InitDB(dsn string) {
 	//连接数据库
-
-	DB, err := gorm.Open(postgres.Open(dsn), &gorm.Config{
+	var err error
+	DB, err = gorm.Open(postgres.Open(dsn), &gorm.Config{
 		PrepareStmt: true, // 预编译 SQL 语句
 	})
 	if err != nil {
