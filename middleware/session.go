@@ -1,24 +1,43 @@
 package middleware
 
 import (
-	"Go_LLM_Web/config"
-	"log"
+	"Go_LLM_Web/db"
+	"Go_LLM_Web/models"
+	"fmt"
+	"net/http"
+	"time"
 
-	"github.com/gin-contrib/sessions"
-	"github.com/gin-contrib/sessions/redis"
 	"github.com/gin-gonic/gin"
 )
 
-func AuthSession() gin.HandlerFunc {
-	// 初始化 Redis 作为 Session 存储
-	store, err := redis.NewStore(10, "tcp", "localhost:6379", "", []byte("secret"))
+// 根据 session_id 获取会话信息
+func GetSession(sessionID string) (*models.Session, error) {
+	var session models.Session
+	if err := db.DB.Where("session_id = ?", sessionID).First(&session).Error; err != nil {
+		return nil, err
+	}
+	// 检查会话是否过期
+	if !session.IsValid || session.ExpiresAt.Before(time.Now()) {
+		return nil, fmt.Errorf("session expired")
+	}
+	return &session, nil
+}
+
+func AuthSession(c *gin.Context) {
+	session_id, err := c.Cookie("session_id")
 	if err != nil {
-		log.Fatal("无法连接 Redis:", err)
+		// 如果没有找到 session_id，返回错误
+		c.JSON(http.StatusUnauthorized, gin.H{"msg": "authorization failed."})
+		return
 	}
 
-	// 设置 Session 过期时间
-	store.Options(config.SessionOpt)
-
-	// 返回 Session 中间件
-	return sessions.Sessions("auth_session", store)
+	session, err := GetSession(session_id)
+	if err != nil {
+		// 如果没有找到会话或会话已过期，返回错误
+		c.JSON(http.StatusUnauthorized, gin.H{"error": "Invalid session or session expired"})
+		c.Abort()
+		return
+	}
+	c.Set("session", session)
+	c.Next()
 }

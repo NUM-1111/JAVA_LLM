@@ -11,5 +11,6 @@ func SetupRoutes(r *gin.Engine) {
 	r.POST("/login", services.UserLogin)
 	r.POST("/register", services.UserRegister)
 	api := r.Group("/api")
-	api.Use(middleware.AuthSession())
+	api.Use(middleware.AuthSession)
+	api.POST("/change/username", services.ChangeUserName)
 }
