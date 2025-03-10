@@ -36,7 +36,7 @@ func InitDB(dsn string) {
 	//自动迁移
 	DB.AutoMigrate(&models.User{})
 	DB.AutoMigrate(&models.Session{})
-	fmt.Println("[POSTGRES] service is running")
+	fmt.Println("[POSTGRES] service is running.")
 }
 
 func CloseDB() {

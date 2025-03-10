@@ -8,7 +8,6 @@ import (
 	"testing"
 
 	"Go_LLM_Web/services"
-	"Go_LLM_Web/db"
 
 	"github.com/gin-gonic/gin"
 	"github.com/stretchr/testify/assert"
