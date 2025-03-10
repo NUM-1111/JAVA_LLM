@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"time"
 
+	"github.com/bwmarrin/snowflake"
 	"github.com/gin-contrib/sessions"
 	"github.com/redis/go-redis/v9"
 )
@@ -30,6 +31,20 @@ var (
 		Path:   "/",
 	}
 
+	// snowFlake
+	MachineID = 0
+	SFNode    *snowflake.Node
+
 	// 邮箱验证
 	EmailPattern = `^[a-zA-Z0-9._%+-]+@hrbeu.edu.cn`
 )
+
+func init() {
+	// Create a new Node with a Node number of 1
+	var err error
+	SFNode, err = snowflake.NewNode(int64(MachineID))
+	if err != nil {
+		fmt.Println(err)
+		return
+	}
+}

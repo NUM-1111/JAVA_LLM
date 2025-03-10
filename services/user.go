@@ -46,7 +46,7 @@ func UserRegister(c *gin.Context) {
 
 	// 如果没插入成功，说明用户名已存在
 	if result.RowsAffected == 0 {
-		c.JSON(http.StatusConflict, gin.H{"msg": "用户名已存在."})
+		c.JSON(http.StatusConflict, gin.H{"msg": "该用户已存在."})
 		return
 	}
 
