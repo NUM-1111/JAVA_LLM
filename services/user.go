@@ -132,7 +132,7 @@ func ChangeUserName(c *gin.Context) {
 		})
 	}
 	user_id := session.(*models.Session).UserID
-	result := db.DB.Where("user_id=?", user_id).Update("username", userData.Username)
+	result := db.DB.Model(&models.User{}).Where("user_id=?", user_id).Update("username", userData.Username)
 	if result.Error != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"msg": "数据库更新出错", "err": result.Error})
 		return
