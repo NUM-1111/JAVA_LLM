@@ -3,9 +3,7 @@ package services
 import (
 	"Go_LLM_Web/config"
 	"regexp"
-	"time"
 
-	"github.com/sony/sonyflake"
 	"golang.org/x/crypto/bcrypt"
 )
 
@@ -19,12 +17,8 @@ func HashPassword(password string) (string, error) {
 }
 
 // 生成 Snowflake ID
-func GenerateSnowflakeID() uint64 {
-	sf := sonyflake.NewSonyflake(sonyflake.Settings{
-		StartTime: time.Now(),
-	})
-	id, _ := sf.NextID()
-	return id
+func GenerateSnowflakeID() int64 {
+	return config.SFNode.Generate().Int64()
 }
 
 // 验证邮箱格式

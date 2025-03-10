@@ -8,7 +8,7 @@ import (
 
 type User struct {
 	ID        uint      `json:"id" gorm:"primary_key;autoIncrement"`
-	UserID    uint64    `gorm:"not null"` // 用户ID，外键关联到 users 表
+	UserID    int64     `gorm:"not null"` // 用户ID，外键关联到 users 表
 	Username  string    `json:"username" gorm:"unique;not null"`
 	Email     string    `json:"email" gorm:"unique;not null"`
 	Password  string    `json:"password" gorm:"not null"`
