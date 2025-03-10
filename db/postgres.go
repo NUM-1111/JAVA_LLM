@@ -47,5 +47,5 @@ func CloseDB() {
 	if err := sqlDB.Close(); err != nil {
 		log.Fatal(err)
 	}
-	fmt.Println("[POSTGRES] service shutdown")
+	fmt.Println("[POSTGRES] service shutdown.")
 }
