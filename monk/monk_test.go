@@ -7,7 +7,9 @@ import (
 	"net/http/httptest"
 	"testing"
 
-	"Go_LLM_Web/services"
+	"Go_LLM_Web/db"
+	"Go_LLM_Web/config"
+	"Go_LLM_Web/routes"
 
 	"github.com/gin-gonic/gin"
 	"github.com/stretchr/testify/assert"
@@ -15,11 +17,17 @@ import (
 
 //创建路由
 func setupRouter()*gin.Engine{
-	// 确保数据库初始化
+	// 启动Postgres
+	db.InitDB(config.PG_dsn)
+	//defer db.CloseDB()
+
+	// 启动Redis
+	db.InitRedis(&config.RedisOpt)
+	//defer db.CloseRedis()
 
 	r := gin.Default()
-	r.POST("/register",services.UserRegister)
-	r.POST("/login",services.UserLogin)
+	// 加载路由
+	routes.SetupRoutes(r)
 	return r
 }
 
@@ -36,7 +44,7 @@ func TestUserRegister(t *testing.T){
 
 	//发送请求
 	req,_ := http.NewRequest("POST","/register",bytes.NewBuffer(requestBody))
-	req.Header.Set("Content-Type","qpplication/json")
+	req.Header.Set("Content-Type","application/json")
 
 	w := httptest.NewRecorder()
 	r.ServeHTTP(w,req)
