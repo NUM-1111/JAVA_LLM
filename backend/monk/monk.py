@@ -18,7 +18,7 @@ login = {
 r = requests.post(base_url+"/login",json=login).json()
 print(r)
 
-session_id = r["session_id"]
+session_id = r.get("session_id")
 
 # 测试更改用户名
 data = {

@@ -44,7 +44,7 @@ func UserRegister(c *gin.Context) {
 		return
 	}
 
-	// 如果没插入成功，说明用户名已存在
+	// 如果没插入成功，说明用户已存在
 	if result.RowsAffected == 0 {
 		c.JSON(http.StatusConflict, gin.H{"msg": "该用户已存在."})
 		return
@@ -80,7 +80,7 @@ func UserLogin(c *gin.Context) {
 	var user models.User
 	err := db.DB.Select("password,user_id").Where("username = ?", userData.Username).First(&user).Error
 	if err != nil {
-		c.JSON(http.StatusUnauthorized, gin.H{"msg": "用户不存在."})
+		c.JSON(http.StatusUnauthorized, gin.H{"msg": "用户名不存在."})
 		return
 	}
 
