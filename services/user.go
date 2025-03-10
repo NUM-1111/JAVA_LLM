@@ -80,7 +80,7 @@ func UserLogin(c *gin.Context) {
 	var user models.User
 	err := db.DB.Select("password,user_id").Where("username = ?", userData.Username).First(&user).Error
 	if err != nil {
-		c.JSON(http.StatusUnauthorized, gin.H{"msg": "用户不存在."})
+		c.JSON(http.StatusUnauthorized, gin.H{"msg": "用户名不存在."})
 		return
 	}
 
@@ -132,7 +132,7 @@ func ChangeUserName(c *gin.Context) {
 		})
 	}
 	user_id := session.(*models.Session).UserID
-	result := db.DB.Where("user_id=?", user_id).Update("username", userData.Username)
+	result := db.DB.Model(&models.User{}).Where("user_id=?", user_id).Update("username", userData.Username)
 	if result.Error != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"msg": "数据库更新出错", "err": result.Error})
 		return
