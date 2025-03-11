@@ -4,6 +4,7 @@ import (
 	"Go_LLM_Web/config"
 	"Go_LLM_Web/db"
 	"Go_LLM_Web/routes"
+	"Go_LLM_Web/services"
 
 	"github.com/gin-gonic/gin"
 )
@@ -17,6 +18,8 @@ func main() {
 	db.InitRedis(&config.RedisOpt)
 	defer db.CloseRedis()
 
+	// 启动消费者
+	go services.CreateConsumers(db.Redis, config.ConsumerCount)
 	// 启动 Gin 服务器
 	r := gin.Default()
 

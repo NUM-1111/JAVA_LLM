@@ -2,7 +2,6 @@ package db
 
 import (
 	"Go_LLM_Web/models"
-	"fmt"
 	"log"
 
 	"gorm.io/driver/postgres"
@@ -16,7 +15,8 @@ func InitDB(dsn string) {
 	//连接数据库
 	var err error
 	DB, err = gorm.Open(postgres.Open(dsn), &gorm.Config{
-		PrepareStmt: true, // 预编译 SQL 语句
+		PrepareStmt:    true, // 预编译 SQL 语句
+		TranslateError: true,
 	})
 	if err != nil {
 		log.Fatal("数据库连接失败:", err)
@@ -36,7 +36,7 @@ func InitDB(dsn string) {
 	//自动迁移
 	DB.AutoMigrate(&models.User{})
 	DB.AutoMigrate(&models.Session{})
-	fmt.Println("[POSTGRES] service is running.")
+	log.Println("[POSTGRES] service is running.")
 }
 
 func CloseDB() {
@@ -47,5 +47,5 @@ func CloseDB() {
 	if err := sqlDB.Close(); err != nil {
 		log.Fatal(err)
 	}
-	fmt.Println("[POSTGRES] service shutdown.")
+	log.Println("[POSTGRES] service shutdown.")
 }
