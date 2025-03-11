@@ -2,8 +2,9 @@ import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { globalData, fetchJson } from "@/constants";
 import { RedStarIcon, SpinCircle } from "./svg-icons";
+import ChatPage from "./Chat";
 
-function LoginPage() {
+function RegisterPage() {
   const navigate = useNavigate();
   const [sendState, setSendState] = useState(false);
   const [formData, setFormData] = useState({
@@ -280,6 +281,7 @@ function LoginPage() {
               >
                 注 册
               </button>
+
             </div>
           </form>
         </div>
@@ -288,4 +290,4 @@ function LoginPage() {
   );
 }
 
-export default LoginPage;
+export default RegisterPage;
