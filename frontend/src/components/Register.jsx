@@ -2,7 +2,6 @@ import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { globalData, fetchJson } from "@/constants";
 import { RedStarIcon, SpinCircle } from "./svg-icons";
-import ChatPage from "./Chat";
 
 function RegisterPage() {
   const navigate = useNavigate();
@@ -127,18 +126,16 @@ function RegisterPage() {
   return (
     <>
       <div className="relative flex flex-wrap h-[101vh] w-full border rounded-sm lg:items-center bg-white">
-        <div className="hidden md:block relative md:h-full md:w-1/2">
-          <img
-            loading="eager"
-            alt="Welcome to AutoUnipus!"
-            src="https://images.unsplash.com/photo-1630450202872-e0829c9d6172?ixid=MnwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8t"
-            className="absolute inset-0 h-full w-full object-cover"
-          />
-        </div>
-        <div className="w-full pt-6 xl:pt-0 sm:px-6 md:w-1/2 md:px-8">
+        <div className="w-full pt-6 xl:pt-0 sm:px-6 md:px-8">
           <div className="mx-auto max-w-lg text-center">
+            <img
+              loading="eager"
+              alt="图片显示错误"
+              src="https://pic.baike.soso.com/p/20100928/20100928142716-1180565429.jpg"
+              className="w-16 h-16 mx-auto"
+            />
             <h1 className="text-2xl font-bold sm:text-3xl text-indigo-600">
-              欢迎加入 AutoUnipus
+              欢迎加入 HeuChat
             </h1>
 
             <p className="mt-4 text-lg text-gray-500">使用邮箱注册</p>
@@ -160,7 +157,7 @@ function RegisterPage() {
                   type="text"
                   value={formData.email}
                   onChange={handleFormChange}
-                  className="w-full rounded-sm hover:scale-105  border hover:border-indigo-500 p-3 pe-12 focus:outline-none focus:ring-2 focus:ring-indigo-300 duration-200"
+                  className="w-full rounded-lg hover:scale-105  border hover:border-indigo-500 p-3 pe-12 focus:outline-none focus:ring-2 focus:ring-indigo-300 duration-200"
                   placeholder="请输入邮箱"
                 />
                  {errors.email && <div className="absolute right-0 mt-1 text-right text-sm text-red-500 ">{errors.email}</div>} 
@@ -179,7 +176,7 @@ function RegisterPage() {
                     type="text"
                     value={formData.captcha}
                     onChange={handleFormChange}
-                    className="w-full rounded-sm hover:scale-105  border hover:border-indigo-500 p-3 pe-12 focus:outline-none focus:ring-2 focus:ring-indigo-300 duration-200"
+                    className="w-full rounded-lg hover:scale-105  border hover:border-indigo-500 p-3 pe-12 focus:outline-none focus:ring-2 focus:ring-indigo-300 duration-200"
                     placeholder="请输入邮箱验证码"
                   />
                   {errors.captcha && <div className="absolute right-0 mt-1 text-right text-sm text-red-500 ">{errors.captcha}</div>} 
@@ -219,7 +216,7 @@ function RegisterPage() {
                   value={formData.password}
                   onChange={handleFormChange}
                   type={pwdType}
-                  className="w-full rounded-sm hover:scale-105  border hover:border-indigo-500 p-3 pe-12 focus:outline-none focus:ring-2 focus:ring-indigo-300 duration-200"
+                  className="w-full rounded-lg hover:scale-105  border hover:border-indigo-500 p-3 pe-12 focus:outline-none focus:ring-2 focus:ring-indigo-300 duration-200"
                   placeholder="请设置密码"
                 />
 

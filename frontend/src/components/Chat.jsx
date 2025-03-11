@@ -7,22 +7,190 @@ function ChatPage() {
     const onRegisterClick = () => navigate("/register"); // 直接跳转
 
     return (
-        <div className="flex flex-col items-center justify-center min-h-screen bg-gray-100 gap-4">
-            {/* 登录按钮 */}
-            <button
-                className="px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition"
-                onClick={onLoginClick}
-            >
-                Login
-            </button>
+        <div className="flex flex-row items-center justify-center min-h-screen bg-gray-200 gap-4">
+            { /*侧边栏 */}
+            <div className="flex h-screen flex-col justify-between border-e border-gray-100 bg-white">
+                <div className="px-4 py-6">
+                    <div>
+                        <img
+                            loading="eager"
+                            alt="图片显示错误"
+                            src="https://th.bing.com/th/id/OIP.w1MtA8ksDXlh9ztvmbLFSwHaHa?rs=1&pid=ImgDetMain://img.phb123.com/uploads/allimg/220606/810-2206061351110-L.jpeg"
+                            className="w-20 h-20 mx-auto"
+                        />
+                        <p className="text-center text-slate-600">HeuChat</p>
+                    </div>
 
-            {/* 注册按钮 */}
-            <button
-                className="px-4 py-2 bg-purple-500 text-white rounded-lg hover:bg-purple-600 transition"
-                onClick={onRegisterClick}
-            >
-                Register
-            </button>
+                    <ul className="mt-6 space-y-1">
+                        <li>
+                            <a
+                                href="#"
+                                className="block rounded-lg bg-gray-100 px-4 py-2 text-sm font-medium text-gray-700"
+                            >
+                                General
+                            </a>
+                        </li>
+
+                        <li>
+                            <details className="group [&_summary::-webkit-details-marker]:hidden">
+                                <summary
+                                    className="flex cursor-pointer items-center justify-between rounded-lg px-4 py-2 text-gray-500 hover:bg-gray-100 hover:text-gray-700"
+                                >
+                                    <span className="text-sm font-medium"> Teams </span>
+
+                                    <span className="shrink-0 transition duration-300 group-open:-rotate-180">
+                                        <svg
+                                            xmlns="http://www.w3.org/2000/svg"
+                                            className="size-5"
+                                            viewBox="0 0 20 20"
+                                            fill="currentColor"
+                                        >
+                                            <path
+                                                fillRule="evenodd"
+                                                d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z"
+                                                clipRule="evenodd"
+                                            />
+                                        </svg>
+                                    </span>
+                                </summary>
+
+                                <ul className="mt-2 space-y-1 px-4">
+                                    <li>
+                                        <a
+                                            href="#"
+                                            className="block rounded-lg px-4 py-2 text-sm font-medium text-gray-500 hover:bg-gray-100 hover:text-gray-700"
+                                        >
+                                            Banned Users
+                                        </a>
+                                    </li>
+
+                                    <li>
+                                        <a
+                                            href="#"
+                                            className="block rounded-lg px-4 py-2 text-sm font-medium text-gray-500 hover:bg-gray-100 hover:text-gray-700"
+                                        >
+                                            Calendar
+                                        </a>
+                                    </li>
+                                </ul>
+                            </details>
+                        </li>
+
+                        <li>
+                            <a
+                                href="#"
+                                className="block rounded-lg px-4 py-2 text-sm font-medium text-gray-500 hover:bg-gray-100 hover:text-gray-700"
+                            >
+                                Billing
+                            </a>
+                        </li>
+
+                        <li>
+                            <a
+                                href="#"
+                                className="block rounded-lg px-4 py-2 text-sm font-medium text-gray-500 hover:bg-gray-100 hover:text-gray-700"
+                            >
+                                Invoices
+                            </a>
+                        </li>
+
+                        <li>
+                            <details className="group [&_summary::-webkit-details-marker]:hidden">
+                                <summary
+                                    className="flex cursor-pointer items-center justify-between rounded-lg px-4 py-2 text-gray-500 hover:bg-gray-100 hover:text-gray-700"
+                                >
+                                    <span className="text-sm font-medium"> Account </span>
+
+                                    <span className="shrink-0 transition duration-300 group-open:-rotate-180">
+                                        <svg
+                                            xmlns="http://www.w3.org/2000/svg"
+                                            className="size-5"
+                                            viewBox="0 0 20 20"
+                                            fill="currentColor"
+                                        >
+                                            <path
+                                                fillRule="evenodd"
+                                                d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z"
+                                                clipRule="evenodd"
+                                            />
+                                        </svg>
+                                    </span>
+                                </summary>
+
+                                <ul className="mt-2 space-y-1 px-4">
+                                    <li>
+                                        <a
+                                            href="#"
+                                            className="block rounded-lg px-4 py-2 text-sm font-medium text-gray-500 hover:bg-gray-100 hover:text-gray-700"
+                                        >
+                                            Details
+                                        </a>
+                                    </li>
+
+                                    <li>
+                                        <a
+                                            href="#"
+                                            className="block rounded-lg px-4 py-2 text-sm font-medium text-gray-500 hover:bg-gray-100 hover:text-gray-700"
+                                        >
+                                            Security
+                                        </a>
+                                    </li>
+
+                                    <li>
+                                        <form action="#">
+                                            <button
+                                                type="submit"
+                                                className="w-full rounded-lg px-4 py-2 [text-align:_inherit] text-sm font-medium text-gray-500 hover:bg-gray-100 hover:text-gray-700"
+                                            >
+                                                Logout
+                                            </button>
+                                        </form>
+                                    </li>
+                                </ul>
+                            </details>
+                        </li>
+                    </ul>
+                </div>
+
+                <div className="sticky inset-x-0 bottom-0 border-t border-gray-100">
+                    <a href="#" className="flex items-center gap-2 bg-white p-4 hover:bg-gray-50">
+                        <img
+                            alt=""
+                            src="https://images.unsplash.com/photo-1600486913747-55e5470d6f40?ixlib=rb-1.2.1&ixid=MnwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8&auto=format&fit=crop&w=1770&q=80"
+                            className="size-10 rounded-full object-cover"
+                        />
+
+                        <div>
+                            <p className="text-xs">
+                                <strong className="block font-medium">新玖零幺</strong>
+
+                                <span> eric@frusciante.com </span>
+                            </p>
+                        </div>
+                    </a>
+                </div>
+            </div>
+
+            {/*对话部分*/ }
+            <div className="flex flex-row items-center justify-center w-4/5 bg-gray-200">
+                <div className="absolute top-0 right-0 h-1/6">
+                    {/* 登录按钮 */}
+                    <button
+                        className="px-4 py-2 bg-indigo-500 text-white rounded-lg hover:bg-blue-600 transition"
+                        onClick={onLoginClick}
+                    >
+                        Login
+                    </button>
+                    {/* 注册按钮 */}
+                    <button
+                        className="px-4 py-2 bg-indigo-500 text-white rounded-lg hover:bg-purple-600 transition"
+                        onClick={onRegisterClick}
+                    >
+                        Register
+                    </button>
+                </div>
+            </div>
+           
         </div>
     );
 }
