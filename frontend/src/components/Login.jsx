@@ -49,21 +49,17 @@ function LoginPage() {
   return (
     <>
       <div className="relative flex flex-wrap h-[101vh] w-full border rounded-lg lg:items-center">
-        <div className="hidden md:block relative h-64 sm:h-96 md:h-full md:w-1/2">
-          <img
-            loading="eager"
-            alt="Welcome to AutoUnipus!"
-            src="https://images.unsplash.com/photo-1630450202872-e0829c9d6172?ixlib=rb-1.2.1&ixid=MnwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8&auto=format&fit=crop&w=774&q=80"
-            className="absolute inset-0 h-full w-full object-cover"
-          />
-        </div>
-        <div className="w-full px-4 sm:px-6 py-40 md:w-1/2 md:px-8 md:py-24">
+        <div className="w-full px-4 sm:px-6 py-40  md:px-8 md:py-24">
           <div className="mx-auto max-w-lg text-center">
+            <img
+              loading="eager"
+              alt="图片显示错误"
+              src="https://pic.baike.soso.com/p/20100928/20100928142716-1180565429.jpg"
+              className="w-16 h-16 mx-auto"
+            />
             <h1 className="text-2xl font-bold sm:text-3xl text-indigo-600">
-              登录到 AutoUnipus
+              登录到 HeuChat
             </h1>
-
-            <p className="mt-4 text-lg text-gray-500">使用邮箱登录</p>
           </div>
 
           <form
@@ -76,7 +72,7 @@ function LoginPage() {
               </label>
               <div className="text-lg py-2 flex flex-row">
                 <RedStarIcon />
-                <span className="text-lg">邮箱:</span>
+                <span className="text-lg">用户名/邮箱:</span>
               </div>
 
               <div className="relative">
@@ -85,8 +81,8 @@ function LoginPage() {
                   type="text"
                   value={formData.email}
                   onChange={handleFormChange}
-                  className="w-full rounded-md border border-indigo-300 p-3 pe-12 text-base focus:outline-none focus:ring-1 focus:ring-blue-500"
-                  placeholder="Enter email"
+                  className="w-full rounded-lg border border-indigo-300 p-3 pe-12 text-base focus:outline-none focus:ring-1 focus:ring-blue-500 hover:scale-105  border hover:border-indigo-500 p-3 pe-12 duration-200"
+                  placeholder="请输入用户名/邮箱"
                 />
               </div>
             </div>
@@ -105,8 +101,8 @@ function LoginPage() {
                   value={formData.password}
                   onChange={handleFormChange}
                   type={pwdType}
-                  className="w-full rounded-md border border-indigo-300 p-3 pe-12 text-base focus:outline-none  focus:ring-1 focus:ring-blue-500"
-                  placeholder="Enter password"
+                  className="w-full rounded-lg border border-indigo-300 p-3 pe-12 text-base focus:outline-none  focus:ring-1 focus:ring-blue-500 hover:scale-105  border hover:border-indigo-500 p-3 pe-12 duration-200"
+                  placeholder="请输入密码"
                 />
 
                 <span className="absolute inset-y-0 end-0 grid place-content-center px-4">
@@ -162,7 +158,7 @@ function LoginPage() {
 
               <button
                 type="submit"
-                className="inline-block tracking-wider rounded border border-indigo-600 bg-indigo-600 mt-2 px-12 py-3 text-md font-medium text-white hover:bg-indigo-50 hover:text-indigo-600 focus:outline-none focus:ring active:text-indigo-500"
+                className="inline-block tracking-wider rounded-lg border border-indigo-600 bg-indigo-600 mt-2 px-12 py-3 text-md font-medium text-white hover:bg-indigo-50 hover:text-indigo-600 focus:outline-none focus:ring active:text-indigo-500"
               >
                 登 录
               </button>
