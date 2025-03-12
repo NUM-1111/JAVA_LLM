@@ -1,4 +1,6 @@
 import { useNavigate } from "react-router-dom";
+import { useState } from "react";
+import { SiderBarIcon } from "./svg-icons";
 
 function ChatPage() {
     const navigate = useNavigate(); // 获取导航函数
@@ -6,11 +8,21 @@ function ChatPage() {
     const onLoginClick = () => navigate("/login"); // 直接跳转
     const onRegisterClick = () => navigate("/register"); // 直接跳转
 
+    const [isOpen, setIsOpen] = useState(true); // 控制侧边栏展开/折叠
+
     return (
-        <div className="flex flex-row items-center justify-center min-h-screen bg-gray-200 gap-4">
+        <div className="flex flex-row items-center justify-center min-h-screen bg-gray-200 gap">
             { /*侧边栏 */}
-            <div className="flex h-screen flex-col justify-between border-e border-gray-100 bg-white">
+            <div className={`${isOpen ? "w-1/5 translate-x-0" : "w-0 -translate-x-full opacity-0"} 
+              hidden md:flex h-screen flex-col justify-between border-e 
+              border-gray-100 bg-white shadow-sm transition-transform duration-300`}>
                 <div className="px-4 py-6">
+
+                    {/* 关闭按钮 */}
+                    <button onClick={() => setIsOpen(false)}>
+                        <SiderBarIcon />
+                    </button>
+
                     <div>
                         <img
                             loading="eager"
@@ -27,7 +39,7 @@ function ChatPage() {
                                 href="#"
                                 className="block rounded-lg bg-gray-100 px-4 py-2 text-sm font-medium text-gray-700"
                             >
-                                General
+                                对话
                             </a>
                         </li>
 
@@ -171,26 +183,34 @@ function ChatPage() {
                 </div>
             </div>
 
-            {/*对话部分*/ }
+            {/*对话部分*/}
             <div className="flex flex-row items-center justify-center w-4/5 bg-gray-200">
-                <div className="absolute top-0 right-0 h-1/6">
+                <div className="absolute top-0 right-0 h-8 flex space-x-2">
                     {/* 登录按钮 */}
                     <button
-                        className="px-4 py-2 bg-indigo-500 text-white rounded-lg hover:bg-blue-600 transition"
+                        className="px-4 py-1 bg-indigo-500 text-white rounded-lg hover:bg-blue-600 transition "
                         onClick={onLoginClick}
                     >
-                        Login
+                        登陆
                     </button>
                     {/* 注册按钮 */}
                     <button
-                        className="px-4 py-2 bg-indigo-500 text-white rounded-lg hover:bg-purple-600 transition"
+                        className="px-4 py-1 bg-indigo-500 text-white rounded-lg hover:bg-purple-400 transition"
                         onClick={onRegisterClick}
                     >
-                        Register
+                        注册
                     </button>
                 </div>
             </div>
-           
+
+            {/* 控制侧边栏的按钮 (左上角) */}
+            {!isOpen && (
+                <button
+                    onClick={() => setIsOpen(true)}
+                    className="fixed top-4 left-4 p-2  transition"
+                ><SiderBarIcon />
+                </button>
+            )}
         </div>
     );
 }
