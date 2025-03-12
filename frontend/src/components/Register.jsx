@@ -126,18 +126,11 @@ function RegisterPage() {
   return (
     <>
       <div className="relative flex flex-wrap h-[101vh] w-full border rounded-sm lg:items-center bg-white">
-        <div className="w-full pt-6 xl:pt-0 sm:px-6 md:px-8">
+        <div className="w-full sm:px-6 md:px-8">
           <div className="mx-auto max-w-lg text-center">
-            <img
-              loading="eager"
-              alt="图片显示错误"
-              src="https://pic.baike.soso.com/p/20100928/20100928142716-1180565429.jpg"
-              className="w-16 h-16 mx-auto"
-            />
-            <h1 className="text-2xl font-bold sm:text-3xl text-indigo-600">
+            <h1 className="text-2xl font-bold sm:text-3xl text-indigo-600 ">
               欢迎加入 HeuChat
             </h1>
-
             <p className="mt-4 text-lg text-gray-500">使用邮箱注册</p>
           </div>
 
@@ -160,7 +153,11 @@ function RegisterPage() {
                   className="w-full rounded-lg hover:scale-105  border hover:border-indigo-500 p-3 pe-12 focus:outline-none focus:ring-2 focus:ring-indigo-300 duration-200"
                   placeholder="请输入邮箱"
                 />
-                 {errors.email && <div className="absolute right-0 mt-1 text-right text-sm text-red-500 ">{errors.email}</div>} 
+                {errors.email && (
+                  <div className="absolute right-0 mt-1 text-right text-sm text-red-500 ">
+                    {errors.email}
+                  </div>
+                )}
               </div>
             </div>
 
@@ -179,7 +176,11 @@ function RegisterPage() {
                     className="w-full rounded-lg hover:scale-105  border hover:border-indigo-500 p-3 pe-12 focus:outline-none focus:ring-2 focus:ring-indigo-300 duration-200"
                     placeholder="请输入邮箱验证码"
                   />
-                  {errors.captcha && <div className="absolute right-0 mt-1 text-right text-sm text-red-500 ">{errors.captcha}</div>} 
+                  {errors.captcha && (
+                    <div className="absolute right-0 mt-1 text-right text-sm text-red-500 ">
+                      {errors.captcha}
+                    </div>
+                  )}
                 </div>
                 {btnWaiting ? (
                   <button
@@ -195,7 +196,9 @@ function RegisterPage() {
                     disabled={sendState}
                     className={`${
                       sendState ? "bg-indigo-400" : "bg-indigo-500"
-                    } absolute right-2 top-2 bottom-2 text-white hover:bg-indigo-600 font-semibold rounded-sm px-5 text-center inline-flex items-center transition-colors duration-300`}
+                    } absolute right-2 top-2 bottom-2 text-white hover:bg-indigo-600 font-semibold rounded-sm px-5 text-center inline-flex items-center transition-colors duration-300
+                      active:scale-95 active:transition-none
+                    `}
                     onClick={() => handleSend(formData.email, setSendState)}
                   >
                     <SpinCircle loading={sendState} />
@@ -254,7 +257,11 @@ function RegisterPage() {
                     )}
                   </svg>
                 </span>
-                {errors.password && <div className="absolute right-0 mt-1 text-right text-sm text-red-500 ">{errors.password}</div>} 
+                {errors.password && (
+                  <div className="absolute right-0 mt-1 text-right text-sm text-red-500 ">
+                    {errors.password}
+                  </div>
+                )}
               </div>
             </div>
 
@@ -274,13 +281,17 @@ function RegisterPage() {
 
               <button
                 type="submit"
-                className="inline-block tracking-wider rounded border border-indigo-600 bg-indigo-600 px-12 mt-2 py-3 text-md font-medium text-white hover:bg-indigo-50 hover:transition-colors hover:text-indigo-600 focus:outline-none focus:ring active:text-indigo-500"
+                className="inline-block tracking-wider rounded-md border border-indigo-600 bg-indigo-600 mt-2 px-8 py-[0.55rem] text-md font-medium text-white
+                 hover:bg-indigo-50 hover:text-indigo-600
+                  focus:outline-none focus:ring
+                   active:text-indigo-500"
               >
                 注 册
               </button>
-
             </div>
+            
           </form>
+          
         </div>
       </div>
     </>

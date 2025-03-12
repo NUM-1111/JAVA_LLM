@@ -32,12 +32,12 @@ function LoginPage() {
       body: JSON.stringify(formData),
     });
     if (data.code !== "0") {
-      console.log(data.msg)
+      console.log(data.msg);
     } else {
       localStorage.auth = data.auth;
-      console.log("登陆成功!")
+      console.log("登陆成功!");
       setTimeout(() => {
-        navigate("/index");  // 跳转主界面
+        navigate("/index"); // 跳转主界面
       }, 500);
     }
   };
@@ -48,15 +48,9 @@ function LoginPage() {
 
   return (
     <>
-      <div className="relative flex flex-wrap h-[101vh] w-full border rounded-lg lg:items-center">
-        <div className="w-full px-4 sm:px-6 py-40  md:px-8 md:py-24">
+      <div className="relative flex flex-wrap h-screen w-full border rounded-lg lg:items-center">
+        <div className="w-full px-4 mt-2 sm:px-6 py-40  md:px-8 md:py-24">
           <div className="mx-auto max-w-lg text-center">
-            <img
-              loading="eager"
-              alt="图片显示错误"
-              src="https://pic.baike.soso.com/p/20100928/20100928142716-1180565429.jpg"
-              className="w-16 h-16 mx-auto"
-            />
             <h1 className="text-2xl font-bold sm:text-3xl text-indigo-600">
               登录到 HeuChat
             </h1>
@@ -81,7 +75,7 @@ function LoginPage() {
                   type="text"
                   value={formData.email}
                   onChange={handleFormChange}
-                  className="w-full rounded-lg border border-indigo-300 p-3 pe-12 text-base focus:outline-none focus:ring-1 focus:ring-blue-500 hover:scale-105  border hover:border-indigo-500 p-3 pe-12 duration-200"
+                  className="w-full rounded-lg border border-indigo-300 p-3 pe-12 text-base focus:outline-none focus:ring-1 focus:ring-blue-500 hover:scale-105  hover:border-indigo-500 duration-200"
                   placeholder="请输入用户名/邮箱"
                 />
               </div>
@@ -101,7 +95,7 @@ function LoginPage() {
                   value={formData.password}
                   onChange={handleFormChange}
                   type={pwdType}
-                  className="w-full rounded-lg border border-indigo-300 p-3 pe-12 text-base focus:outline-none  focus:ring-1 focus:ring-blue-500 hover:scale-105  border hover:border-indigo-500 p-3 pe-12 duration-200"
+                  className="w-full rounded-lg border border-indigo-300 p-3 pe-12 text-base focus:outline-none  focus:ring-1 focus:ring-blue-500 hover:scale-105  hover:border-indigo-500 duration-200"
                   placeholder="请输入密码"
                 />
 
@@ -142,19 +136,32 @@ function LoginPage() {
               </div>
             </div>
 
-            <div className="flex items-center justify-between">
-              <p className="text-sm text-gray-500 select-none">
-                还没有账号？
-                <a
-                  href=""
-                  className="text-indigo-500 hover:text-indigo-400"
-                  onClick={() => {
-                    !loading && navigate("/register");
-                  }}
-                >
-                  立即注册
-                </a>
-              </p>
+            <div className="flex items-start justify-between">
+              <div className="flex flex-col space-y-2 mt-2">
+                <p className="text-sm text-gray-500 select-none">
+                  还没有账号？
+                  <a
+                    href=""
+                    className="text-indigo-500 hover:text-indigo-400"
+                    onClick={() => {
+                      !loading && navigate("/register");
+                    }}
+                  >
+                    立即注册
+                  </a>
+                </p>
+                <p className="text-sm select-none">
+                  <a
+                    href=""
+                    className="text-indigo-500 hover:text-indigo-400"
+                    onClick={() => {
+                      !loading && navigate("/register");
+                    }}
+                  >
+                    忘记密码
+                  </a>
+                </p>
+              </div>
 
               <button
                 type="submit"
@@ -162,6 +169,25 @@ function LoginPage() {
               >
                 登 录
               </button>
+            </div>
+            <div className="flex flex-col pt-8">
+              <div class="flex items-center justify-center py-4 text-gray-500 text-sm">
+                <div class="flex-grow border-t  border-gray-300"></div>
+                <span class="px-4">其他登录方式</span>
+                <div class="flex-grow border-t  border-gray-300"></div>
+              </div>
+
+              <div class="flex justify-center items-center gap-4 mt-1 text-blue-500 text-sm">
+                <a
+                  href=""
+                  className=" text-indigo-500 hover:text-indigo-400 select-none"
+                  onClick={() => {
+                    !loading && navigate("/login");
+                  }}
+                >
+                  统一身份认证登录
+                </a>
+              </div>
             </div>
           </form>
         </div>
