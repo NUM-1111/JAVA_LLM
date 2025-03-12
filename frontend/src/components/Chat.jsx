@@ -13,13 +13,13 @@ function ChatPage() {
     return (
         <div className="flex flex-row items-center justify-center min-h-screen bg-gray-200 gap">
             { /*侧边栏 */}
-            <div className={`${isOpen ? "w-1/5 translate-x-0" : "w-0 -translate-x-full opacity-0"} 
-              hidden md:flex h-screen flex-col justify-between border-e 
-              border-gray-100 bg-white shadow-sm transition-transform duration-300`}>
+            <div className={`${isOpen ? " translate-x-0" : "-translate-x-full "} 
+             md:flex md:relative md:z-auto md:w-1/5 absolute w- z-50 inset-y-0 left-0 h-screen flex-col justify-between border-e 
+              border-gray-100 bg-white shadow-sm transition-all duration-300 overflow-hidden`}>
                 <div className="px-4 py-6">
 
                     {/* 关闭按钮 */}
-                    <button onClick={() => setIsOpen(false)}>
+                    <button onClick={() => setIsOpen(false)} className={`${isOpen ? "block" : "hidden"} fixed top-[1.52rem] left-4  transition`}>
                         <SiderBarIcon />
                     </button>
 
@@ -164,38 +164,30 @@ function ChatPage() {
                     </ul>
                 </div>
 
-                <div className="sticky inset-x-0 bottom-0 border-t border-gray-100">
-                    <a href="#" className="flex items-center gap-2 bg-white p-4 hover:bg-gray-50">
-                        <img
-                            alt=""
-                            src="https://images.unsplash.com/photo-1600486913747-55e5470d6f40?ixlib=rb-1.2.1&ixid=MnwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8&auto=format&fit=crop&w=1770&q=80"
-                            className="size-10 rounded-full object-cover"
-                        />
-
-                        <div>
-                            <p className="text-xs">
-                                <strong className="block font-medium">新玖零幺</strong>
-
-                                <span> eric@frusciante.com </span>
-                            </p>
-                        </div>
-                    </a>
-                </div>
+                
             </div>
 
             {/*对话部分*/}
-            <div className="flex flex-row items-center justify-center w-4/5 bg-gray-200">
+            <div className="flex flex-row items-center justify-center w-4/5 z-10 bg-gray-200">
                 <div className="absolute top-0 right-0 h-8 flex space-x-2">
+                    {/* 控制侧边栏的按钮 (左上角) */}
+                    
+                        <button
+                            onClick={() => setIsOpen(true)}
+                            className={`${isOpen ? "xl:hidden" : "xl:block"} block fixed top-[1.52rem] left-4  transition `}    
+                        ><SiderBarIcon />
+                        </button>
+
                     {/* 登录按钮 */}
                     <button
-                        className="px-4 py-1 bg-indigo-500 text-white rounded-lg hover:bg-blue-600 transition "
+                        className="px-4 py-1 bg-blue-400 text-white rounded-2xl hover:bg-blue-600 transition "
                         onClick={onLoginClick}
                     >
                         登陆
                     </button>
                     {/* 注册按钮 */}
                     <button
-                        className="px-4 py-1 bg-indigo-500 text-white rounded-lg hover:bg-purple-400 transition"
+                        className="px-4 py-1 bg-blue-400 text-white rounded-2xl hover:bg-cyan-400 transition hidden md:block"
                         onClick={onRegisterClick}
                     >
                         注册
@@ -203,14 +195,6 @@ function ChatPage() {
                 </div>
             </div>
 
-            {/* 控制侧边栏的按钮 (左上角) */}
-            {!isOpen && (
-                <button
-                    onClick={() => setIsOpen(true)}
-                    className="fixed top-4 left-4 p-2  transition"
-                ><SiderBarIcon />
-                </button>
-            )}
         </div>
     );
 }
