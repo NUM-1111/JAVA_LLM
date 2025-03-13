@@ -20,7 +20,7 @@ print(r)
 
 #登录测试
 login = {
-    "username":"pcx001",
+    "username":"pcx004",
     "password":"pcx001"
 }
 r = requests.post(base_url+"/login",json=login).json()
@@ -28,7 +28,7 @@ print(r)
 
 session_id = r.get("session_id")
 
-# 测试更改用户名
+'''# 测试更改用户名
 data = {
     "username":"pcx004"
 }
@@ -36,4 +36,4 @@ cookies = {
     "session_id":session_id
 }
 r = requests.post(base_url+"/api/change/username",json=data,cookies=cookies).json()
-print(r)
+print(r)'''

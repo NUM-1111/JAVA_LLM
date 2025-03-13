@@ -6,6 +6,7 @@ import (
 	"Go_LLM_Web/models"
 	"errors"
 	"net/http"
+	"strings"
 	"time"
 
 	"github.com/gin-gonic/gin"
@@ -146,12 +147,35 @@ func UserLogin(c *gin.Context) {
 		c.JSON(http.StatusBadRequest, gin.H{"msg": "数据格式异常,登录失败."})
 		return
 	}
-	// 只查询必要的字段
 	var user models.User
-	err := db.DB.Select("password,user_id").Where("username = ?", userData.Username).First(&user).Error
-	if err != nil {
-		c.JSON(http.StatusUnauthorized, gin.H{"msg": "用户名不存在."})
-		return
+	if strings.Contains(userData.Account, "@") {
+		// 校验邮箱格式
+		if !IsValidEmail(userData.Account) {
+			c.JSON(http.StatusBadRequest, gin.H{"msg": "邮箱格式异常,注册失败."})
+			return
+		}
+		// 只查询必要的字段
+		err := db.DB.Select("password,user_id").Where("email = ?", userData.Account).First(&user).Error
+		if err != nil {
+			c.JSON(http.StatusUnauthorized, gin.H{"msg": "该邮箱不存在."})
+			return
+		}
+	} else {
+		// 校验用户名格式
+		err := ValidName(userData.Account)
+		if err == ErrInvalidLength {
+			c.JSON(http.StatusBadRequest, gin.H{"msg": "用户名长度必须为3~20位!"})
+			return
+		} else if err == ErrInvalidPattern {
+			c.JSON(http.StatusBadRequest, gin.H{"msg": "用户名格式有误,或存在非法字符!"})
+			return
+		}
+		// 只查询必要的字段
+		err = db.DB.Select("password,user_id").Where("username = ?", userData.Account).First(&user).Error
+		if err != nil {
+			c.JSON(http.StatusUnauthorized, gin.H{"msg": "该用户名不存在."})
+			return
+		}
 	}
 
 	// 验证密码

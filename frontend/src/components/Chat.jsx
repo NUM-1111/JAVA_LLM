@@ -245,14 +245,17 @@ function ChatPage() {
         </header>
 
         {/* 可滚动的主内容区域 */}
-        <main className="flex-grow h-screen justify-center items-center overflow-auto">
-          <div className="flex flex-col text-base mx-5 items-center mt-44 gap-5">
-            <h1 className="text-3xl font-bold bg-clip-text text-transparent bg-gradient-to-br from-indigo-600  to-indigo-500 leading-[34px] tracking-[0.38px] select-none">
+        <main className="flex-grow h-screen overflow-auto flex flex-col">
+          <div className="flex flex-col text-base mx-5 items-center mt-44 gap-5 flex-grow">
+            <h1 className="text-3xl font-bold bg-clip-text text-transparent bg-gradient-to-br from-indigo-600 to-indigo-500 leading-[34px] tracking-[0.38px] select-none">
               有什么可以帮忙的?
             </h1>
+
             <div
-              className="flex flex-col h-auto min-h-28 w-7/12 rounded-3xl border border-gray-500 bg-gray-50"
               id="InputContainer"
+              className="flex flex-col h-auto w-[90%] rounded-3xl border border-gray-500 bg-gray-50 
+                 md:static md:w-7/12 
+                 absolute bottom-5 px-4 py-1 md:py-2"
             >
               <div className="mx-3 mt-1 flex flex-col bg-inherit mb-2">
                 <textarea
@@ -261,21 +264,25 @@ function ChatPage() {
                   placeholder="问你所想 畅所欲言"
                   onInput={(e) => {
                     e.target.style.height = "auto"; // 先重置高度，防止高度收缩不生效
-                    let currentHeight = e.target.scrollHeight;
-                    let maxHeight =
-                      parseInt(window.getComputedStyle(e.target).lineHeight) *
-                      7;
-                    e.target.style.height = `${
-                      currentHeight < maxHeight ? currentHeight : maxHeight
-                    }px`; // 根据内容调整高度
+                    const lineHeight = parseInt(
+                      window.getComputedStyle(e.target).lineHeight
+                    );
+                    const isSmallScreen = window.innerWidth < 768; // 判断是否为 md 以下
+                    let maxHeight = isSmallScreen
+                      ? lineHeight * 5.5
+                      : lineHeight * 7;
+                    e.target.style.height = `${Math.min(
+                      e.target.scrollHeight,
+                      maxHeight
+                    )}px`; // 根据内容调整高度
                   }}
                 ></textarea>
-                <div className="w-full flex justify-between mt-2">
-                  <button
-                    className="flex flex-row justify-center items-center gap-1 px-2 rounded-full bg-white border-gray-300 border text-black hover:bg-gray-100 transition"
-                  >
-                    <DeepThinkIcon className={"size-4"}/>
-                    <span className="text-sm mb-[2px] select-none">深度思考</span>
+                <div className="w-full flex justify-between md:mt-2">
+                  <button className="flex flex-row justify-center items-center gap-1 px-2 rounded-full bg-white border-gray-300 border text-black hover:bg-gray-100 transition">
+                    <DeepThinkIcon className={"size-4"} />
+                    <span className="text-sm mb-[2px] select-none">
+                      深度思考
+                    </span>
                   </button>
                   <button className="size-9 bg-indigo-600 text-white rounded-full hover:bg-indigo-500">
                     <ArrowUpIcon className={"size-9"} />

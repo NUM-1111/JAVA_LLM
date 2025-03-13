@@ -15,9 +15,10 @@ import (
 
 // 自定义错误信息
 var (
-	ErrInvalidLength  = errors.New("lengthErr")                 // 长度错误
-	ErrInvalidPattern = errors.New("patternErr")                // 格式错误
-	nameRegex         = regexp.MustCompile(config.NamePattern)  // 用户名正则
+	ErrInvalidLength  = errors.New("lengthErr")  // 长度错误
+	ErrInvalidPattern = errors.New("patternErr") // 格式错误
+	validCharsRegex   = regexp.MustCompile(`^[a-zA-Z0-9#._-]+$`)
+	mustContainRegex  = regexp.MustCompile(`[a-zA-Z0-9]`)       // 至少包含一个字母或数字
 	emailRegex        = regexp.MustCompile(config.EmailPattern) // 邮箱正则
 )
 
@@ -41,7 +42,13 @@ func ValidName(username string) error {
 	if length < config.NameMinLength || length > config.NameMaxLength {
 		return ErrInvalidLength
 	}
-	if !nameRegex.MatchString(username) {
+	// 确保至少包含一个字母或数字
+	if !mustContainRegex.MatchString(username) {
+		return ErrInvalidPattern
+	}
+
+	// 确保只包含合法字符
+	if !validCharsRegex.MatchString(username) {
 		return ErrInvalidPattern
 	}
 	return nil

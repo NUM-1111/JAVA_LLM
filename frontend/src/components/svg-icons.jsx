@@ -195,6 +195,126 @@ const ArrowUpIcon = ({ className }) => {
     </svg>
   );
 };
+const MessageIcon = ({ title, description, onClose, ifShow, type }) => {
+  return (
+    <div
+      role="alert"
+      className={`fixed left-1/2 -translate-x-1/2 z-50 flex justify-center items-center rounded-xl border border-gray-100 bg-white p-4 shadow-lg transition-all duration-300 ${
+        ifShow ? "translate-y-0 top-3" : "-translate-y-12 -top-12"
+      }`}
+    >
+      <div className="flex items-start gap-4 justify-center">
+        {type === "success" && (
+          <span className="text-green-600 mt-[0.15rem]">
+            <svg
+              className="size-5"
+              viewBox="64 64 896 896"
+              focusable="false"
+              fill="currentColor"
+              aria-hidden="true"
+            >
+              <path d="M512 64C264.6 64 64 264.6 64 512s200.6 448 448 448 448-200.6 448-448S759.4 64 512 64zm193.5 301.7l-210.6 292a31.8 31.8 0 01-51.7 0L318.5 484.9c-3.8-5.3 0-12.7 6.5-12.7h46.9c10.2 0 19.9 4.9 25.9 13.3l71.2 98.8 157.2-218c6-8.3 15.6-13.3 25.9-13.3H699c6.5 0 10.3 7.4 6.5 12.7z"></path>
+            </svg>
+          </span>
+        )}
+        {type === "info" && (
+          <span className="text-blue-600 mt-[0.15rem]">
+            <svg
+              className="size-5"
+              viewBox="64 64 896 896"
+              focusable="false"
+              fill="currentColor"
+              aria-hidden="true"
+            >
+              <path d="M512 64C264.6 64 64 264.6 64 512s200.6 448 448 448 448-200.6 448-448S759.4 64 512 64zm32 664c0 4.4-3.6 8-8 8h-48c-4.4 0-8-3.6-8-8V456c0-4.4 3.6-8 8-8h48c4.4 0 8 3.6 8 8v272zm-32-344a48.01 48.01 0 010-96 48.01 48.01 0 010 96z"></path>
+            </svg>
+          </span>
+        )}
+        {type === "error" && (
+          <span className="text-red-600 mt-[0.15rem]">
+            <svg
+              className="size-5"
+              fillRule="evenodd"
+              viewBox="64 64 896 896"
+              focusable="false"
+              fill="currentColor"
+              aria-hidden="true"
+            >
+              <path d="M512 64c247.4 0 448 200.6 448 448S759.4 960 512 960 64 759.4 64 512 264.6 64 512 64zm127.98 274.82h-.04l-.08.06L512 466.75 384.14 338.88c-.04-.05-.06-.06-.08-.06a.12.12 0 00-.07 0c-.03 0-.05.01-.09.05l-45.02 45.02a.2.2 0 00-.05.09.12.12 0 000 .07v.02a.27.27 0 00.06.06L466.75 512 338.88 639.86c-.05.04-.06.06-.06.08a.12.12 0 000 .07c0 .03.01.05.05.09l45.02 45.02a.2.2 0 00.09.05.12.12 0 00.07 0c.02 0 .04-.01.08-.05L512 557.25l127.86 127.87c.04.04.06.05.08.05a.12.12 0 00.07 0c.03 0 .05-.01.09-.05l45.02-45.02a.2.2 0 00.05-.09.12.12 0 000-.07v-.02a.27.27 0 00-.05-.06L557.25 512l127.87-127.86c.04-.04.05-.06.05-.08a.12.12 0 000-.07c0-.03-.01-.05-.05-.09l-45.02-45.02a.2.2 0 00-.09-.05.12.12 0 00-.07 0z"></path>
+            </svg>
+          </span>
+        )}
+
+        <div className="flex-1">
+          <strong className="block font-medium text-gray-900">{title}</strong>
+          <p className="mt-1 text-sm text-gray-700">{description}</p>
+        </div>
+
+        <button
+          onClick={onClose}
+          className="text-gray-500 transition hover:text-gray-600"
+        >
+          <svg
+            xmlns="http://www.w3.org/2000/svg"
+            fill="none"
+            viewBox="0 0 24 24"
+            strokeWidth="1.5"
+            stroke="currentColor"
+            className="size-6"
+          >
+            <path
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              d="M6 18L18 6M6 6l12 12"
+            />
+          </svg>
+        </button>
+      </div>
+    </div>
+  );
+};
+
+const CloseEyeIcon = ({ className }) => {
+  return (
+    <svg
+      xmlns="http://www.w3.org/2000/svg"
+      className={className ? className : "size-5 text-gray-400"}
+      fill="none"
+      viewBox="0 0 1024 1024"
+      stroke="currentColor"
+    >
+      <path
+        d="M659.0208 665.6c-9.984 0-19.7632-5.12-25.1904-14.2336l-58.7008-97.92a29.44 29.44 0 0 1 10.0864-40.2944 29.5168 29.5168 0 0 1 40.32 10.0608l58.7008 97.92A29.44 29.44 0 0 1 659.0208 665.6z m156.416-97.92c-7.5008 0-15.0016-2.8672-20.736-8.6016l-78.2592-78.336a29.3376 29.3376 0 1 1 41.4976-41.4976l78.2592 78.336a29.3376 29.3376 0 0 1-20.736 50.0992zM365.0048 665.6a29.3888 29.3888 0 0 1-25.1904-44.4672l58.6752-97.92a29.3888 29.3888 0 0 1 50.4064 30.2336l-58.7008 97.92a29.312 29.312 0 0 1-25.1904 14.2336z m-156.416-97.92a29.3376 29.3376 0 0 1-20.736-50.0992l78.2336-78.336a29.3376 29.3376 0 1 1 41.4976 41.472L229.2992 559.104a28.8512 28.8512 0 0 1-20.736 8.6016z m312.9344-19.5584c-81.8176 0-202.2912-28.0576-311.168-161.536a137.6256 137.6256 0 0 0-2.9696-3.584 29.3888 29.3888 0 0 1 39.7312-43.264c1.28 1.0752 4.352 4.2496 8.7808 9.6768 94.3616 115.712 196.5568 140.032 265.6256 140.032 119.2448 0 255.0272-123.136 268.3648-142.6944 8.9856-13.056 26.9824-17.3056 40.4224-8.704 13.312 8.4992 17.8688 25.4976 9.8816 39.1424-13.952 23.3984-166.8096 170.9312-318.6688 170.9312z"
+        fill="#606065"
+      ></path>
+    </svg>
+  );
+};
+const OpenEyeIcon = ({ className }) => {
+  return (
+    <svg
+      xmlns="http://www.w3.org/2000/svg"
+      className={className ? className : "size-5 text-gray-400"}
+      fill="none"
+      viewBox="0 0 24 24"
+      stroke="currentColor"
+    >
+      <path
+        strokeLinecap="round"
+        strokeLinejoin="round"
+        strokeWidth="2"
+        d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"
+      />
+      <path
+        strokeLinecap="round"
+        strokeLinejoin="round"
+        strokeWidth="2"
+        d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"
+      />
+    </svg>
+  );
+};
+
 export {
   LogoutIcon,
   UserIcon,
@@ -207,4 +327,7 @@ export {
   NewChatIcon,
   DeepThinkIcon,
   ArrowUpIcon,
+  MessageIcon,
+  CloseEyeIcon,
+  OpenEyeIcon,
 };

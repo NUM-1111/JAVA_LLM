@@ -38,7 +38,6 @@ var (
 	// 邮箱验证
 	//EmailPattern = `^[a-zA-Z0-9._%+-]+@hrbeu.edu.cn`
 	EmailPattern  = `^[a-zA-Z0-9._%+-]+@[a-z\.]+`
-	NamePattern   = `^(?=.*[a-zA-Z0-9])[a-zA-Z0-9#._-]+$`
 	NameMaxLength = 20
 	NameMinLength = 3
 
