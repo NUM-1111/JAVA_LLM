@@ -390,7 +390,7 @@ const BreadcrumbIcon = ({ className }) => {
 const AddIcon = ({className}) => {
   return (
     <svg
-      className={className ? className : "size-5"}
+      className={className ? className : "size-4"}
       xmlns="http://www.w3.org/2000/svg"
       fill="none"
       viewBox="0 0 24 24"
