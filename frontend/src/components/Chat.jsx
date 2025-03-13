@@ -1,6 +1,6 @@
 import { useNavigate } from "react-router-dom";
 import { useState } from "react";
-import { SiderBarIcon } from "./svg-icons";
+import { SiderBarIcon,AddIcon} from "./svg-icons";
 
 function ChatPage() {
   const navigate = useNavigate(); // 获取导航函数
@@ -30,16 +30,27 @@ function ChatPage() {
               isOpen ? "block" : "hidden"
             } fixed top-[1.52rem] left-4 transition`}
           >
-            <SiderBarIcon />
+            <SiderBarIcon/>
           </button>
 
-          {/*新对话按钮*/}
-          <div className="mt-8 space-y-1 ">
-            <button className="px-4 py-2 font-bold text-sm  rounded-lg border border-blue-200 text-blue-600 bg-blue-500/15  hover:bg-blue-500/20 ">
-              开启新对话
-            </button>
+          {/*新对话模块*/}
+                  <div className="flex flex-cow mt-8  font-bold text-sm rounded-lg border border-blue-200 text-blue-600 bg-blue-500/15  hover:bg-blue-500/20 ">
+                      {/*AddIcon图标*/}
+                      <div
+                          className="fixed top-[4.2rem] left-5 transition">
+                          <AddIcon />
+                      </div>
+
+                      {/*新对话按钮 */}
+                      <div>
+                          <button
+                              className="px-5 py-2 ">
+                          开启新对话
+                          </button>
+                      </div>
           </div>
 
+                  {/*历史对话*/}
           <ul className="mt-6 space-y-1">
             <li>
               <a
