@@ -1,11 +1,6 @@
 import { useNavigate } from "react-router-dom";
 import { useState } from "react";
-import {
-  SiderBarIcon,
-  AddIcon,
-  NewChatIcon,
-  BreadcrumbIcon,
-} from "./svg-icons";
+import { SiderBarIcon,AddIcon,NewChatIcon,BreadcrumbIcon} from "./svg-icons";
 
 function ChatPage() {
   const navigate = useNavigate(); // 获取导航函数
@@ -27,29 +22,42 @@ function ChatPage() {
              md:flex  md:w-1/5 absolute w-3/5 z-50 inset-y-0 left-0 h-screen flex flex-col justify-between border-e 
               border-gray-100 bg-white shadow-sm transition-all duration-300 overflow-hidden`}
       >
-        <div className="px-4 py-6">
-          {/* 关闭按钮 */}
-          <button
-            onClick={() => setIsOpen(false)}
-            className={`${
-              isOpen ? "block" : "hidden"
-            } fixed top-[1.52rem] left-4 transition`}
-          >
-            <SiderBarIcon />
-          </button>
+              <div className="px-4 py-3 transform">
+                  {/*侧边栏顶部*/}
+                  <header className="top-0 flex flex-row transform">
+                      {/* 关闭按钮 */}
+                      <button
+                          onClick={() => setIsOpen(false)}
+                          className={`${isOpen ? "block" : "hidden "
+                              }  flex justify-center items-center size-10  rounded-lg hover:shadow-md hover:bg-blue-300`}
+                      >
+                          <SiderBarIcon />
+                      </button>
+                      {/*新对话按钮(icon) */}
+                      <button
+                          className={`${isOpen ? "block" : "hidden "
+                              } flex justify-center items-center size-10  rounded-lg hover:shadow-md hover:bg-blue-300 `}
+                      >
+                          <NewChatIcon />
+                      </button>
+                  </header>
 
           {/*新对话模块*/}
-          <div className="flex flex-cow mt-8  font-bold text-sm rounded-lg border border-blue-200 text-blue-600 bg-blue-500/15  hover:bg-blue-500/20 ">
-            {/*AddIcon图标*/}
-            <div className="fixed top-[4.2rem] left-5 transition">
-              <AddIcon />
-            </div>
+                  <div className="flex flex-row mt-8 font-bold text-sm rounded-lg border border-blue-200 text-blue-600 bg-blue-500/15  hover:bg-blue-500/20 ">
+                      {/*AddIcon图标*/}
+                      <div
+                          className="flex px-2 py-2.5">
+                          <AddIcon />
+                      </div>
 
-            {/*新对话按钮 */}
-            <div>
-              <button className="px-5 py-2 ">开启新对话</button>
-            </div>
-          </div>
+                      {/*新对话按钮 */}
+                      <div>
+                          <button
+                              className=" py-2 ">
+                              开启新对话
+                          </button>
+                      </div>
+                  </div>
 
           {/*历史对话*/}
           <ul className="mt-6 space-y-1">
