@@ -14,8 +14,8 @@ function ChatPage() {
         <div className="flex flex-row items-center justify-center min-h-screen bg-gray-200 gap">
             {/*侧边栏 */}
             <div
-                className={`${isOpen ? " translate-x-0" : "-translate-x-full "} 
-             md:flex md:relative md:z-auto md:w-1/5 absolute w-3/5 z-50 inset-y-0 left-0 h-screen flex-col justify-between border-e 
+                className={`${isOpen ? " translate-x-0 md:relative md:z-auto" : "-translate-x-full hidden"} 
+             md:flex  md:w-1/5 absolute w-3/5 z-50 inset-y-0 left-0 h-screen flex flex-col justify-between border-e 
               border-gray-100 bg-white shadow-sm transition-all duration-300 overflow-hidden`}
             >
                 <div className="px-4 py-6">
@@ -29,9 +29,9 @@ function ChatPage() {
                     </button>
 
                     {/*新对话按钮*/}
-                    <div className="mt-8 space-y-1">
+                    <div className="mt-8 space-y-1 ">
                         <button
-                            className="px-4 py-2 rounded-lg  text-sm text-white bg-blue-500 hover:bg-blue-400 ">
+                            className="px-4 py-2 font-bold text-sm  rounded-lg border border-blue-200 text-blue-600 bg-blue-500/15  hover:bg-blue-500/20 ">
                             开启新对话
                         </button>
                     </div>
