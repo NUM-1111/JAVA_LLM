@@ -1,7 +1,11 @@
 import { useNavigate } from "react-router-dom";
 import { useState } from "react";
-import { SiderBarIcon,AddIcon,NewChatIcon,BreadcrumbIcon} from "./svg-icons";
-import { SiderBarIcon,NewChatIcon, BreadcrumbIcon } from "./svg-icons";
+import {
+  SiderBarIcon,
+  AddIcon,
+  NewChatIcon,
+  BreadcrumbIcon,
+} from "./svg-icons";
 
 function ChatPage() {
   const navigate = useNavigate(); // 获取导航函数
@@ -31,27 +35,23 @@ function ChatPage() {
               isOpen ? "block" : "hidden"
             } fixed top-[1.52rem] left-4 transition`}
           >
-            <SiderBarIcon/>
+            <SiderBarIcon />
           </button>
 
           {/*新对话模块*/}
-                  <div className="flex flex-cow mt-8  font-bold text-sm rounded-lg border border-blue-200 text-blue-600 bg-blue-500/15  hover:bg-blue-500/20 ">
-                      {/*AddIcon图标*/}
-                      <div
-                          className="fixed top-[4.2rem] left-5 transition">
-                          <AddIcon />
-                      </div>
+          <div className="flex flex-cow mt-8  font-bold text-sm rounded-lg border border-blue-200 text-blue-600 bg-blue-500/15  hover:bg-blue-500/20 ">
+            {/*AddIcon图标*/}
+            <div className="fixed top-[4.2rem] left-5 transition">
+              <AddIcon />
+            </div>
 
-                      {/*新对话按钮 */}
-                      <div>
-                          <button
-                              className="px-5 py-2 ">
-                          开启新对话
-                          </button>
-                      </div>
+            {/*新对话按钮 */}
+            <div>
+              <button className="px-5 py-2 ">开启新对话</button>
+            </div>
           </div>
 
-                  {/*历史对话*/}
+          {/*历史对话*/}
           <ul className="mt-6 space-y-1">
             <li>
               <a
@@ -207,11 +207,9 @@ function ChatPage() {
             >
               <NewChatIcon />
             </button>
-            <button
-              className="flex flex-row items-center ml-1 px-2 py-1 rounded-lg min-h-10 hover:bg-blue-300 hover:shadow-md transition"
-            >
+            <button className="flex flex-row items-center ml-1 px-2 py-1 rounded-lg min-h-10 hover:bg-blue-300 hover:shadow-md transition">
               <span className="text-md font-semibold">DeepSeek-R1</span>
-              <BreadcrumbIcon className={"size-6"}/>
+              <BreadcrumbIcon className={"size-6"} />
             </button>
           </div>
 
@@ -234,11 +232,26 @@ function ChatPage() {
         </header>
 
         {/* 可滚动的主内容区域 */}
-        <main className="flex-grow overflow-auto p-5">
-          <div className="relative flex flex-col text-base mx-5 h-full mt-0 items-center">
-            <h1 className="text-2xl font-bold text-indigo-600 leading-[34px] tracking-[0.38px]">
+        <main className="flex-grow h-screen justify-center items-center overflow-auto">
+          <div className="flex flex-col text-base mx-5 items-center mt-36 gap-4">
+            <h1 className="text-3xl font-bold bg-clip-text text-transparent bg-gradient-to-br from-indigo-600 via-indigo-500 to-indigo-400 leading-[34px] tracking-[0.38px]">
               有什么可以帮忙的?
             </h1>
+            <div
+              className="flex flex-col h-28 w-3/6 rounded-3xl border border-gray-500 bg-gray-50"
+              id="InputContainer"
+            >
+              <div className="mx-3 mt-1">
+                <input
+                  type="text"
+                  className="w-full rounded-lg p-3 pe-12 text-base outline-none bg-inherit"
+                  placeholder="询问任何问题"
+                />
+                <div className="w-full rounded-lg p-3 pe-12 justify-between text-base outline-none bg-inherit">
+                  发送
+                </div>
+              </div>
+            </div>
           </div>
         </main>
       </div>
