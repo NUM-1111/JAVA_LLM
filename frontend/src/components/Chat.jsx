@@ -1,6 +1,6 @@
 import { useNavigate } from "react-router-dom";
 import { useState } from "react";
-import { SiderBarIcon } from "./svg-icons";
+import { SiderBarIcon,NewChatIcon, BreadcrumbIcon } from "./svg-icons";
 
 function ChatPage() {
   const navigate = useNavigate(); // 获取导航函数
@@ -11,7 +11,7 @@ function ChatPage() {
   const [isOpen, setIsOpen] = useState(true); // 控制侧边栏展开/折叠
 
   return (
-    <div className="flex flex-row items-center justify-center min-h-screen bg-gray-200 gap">
+    <div className="flex flex-row  min-h-screen bg-gray-100 gap">
       {/*侧边栏 */}
       <div
         className={`${
@@ -172,42 +172,61 @@ function ChatPage() {
       <div
         className={`${
           isOpen ? "w-4/5" : "w-full"
-        } flex flex-row items-center justify-center z-10 bg-gray-200`}
+        } flex flex-col h-full bg-gray-100`}
       >
-        <header className="absolute right-4 top-3 h-8 flex space-x-2">
-          {/* 控制侧边栏的按钮 (左上角) */}
-          <button
-            onClick={() => setIsOpen(true)}
-            className={`${
-              isOpen ? "hidden" : "block"
-            } block fixed top-[1.52rem] left-4 transition `}
-          >
-            <SiderBarIcon />
-          </button>
-
-          <div className="flex flex-row gap-2">
-            {/* 登录按钮 */}
+        {/* 头部导航栏 - 固定在主内容顶部 */}
+        {/*进入具体内容页可加上: border-b border-gray-300 */}
+        <header className="sticky top-0 flex flex-row px-5 py-3 justify-between z-10">
+          {/* 左侧按钮 */}
+          <div className="flex flex-row text-gray-700">
             <button
-              className="px-3 py-1 rounded-2xl bg-blue-500 text-white  hover:bg-blue-400 transition "
+              onClick={() => setIsOpen(true)}
+              className={`${
+                isOpen ? "hidden" : "block"
+              } flex justify-center items-center size-10 transition rounded-lg hover:shadow-md hover:bg-blue-300`}
+            >
+              <SiderBarIcon />
+            </button>
+            {/*新对话按钮*/}
+            <button
+              className={`${
+                isOpen ? "hidden" : "block"
+              } flex justify-center items-center size-10 transition rounded-lg hover:shadow-md hover:bg-blue-300`}
+            >
+              <NewChatIcon />
+            </button>
+            <button
+              className="flex flex-row items-center ml-1 px-2 py-1 rounded-lg min-h-10 hover:bg-blue-300 hover:shadow-md transition"
+            >
+              <span className="text-md font-semibold">DeepSeek-R1</span>
+              <BreadcrumbIcon className={"size-6"}/>
+            </button>
+          </div>
+
+          {/* 右侧登录/注册按钮 */}
+          <div className="flex flex-row justify-center items-center gap-2">
+            <button
+              className="px-4 py-[0.40rem] rounded-full bg-blue-500 border-blue-500 border text-white hover:text-blue-600 hover:bg-blue-200 transition"
               onClick={onLoginClick}
             >
               <span className="text-sm">登录</span>
             </button>
 
-            {/* 注册按钮 */}
             <button
-              className="px-3 py-1 rounded-2xl bg-white text-black  hover:bg-slate-100 transition hidden md:block"
+              className="px-4 py-[0.40rem] rounded-full bg-white border-gray-300 border text-black hover:bg-gray-100 transition hidden md:block"
               onClick={onRegisterClick}
             >
               <span className="text-sm">注册</span>
             </button>
           </div>
         </header>
-        <main className="h-full w-full">
-          <div className="relative flex flex-col text-base mx-5 justify-center items-center">
-            <p className="text-2xl font-bold text-blue-500 leading-[34px] tracking-[0.38px]">
+
+        {/* 可滚动的主内容区域 */}
+        <main className="flex-grow overflow-auto p-5">
+          <div className="relative flex flex-col text-base mx-5 h-full mt-0 items-center">
+            <h1 className="text-2xl font-bold text-indigo-600 leading-[34px] tracking-[0.38px]">
               有什么可以帮忙的?
-            </p>
+            </h1>
           </div>
         </main>
       </div>
