@@ -34,7 +34,7 @@ function ChatPage() {
     document.addEventListener("mousedown", handleClickOutside);
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
-
+  
   return (
     <div className="flex flex-row  max-h-screen bg-gray-100 gap">
       <SideBar isOpen={isOpen} setIsOpen={setIsOpen} />
