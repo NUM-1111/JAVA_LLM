@@ -1,5 +1,5 @@
 import { useNavigate } from "react-router-dom";
-import { useState } from "react";
+import { useState,useEffect, useRef } from "react";
 import { globalData } from "../constants";
 import {
   SiderBarIcon,
@@ -17,6 +17,8 @@ function ChatPage() {
   // 控制模型选择
   const [showModels, setShowModels] = useState(false);
   const [selectedCode, setSelectedCode] = useState(1);
+  const [deepThink,setDeepThink] = useState(false);
+  const modelRef = useRef(null);
   const onLoginClick = () => navigate("/login"); // 直接跳转
   const onRegisterClick = () => navigate("/register"); // 直接跳转
   const [chats, setChats] = useState([]); //存储对话
@@ -38,6 +40,18 @@ function ChatPage() {
     };
 
   const [isOpen, setIsOpen] = useState(true); // 控制侧边栏展开/折叠
+
+  // 监听点击外部区域来关闭下拉菜单
+  useEffect(() => {
+    function handleClickOutside(event) {
+      if (modelRef.current && !modelRef.current.contains(event.target)) {
+        setShowModels(false);
+      }
+    }
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, []);
+
   return (
     <div className="flex flex-row  max-h-screen bg-gray-100 gap">
       {/*侧边栏 */}
@@ -130,8 +144,9 @@ function ChatPage() {
             >
               <NewChatIcon />
             </button>
-            <div className="relative group">
+            <div ref={modelRef} className="relative group">
               <button
+              
                 onClick={() => setShowModels(!showModels)}
                 className={`relative flex flex-row items-center ml-1 px-2 py-2 rounded-lg min-h-11 hover:bg-white hover:border ${
                   showModels ? "bg-white border" : ""
@@ -224,10 +239,10 @@ function ChatPage() {
                     )}px`; // 根据内容调整高度
                   }}
                 ></textarea>
-                <div className="w-full flex justify-between md:mt-2">
-                  <button className="flex flex-row justify-center items-center gap-1 px-2 rounded-full bg-white border-gray-300 border text-black hover:bg-gray-100 transition">
+                <div className="w-full flex justify-between  md:mt-2">
+                  <button onClick={()=>setDeepThink(!deepThink)} className={`flex flex-row justify-center items-center gap-1 px-2 my-[0.2rem] rounded-full border ${deepThink?"bg-blue-200 text-blue-600 border-blue-500":"bg-white border-gray-300  text-black  hover:bg-gray-100"} transition`}>
                     <DeepThinkIcon className={"size-4"} />
-                    <span className="text-sm mb-[2px] select-none">
+                    <span className="text-sm select-none">
                       深度思考
                     </span>
                   </button>
