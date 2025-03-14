@@ -314,6 +314,23 @@ const OpenEyeIcon = ({ className }) => {
     </svg>
   );
 };
+const SelectedIcon = ({ className }) => {
+  return (
+    <svg
+      className={className?className:"mt-1 size-6"}
+      fill= "currentColor"
+      overflow="hidden"
+      viewBox="0 0 1024 1024"
+      version="1.1"
+      xmlns="http://www.w3.org/2000/svg"
+    >
+      <path
+        d="M464.248 677.488c9.967 9.161 25.418 8.714 34.838-1.009l299.819-309.441c9.598-9.906 9.349-25.718-0.558-35.317-9.906-9.598-25.718-9.348-35.316 0.558L463.21 641.72l34.84-1.008L316.608 473.94c-10.156-9.334-25.955-8.668-35.29 1.487-9.334 10.156-8.668 25.955 1.487 35.29l181.442 166.77z"
+
+      ></path>
+    </svg>
+  );
+};
 
 export {
   LogoutIcon,
@@ -330,4 +347,5 @@ export {
   MessageIcon,
   CloseEyeIcon,
   OpenEyeIcon,
+  SelectedIcon,
 };

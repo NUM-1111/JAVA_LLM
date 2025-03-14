@@ -8,88 +8,95 @@ import {
   BreadcrumbIcon,
   DeepThinkIcon,
   ArrowUpIcon,
+  SelectedIcon,
 } from "./svg-icons";
 
 function ChatPage() {
   const navigate = useNavigate(); // 获取导航函数
-
+  
+  // 控制模型选择
+  const [showModels, setShowModels] = useState(false);
+  const [selectedCode, setSelectedCode] = useState(1);
   const onLoginClick = () => navigate("/login"); // 直接跳转
-    const onRegisterClick = () => navigate("/register"); // 直接跳转
-    const [chats, setChats] = useState([]);//存储对话
+  const onRegisterClick = () => navigate("/register"); // 直接跳转
+  const [chats, setChats] = useState([]); //存储对话
 
-    //创建新对话
-    const createChat = async () => {
-        const res = await fetch(globalData.domain + "/chat/new", { method: "POST" });
-        const data = await res.json();
-        const newChatID = data.chat_id;
+  //创建新对话
+  const createChat = async () => {
+    const res = await fetch(globalData.domain + "/chat/new", {
+      method: "POST",
+    });
+    const data = await res.json();
+    const newChatID = data.chat_id;
 
-        setChats([...chats, newChatID]);//更新侧边栏
-        navigate(`/chat/${newChatID}`);//跳转到新对话
-    };
-
+    setChats([...chats, newChatID]); //更新侧边栏
+    navigate(`/chat/${newChatID}`); //跳转到新对话
+  };
   const [isOpen, setIsOpen] = useState(true); // 控制侧边栏展开/折叠
-
   return (
     <div className="flex flex-row  max-h-screen bg-gray-100 gap">
-          {/*侧边栏 */}
-          <div
-              className={`${isOpen
-                      ? " translate-x-0 md:relative md:z-auto"
-                      : "-translate-x-full hidden"
-                  } 
+      {/*侧边栏 */}
+      <div
+        className={`${
+          isOpen
+            ? " translate-x-0 md:relative md:z-auto"
+            : "-translate-x-full hidden"
+        } 
              md:flex  md:w-1/5 absolute w-3/5 z-50 inset-y-0 left-0 flex flex-col max-h-screen justify-between border-e 
               border-gray-100 bg-white shadow-sm transition-all duration-300 overflow-hidden overflow-y-auto`}
-          >
-              <div className="px-4 py-3 transform">
-                  {/*侧边栏顶部*/}
-                  <header className="top-0 flex flex-row transform">
-                      {/* 关闭按钮 */}
-                      <button
-                          onClick={() => setIsOpen(false)}
-                          className={`${isOpen ? "block" : "hidden "
-                              }  flex justify-center items-center size-10  rounded-lg hover:shadow-md hover:bg-blue-300`}
-                      >
-                          <SiderBarIcon />
-                      </button>
+      >
+        <div className="px-4 py-3 transform">
+          {/*侧边栏顶部*/}
+          <header className="top-0 flex flex-row transform">
+            {/* 关闭按钮 */}
+            <button
+              onClick={() => setIsOpen(false)}
+              className={`${
+                isOpen ? "block" : "hidden "
+              }  flex justify-center items-center size-10  rounded-lg hover:shadow-md hover:bg-blue-300`}
+            >
+              <SiderBarIcon />
+            </button>
 
-                      {/*新对话按钮(icon) */}
-                      <button
-                          onClick={createChat}
-                          className={`${isOpen ? "block" : "hidden "
-                              } flex justify-center items-center size-10  rounded-lg hover:shadow-md hover:bg-blue-300 `}
-                      >
-                          <NewChatIcon />
-                      </button>
-                  </header>
+            {/*新对话按钮(icon) */}
+            <button
+              onClick={createChat}
+              className={`${
+                isOpen ? "block" : "hidden "
+              } flex justify-center items-center size-10  rounded-lg hover:shadow-md hover:bg-blue-300 `}
+            >
+              <NewChatIcon />
+            </button>
+          </header>
 
-                  {/*新对话模块*/}
-                  <div className="flex flex-row mt-8 font-bold text-sm rounded-lg border border-blue-200 text-blue-600 bg-blue-500/15  hover:bg-blue-500/20 ">
-                      {/*AddIcon图标*/}
-                      <div className="flex px-2 py-2.5">
-                          <AddIcon />
-                      </div>
+          {/*新对话模块*/}
+          <div className="flex flex-row mt-8 font-bold text-sm rounded-lg border border-blue-200 text-blue-600 bg-blue-500/15  hover:bg-blue-500/20 ">
+            {/*AddIcon图标*/}
+            <div className="flex px-2 py-2.5">
+              <AddIcon />
+            </div>
 
-                      {/*新对话按钮 */}
-                      <div>
-                          <button
-                              onClick={createChat}
-                              className=" py-2 ">开启新对话</button>
-                      </div>
-                  </div>
-                  {/* 侧边栏对话列表 */}
-                  <div className="flex-1 overflow-y-auto">
-                      {chats.map((chatId) => (
-                          <a
-                              key={chatId}
-                              href={`/chat/${chatId}`}
-                              className="block p-2 bg-gray-700 hover:bg-gray-600 rounded my-1"
-                          >
-                              会话 {chatId.slice(0, 8)}...
-                          </a>
-                      ))}
-                  </div>
-              </div>
+            {/*新对话按钮 */}
+            <div>
+              <button onClick={createChat} className=" py-2 ">
+                开启新对话
+              </button>
+            </div>
           </div>
+          {/* 侧边栏对话列表 */}
+          <div className="flex-1 overflow-y-auto">
+            {chats.map((chatId) => (
+              <a
+                key={chatId}
+                href={`/chat/${chatId}`}
+                className="block p-2 bg-gray-700 hover:bg-gray-600 rounded my-1"
+              >
+                会话 {chatId.slice(0, 8)}...
+              </a>
+            ))}
+          </div>
+        </div>
+      </div>
 
       {/*对话部分*/}
       <div
@@ -103,7 +110,7 @@ function ChatPage() {
           {/* 左侧按钮 */}
           <div className="flex flex-row text-gray-700">
             <button
-              onClick={() => setIsOpen(true)}
+                onClick={()=>setIsOpen(true)}
               className={`${
                 isOpen ? "hidden" : "block"
               } flex justify-center items-center size-10 transition rounded-lg hover:shadow-md hover:bg-blue-300`}
@@ -118,10 +125,47 @@ function ChatPage() {
             >
               <NewChatIcon />
             </button>
-            <button className="flex flex-row items-center ml-1 px-2 py-1 rounded-lg min-h-10 hover:bg-blue-300 hover:shadow-md transition">
-              <span className="text-md font-semibold">DeepSeek-R1</span>
-              <BreadcrumbIcon className={"size-6"} />
-            </button>
+            <div className="relative group">
+              <button
+                onClick={() => setShowModels(!showModels)}
+                className={`relative flex flex-row items-center ml-1 px-2 py-2 rounded-lg min-h-11 hover:bg-white hover:border ${
+                  showModels ? "bg-white border" : ""
+                } border-gray-200 transition`}
+              >
+                <span className="text-md font-semibold text-gray-700">
+                  DeepSeek-R1
+                </span>
+                <BreadcrumbIcon className={"size-6"} />
+              </button>
+              {/* 下拉菜单 */}
+              {showModels && (
+                <div
+                  className="absolute flex flex-col top-14 left-0 min-h-20 min-w-[260px] w-max z-50 px-2 py-2 justify-center rounded-xl border border-gray-200 bg-white shadow-md"
+                  id="selectModel"
+                >
+                  <button
+                    onClick={() => setSelectedCode(1)}
+                    className={`flex flex-row w-full px-6 py-3 text-left whitespace-nowrap hover:bg-gray-100  items-start justify-between rounded-lg`}
+                  >
+                    <div className="flex flex-col">
+                      <p className="text-sm font-semibold">DeepSeek-R1</p>
+                      <p className="text-xs">具备深度思考能力</p>
+                    </div>
+                    {selectedCode === 1 && <SelectedIcon />}
+                  </button>
+                  <button
+                    onClick={() => setSelectedCode(2)}
+                    className={`flex flex-row w-full px-6 py-3 text-left whitespace-nowrap hover:bg-gray-100 items-start justify-between rounded-lg`}
+                  >
+                    <div className="flex flex-col">
+                      <p className="text-sm font-semibold">QWQ-32B</p>
+                      <p className="text-xs">轻量化 性能媲美满血R1</p>
+                    </div>
+                    {selectedCode === 2 && <SelectedIcon />}
+                  </button>
+                </div>
+              )}
+            </div>
           </div>
 
           {/* 右侧登录/注册按钮 */}
