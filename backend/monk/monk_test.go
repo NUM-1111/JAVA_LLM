@@ -18,7 +18,7 @@ import (
 // 创建路由
 func setupRouter() *gin.Engine {
 	// 启动Postgres
-	db.InitDB(config.PG_dsn)
+	db.InitPostgresDB(config.PG_dsn)
 	//defer db.CloseDB()
 
 	// 启动Redis

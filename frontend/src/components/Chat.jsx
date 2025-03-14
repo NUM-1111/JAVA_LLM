@@ -1,5 +1,5 @@
 import { useNavigate } from "react-router-dom";
-import { useState,useEffect, useRef } from "react";
+import { useState, useEffect, useRef } from "react";
 import { globalData } from "../constants";
 import {
   SiderBarIcon,
@@ -13,31 +13,38 @@ import {
 
 function ChatPage() {
   const navigate = useNavigate(); // 获取导航函数
-  
+
   // 控制模型选择
   const [showModels, setShowModels] = useState(false);
   const [selectedCode, setSelectedCode] = useState(1);
-  const [deepThink,setDeepThink] = useState(false);
+  const [deepThink, setDeepThink] = useState(false);
   const modelRef = useRef(null);
+  const models = {
+    1: "DeepSeek-R1",
+    2: "QwQ-32B",
+  };
+
   const onLoginClick = () => navigate("/login"); // 直接跳转
   const onRegisterClick = () => navigate("/register"); // 直接跳转
   const [chats, setChats] = useState([]); //存储对话
 
-    //创建新对话
-    const createChat = async () => {
-        try {
-            const res = await fetch(globalData.domain + "/chat/new", { method: "POST" });
-            if (!res.ok) throw new Error("创建聊天失败");
-            const data = await res.json();
-            if (!data.chat_id) throw new Error("无效的聊天ID");
+  //创建新对话
+  const createChat = async () => {
+    try {
+      const res = await fetch(globalData.domain + "/chat/new", {
+        method: "POST",
+      });
+      if (!res.ok) throw new Error("创建聊天失败");
+      const data = await res.json();
+      if (!data.chat_id) throw new Error("无效的聊天ID");
 
-            const newChatID = data.chat_id;
-            setChats([...chats, newChatID]);
-            navigate(`/chat/${newChatID}`);
-        } catch (error) {
-            console.error(error.message);
-        }
-    };
+      const newChatID = data.chat_id;
+      setChats([...chats, newChatID]);
+      navigate(`/chat/${newChatID}`);
+    } catch (error) {
+      console.error(error.message);
+    }
+  };
 
   const [isOpen, setIsOpen] = useState(true); // 控制侧边栏展开/折叠
 
@@ -95,27 +102,27 @@ function ChatPage() {
               <AddIcon />
             </div>
 
-                      {/*新对话按钮 */}
-                      <div>
-                          <button
-                              onClick={createChat}
-                              className=" py-2 ">开启新对话</button>
-                      </div>
-                  </div>
-                  {/* 侧边栏对话列表 */}
-                  <div className="mt-4">
-                      {chats.map((chatId) => (
-                          <button
-                              key={chatId}
-                              onClick={() => navigate(`/chat/${chatId}`)}
-                              className="block w-full text-left p-2 bg-gray-100 rounded-md hover:bg-gray-200 my-1"
-                          >
-                              会话 {chatId.slice(0, 8)}...
-                          </button>
-                      ))}
-                  </div>
-              </div>
+            {/*新对话按钮 */}
+            <div>
+              <button onClick={createChat} className=" py-2 ">
+                开启新对话
+              </button>
+            </div>
           </div>
+          {/* 侧边栏对话列表 */}
+          <div className="mt-4">
+            {chats.map((chatId) => (
+              <button
+                key={chatId}
+                onClick={() => navigate(`/chat/${chatId}`)}
+                className="block w-full text-left p-2 bg-gray-100 rounded-md hover:bg-gray-200 my-1"
+              >
+                会话 {chatId.slice(0, 8)}...
+              </button>
+            ))}
+          </div>
+        </div>
+      </div>
 
       {/*对话部分*/}
       <div
@@ -129,7 +136,7 @@ function ChatPage() {
           {/* 左侧按钮 */}
           <div className="flex flex-row text-gray-700">
             <button
-                onClick={()=>setIsOpen(true)}
+              onClick={() => setIsOpen(true)}
               className={`${
                 isOpen ? "hidden" : "block"
               } flex justify-center items-center size-10 transition rounded-lg hover:shadow-md hover:bg-blue-300`}
@@ -146,14 +153,13 @@ function ChatPage() {
             </button>
             <div ref={modelRef} className="relative group">
               <button
-              
                 onClick={() => setShowModels(!showModels)}
-                className={`relative flex flex-row items-center ml-1 px-2 py-2 rounded-lg min-h-11 hover:bg-white hover:border ${
-                  showModels ? "bg-white border" : ""
-                } border-gray-200 transition`}
+                className={`relative flex flex-row items-center ml-1 px-2 py-2 rounded-lg min-h-11 hover:bg-gray-50 border ${
+                  showModels ? "bg-gray-50 border-gray-200" : "border-gray-100"
+                }  transition`}
               >
                 <span className="text-md font-semibold text-gray-700">
-                  DeepSeek-R1
+                  {models[selectedCode]}
                 </span>
                 <BreadcrumbIcon className={"size-6"} />
               </button>
@@ -178,7 +184,7 @@ function ChatPage() {
                     className={`flex flex-row w-full px-6 py-3 text-left whitespace-nowrap hover:bg-gray-100 items-start justify-between rounded-lg`}
                   >
                     <div className="flex flex-col">
-                      <p className="text-sm font-semibold">QWQ-32B</p>
+                      <p className="text-sm font-semibold">QwQ-32B</p>
                       <p className="text-xs">轻量化 性能媲美满血R1</p>
                     </div>
                     {selectedCode === 2 && <SelectedIcon />}
@@ -240,11 +246,16 @@ function ChatPage() {
                   }}
                 ></textarea>
                 <div className="w-full flex justify-between  md:mt-2">
-                  <button onClick={()=>setDeepThink(!deepThink)} className={`flex flex-row justify-center items-center gap-1 px-2 my-[0.2rem] rounded-full border ${deepThink?"bg-blue-200 text-blue-600 border-blue-500":"bg-white border-gray-300  text-black  hover:bg-gray-100"} transition`}>
+                  <button
+                    onClick={() => setDeepThink(!deepThink)}
+                    className={`flex flex-row justify-center items-center gap-1 px-2 my-[0.2rem] rounded-full border ${
+                      deepThink
+                        ? "bg-blue-200 text-blue-600 border-blue-500"
+                        : "bg-white border-gray-300  text-black  hover:bg-gray-100"
+                    } transition`}
+                  >
                     <DeepThinkIcon className={"size-4"} />
-                    <span className="text-sm select-none">
-                      深度思考
-                    </span>
+                    <span className="text-sm select-none">深度思考</span>
                   </button>
                   <button className="size-9 bg-indigo-600 text-white rounded-full hover:bg-indigo-500">
                     <ArrowUpIcon className={"size-9"} />

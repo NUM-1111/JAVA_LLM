@@ -11,7 +11,7 @@ import (
 // 初始化数据库
 var DB *gorm.DB
 
-func InitDB(dsn string) {
+func InitPostgresDB(dsn string) {
 	//连接数据库
 	var err error
 	DB, err = gorm.Open(postgres.Open(dsn), &gorm.Config{
@@ -19,7 +19,7 @@ func InitDB(dsn string) {
 		TranslateError: true,
 	})
 	if err != nil {
-		log.Fatal("数据库连接失败:", err)
+		log.Fatal("Postgres连接失败:", err)
 	}
 
 	// 获取底层 sql.DB 实例并设置连接池参数
@@ -36,10 +36,10 @@ func InitDB(dsn string) {
 	//自动迁移
 	DB.AutoMigrate(&models.User{})
 	DB.AutoMigrate(&models.Session{})
-	log.Println("[POSTGRES] service is running.")
+	log.Println("[Postgres] service is running.")
 }
 
-func CloseDB() {
+func ClosePostgresDB() {
 	sqlDB, err := DB.DB()
 	if err != nil {
 		log.Fatal(err)
@@ -47,5 +47,5 @@ func CloseDB() {
 	if err := sqlDB.Close(); err != nil {
 		log.Fatal(err)
 	}
-	log.Println("[POSTGRES] service shutdown.")
+	log.Println("[Postgres] service shutdown.")
 }

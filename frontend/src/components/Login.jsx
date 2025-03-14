@@ -65,7 +65,7 @@ function LoginPage() {
     const data = await req.json();
     if (req.status != 200) {
       setMsgStruct({
-        title: "登录失败",
+        title: "登录失败!",
         description: data.msg,
         type: "error",
       });
@@ -74,6 +74,7 @@ function LoginPage() {
         setShowMsg(false);
       }, 2000);
     } else {
+      localStorage.auth = data.auth;
       setMsgStruct({
         title: "登录成功",
         description: "即将跳转至聊天界面...",
@@ -100,8 +101,8 @@ function LoginPage() {
         onClose={() => setShowMsg(false)}
         ifShow={showMsg}
       />
-      <div className="relative z-10 flex flex-wrap h-screen w-full border rounded-lg lg:items-center">
-        <div className="w-full px-4 mt-2 sm:px-6 py-40  md:px-8 md:py-24">
+      <div className="fixed z-10 flex flex-wrap h-fit w-full border rounded-lg items-center">
+        <div className="w-full px-10 mt-2 py-20 md:px-8">
           <div className="mx-auto max-w-lg text-center">
             <h1 className="text-2xl font-bold sm:text-3xl text-indigo-600">
               登录到 HeuChat
@@ -110,7 +111,7 @@ function LoginPage() {
 
           <form
             onSubmit={handleLogin}
-            className="mx-auto mb-0 mt-8 max-w-md space-y-4"
+            className="mx-auto mb-0 mt-8 max-w-md space-y-4 scale-90 sm:scale-100"
           >
             <div>
               <div className="text-lg py-2 flex flex-row">

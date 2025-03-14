@@ -50,15 +50,31 @@ function RegisterPage() {
     });
     const data = await req.json();
     if (req.status != 200) {
-      console.log(data);
-      setSendState(false);
-    } else {
+      setTimeout(()=>{
+        setSendState(false);
+      },300);
+      setMsgStruct({
+        title: "发送失败",
+        description: data.msg,
+        type: "error",
+      });
+      setShowMsg(true);
       setTimeout(() => {
-        console.log(data);
-      }, 300);
+        setShowMsg(false);
+      }, 2000);
+    } else {
       setSendState(false);
       setBtnWaiting(true);
       changeWaitText();
+      setMsgStruct({
+        title: "发送成功",
+        description: data.msg,
+        type: "success",
+      });
+      setShowMsg(true);
+      setTimeout(() => {
+        setShowMsg(false);
+      }, 1500);
     }
   };
   // 表单数据变化
@@ -92,9 +108,11 @@ function RegisterPage() {
     return formIsValid;
   };
 
-  // 提交表单
-  const [showSuccessMsg, setShowSuccessMsg] = useState(false);
+  //设置消息弹窗
+  const [showMsg, setShowMsg] = useState(false);
+  const [msgStruct, setMsgStruct] = useState({});
 
+  // 提交表单
   const handleRegister = async (event) => {
     event.preventDefault();
     if (!validateForm()) {
@@ -110,12 +128,25 @@ function RegisterPage() {
     });
     const data = await req.json();
     if (req.status != 200) {
-      console.log(data);
+      setMsgStruct({
+        title: "注册失败!",
+        description: data.msg,
+        type: "error",
+      });
+      setShowMsg(true);
+      setTimeout(() => {
+        setShowMsg(false);
+      }, 2000);
     } else {
       localStorage.auth = data.auth;
-      setShowSuccessMsg(true);
+      setMsgStruct({
+        title: "登录成功",
+        description: "即将跳转至聊天界面...",
+        type: "success",
+      });
+      setShowMsg(true);
       setTimeout(() => {
-        setShowSuccessMsg(false);
+        setShowMsg(false);
         navigate("/chat");
       }, 500);
     }
@@ -137,15 +168,15 @@ function RegisterPage() {
 
   return (
     <>
-      <div className="relative flex flex-wrap h-[101vh] w-full border rounded-sm lg:items-center bg-white">
-        <div className="w-full sm:px-6 md:px-8">
-          <MessageIcon
-            title="注册成功"
-            description="即将跳转至聊天界面..."
-            onClose={() => setShowSuccessMsg(false)}
-            ifShow={showSuccessMsg}
-            type="success"
-          />
+      <MessageIcon
+        title={msgStruct.title}
+        description={msgStruct.description}
+        type={msgStruct.type}
+        onClose={() => setShowMsg(false)}
+        ifShow={showMsg}
+      />
+      <div className="relative flex flex-wrap h-[101vh] w-full border rounded-sm items-center bg-white">
+        <div className="w-full px-4 sm:px-6 md:px-8">
           <div className="mx-auto max-w-lg text-center">
             <h1 className="text-2xl font-bold sm:text-3xl text-indigo-600 ">
               欢迎加入 HeuChat
@@ -155,7 +186,7 @@ function RegisterPage() {
 
           <form
             onSubmit={handleRegister}
-            className="mx-auto px-6 my-auto max-w-md space-y-3"
+            className="mx-auto px-6 my-auto max-w-md space-y-3 scale-90 sm:scale-100"
           >
             <div className="w-full">
               <div className="text-lg py-2 flex flex-row">

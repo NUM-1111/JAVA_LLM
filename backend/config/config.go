@@ -12,6 +12,9 @@ import (
 )
 
 var (
+	// MongoDB
+	Mongo_url = "mongodb://ferret:ferret@localhost:27217"
+
 	//Postgres
 	Host          = "localhost"
 	PG_user       = "postgres"

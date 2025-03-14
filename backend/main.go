@@ -11,8 +11,12 @@ import (
 
 func main() {
 	// 启动Postgres
-	db.InitDB(config.PG_dsn)
-	defer db.CloseDB()
+	db.InitPostgresDB(config.PG_dsn)
+	defer db.ClosePostgresDB()
+
+	// 启动MongoDB
+	db.InitMongoDB(config.Mongo_url)
+	defer db.CloseMongoDB()
 
 	// 启动Redis
 	db.InitRedis(&config.RedisOpt)
@@ -28,4 +32,5 @@ func main() {
 
 	//启动服务器
 	r.Run("127.0.0.1:8080")
+
 }
