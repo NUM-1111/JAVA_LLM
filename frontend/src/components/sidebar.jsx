@@ -7,11 +7,8 @@ import {
     NewChatIcon,
 } from "./svg-icons";
 
-const SiderBar = () => {
+export default function SideBar({ isOpen, setIsOpen })  {
     const navigate = useNavigate(); // 获取导航函数
-
-    const onLoginClick = () => navigate("/login"); // 直接跳转
-    const onRegisterClick = () => navigate("/register"); // 直接跳转
     const [chats, setChats] = useState([]);//存储对话
 
     //创建新对话
@@ -23,8 +20,6 @@ const SiderBar = () => {
         setChats([...chats, newChatID]);//更新侧边栏
         navigate(`/chat/${newChatID}`);//跳转到新对话
     };
-
-    const [isOpen, setIsOpen] = useState(true); // 控制侧边栏展开/折叠
 
     return (
             <div
