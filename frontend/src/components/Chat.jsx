@@ -21,17 +21,22 @@ function ChatPage() {
   const onRegisterClick = () => navigate("/register"); // 直接跳转
   const [chats, setChats] = useState([]); //存储对话
 
-  //创建新对话
-  const createChat = async () => {
-    const res = await fetch(globalData.domain + "/chat/new", {
-      method: "POST",
-    });
-    const data = await res.json();
-    const newChatID = data.chat_id;
+    //创建新对话
+    const createChat = async () => {
+        try {
+            const res = await fetch(globalData.domain + "/chat/new", { method: "POST" });
+            if (!res.ok) throw new Error("创建聊天失败");
+            const data = await res.json();
+            if (!data.chat_id) throw new Error("无效的聊天ID");
 
-    setChats([...chats, newChatID]); //更新侧边栏
-    navigate(`/chat/${newChatID}`); //跳转到新对话
-  };
+            const newChatID = data.chat_id;
+            setChats([...chats, newChatID]);
+            navigate(`/chat/${newChatID}`);
+        } catch (error) {
+            console.error(error.message);
+        }
+    };
+
   const [isOpen, setIsOpen] = useState(true); // 控制侧边栏展开/折叠
   return (
     <div className="flex flex-row  max-h-screen bg-gray-100 gap">
@@ -76,27 +81,27 @@ function ChatPage() {
               <AddIcon />
             </div>
 
-            {/*新对话按钮 */}
-            <div>
-              <button onClick={createChat} className=" py-2 ">
-                开启新对话
-              </button>
-            </div>
+                      {/*新对话按钮 */}
+                      <div>
+                          <button
+                              onClick={createChat}
+                              className=" py-2 ">开启新对话</button>
+                      </div>
+                  </div>
+                  {/* 侧边栏对话列表 */}
+                  <div className="mt-4">
+                      {chats.map((chatId) => (
+                          <button
+                              key={chatId}
+                              onClick={() => navigate(`/chat/${chatId}`)}
+                              className="block w-full text-left p-2 bg-gray-100 rounded-md hover:bg-gray-200 my-1"
+                          >
+                              会话 {chatId.slice(0, 8)}...
+                          </button>
+                      ))}
+                  </div>
+              </div>
           </div>
-          {/* 侧边栏对话列表 */}
-          <div className="flex-1 overflow-y-auto">
-            {chats.map((chatId) => (
-              <a
-                key={chatId}
-                href={`/chat/${chatId}`}
-                className="block p-2 bg-gray-700 hover:bg-gray-600 rounded my-1"
-              >
-                会话 {chatId.slice(0, 8)}...
-              </a>
-            ))}
-          </div>
-        </div>
-      </div>
 
       {/*对话部分*/}
       <div
