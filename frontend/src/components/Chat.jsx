@@ -1,6 +1,5 @@
 import { useNavigate } from "react-router-dom";
 import { useState, useEffect, useRef } from "react";
-import { globalData } from "../constants";
 import SideBar from '../components/sidebar.jsx';
 import {
   SiderBarIcon,
@@ -26,7 +25,6 @@ function ChatPage() {
 
   const onLoginClick = () => navigate("/login"); // 直接跳转
   const onRegisterClick = () => navigate("/register"); // 直接跳转
-  const [chats, setChats] = useState([]); //存储对话
   const [isOpen, setIsOpen] = useState(true); // 控制侧边栏展开/折叠
 
   // 监听点击外部区域来关闭下拉菜单
