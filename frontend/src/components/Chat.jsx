@@ -1,9 +1,9 @@
 import { useNavigate } from "react-router-dom";
 import { useState, useEffect, useRef } from "react";
 import { globalData } from "../constants";
+import SideBar from '../components/sidebar.jsx';
 import {
   SiderBarIcon,
-  AddIcon,
   NewChatIcon,
   BreadcrumbIcon,
   DeepThinkIcon,
@@ -27,25 +27,6 @@ function ChatPage() {
   const onLoginClick = () => navigate("/login"); // 直接跳转
   const onRegisterClick = () => navigate("/register"); // 直接跳转
   const [chats, setChats] = useState([]); //存储对话
-
-  //创建新对话
-  const createChat = async () => {
-    try {
-      const res = await fetch(globalData.domain + "/chat/new", {
-        method: "POST",
-      });
-      if (!res.ok) throw new Error("创建聊天失败");
-      const data = await res.json();
-      if (!data.chat_id) throw new Error("无效的聊天ID");
-
-      const newChatID = data.chat_id;
-      setChats([...chats, newChatID]);
-      navigate(`/chat/${newChatID}`);
-    } catch (error) {
-      console.error(error.message);
-    }
-  };
-
   const [isOpen, setIsOpen] = useState(true); // 控制侧边栏展开/折叠
 
   // 监听点击外部区域来关闭下拉菜单
@@ -58,71 +39,10 @@ function ChatPage() {
     document.addEventListener("mousedown", handleClickOutside);
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
-
+  
   return (
     <div className="flex flex-row  max-h-screen bg-gray-100 gap">
-      {/*侧边栏 */}
-      <div
-        className={`${
-          isOpen
-            ? " translate-x-0 md:relative md:z-auto"
-            : "-translate-x-full hidden"
-        } 
-             md:flex  md:w-1/5 absolute w-3/5 z-50 inset-y-0 left-0 flex flex-col max-h-screen justify-between border-e 
-              border-gray-100 bg-white shadow-sm transition-all duration-300 overflow-hidden overflow-y-auto`}
-      >
-        <div className="px-4 py-3 transform">
-          {/*侧边栏顶部*/}
-          <header className="top-0 flex flex-row transform">
-            {/* 关闭按钮 */}
-            <button
-              onClick={() => setIsOpen(false)}
-              className={`${
-                isOpen ? "block" : "hidden "
-              }  flex justify-center items-center size-10  rounded-lg hover:shadow-md hover:bg-blue-300`}
-            >
-              <SiderBarIcon />
-            </button>
-
-            {/*新对话按钮(icon) */}
-            <button
-              onClick={createChat}
-              className={`${
-                isOpen ? "block" : "hidden "
-              } flex justify-center items-center size-10  rounded-lg hover:shadow-md hover:bg-blue-300 `}
-            >
-              <NewChatIcon />
-            </button>
-          </header>
-
-          {/*新对话模块*/}
-          <div className="flex flex-row mt-8 font-bold text-sm rounded-lg border border-blue-200 text-blue-600 bg-blue-500/15  hover:bg-blue-500/20 ">
-            {/*AddIcon图标*/}
-            <div className="flex px-2 py-2.5">
-              <AddIcon />
-            </div>
-
-            {/*新对话按钮 */}
-            <div>
-              <button onClick={createChat} className=" py-2 ">
-                开启新对话
-              </button>
-            </div>
-          </div>
-          {/* 侧边栏对话列表 */}
-          <div className="mt-4">
-            {chats.map((chatId) => (
-              <button
-                key={chatId}
-                onClick={() => navigate(`/chat/${chatId}`)}
-                className="block w-full text-left p-2 bg-gray-100 rounded-md hover:bg-gray-200 my-1"
-              >
-                会话 {chatId.slice(0, 8)}...
-              </button>
-            ))}
-          </div>
-        </div>
-      </div>
+      <SideBar isOpen={isOpen} setIsOpen={setIsOpen} />
 
       {/*对话部分*/}
       <div
