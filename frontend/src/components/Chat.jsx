@@ -19,12 +19,18 @@ function ChatPage() {
 
     //创建新对话
     const createChat = async () => {
-        const res = await fetch(globalData.domain + "/chat/new", { method: "POST" });
-        const data = await res.json();
-        const newChatID = data.chat_id;
+        try {
+            const res = await fetch(globalData.domain + "/chat/new", { method: "POST" });
+            if (!res.ok) throw new Error("创建聊天失败");
+            const data = await res.json();
+            if (!data.chat_id) throw new Error("无效的聊天ID");
 
-        setChats([...chats, newChatID]);//更新侧边栏
-        navigate(`/chat/${newChatID}`);//跳转到新对话
+            const newChatID = data.chat_id;
+            setChats([...chats, newChatID]);
+            navigate(`/chat/${newChatID}`);
+        } catch (error) {
+            console.error(error.message);
+        }
     };
 
   const [isOpen, setIsOpen] = useState(true); // 控制侧边栏展开/折叠
@@ -77,15 +83,15 @@ function ChatPage() {
                       </div>
                   </div>
                   {/* 侧边栏对话列表 */}
-                  <div className="flex-1 overflow-y-auto">
+                  <div className="mt-4">
                       {chats.map((chatId) => (
-                          <a
+                          <button
                               key={chatId}
-                              href={`/chat/${chatId}`}
-                              className="block p-2 bg-gray-700 hover:bg-gray-600 rounded my-1"
+                              onClick={() => navigate(`/chat/${chatId}`)}
+                              className="block w-full text-left p-2 bg-gray-100 rounded-md hover:bg-gray-200 my-1"
                           >
                               会话 {chatId.slice(0, 8)}...
-                          </a>
+                          </button>
                       ))}
                   </div>
               </div>
