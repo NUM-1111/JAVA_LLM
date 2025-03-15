@@ -37,44 +37,59 @@ function ChatPage() {
     document.addEventListener("mousedown", handleClickOutside);
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
-  
+
   return (
     <div className="flex flex-row  max-h-screen bg-gray-100 gap">
+      {/*侧边栏部分 */}
       <SideBar isOpen={isOpen} setIsOpen={setIsOpen} />
 
       {/*对话部分*/}
       <div
-        className={`${
-          isOpen ? "w-4/5" : "w-full"
-        } flex flex-col h-full max-h-screen bg-gray-100`}
+        className={`${isOpen ? "w-4/5" : "w-full"
+          } flex flex-col h-full max-h-screen bg-gray-100`}
       >
         {/* 头部导航栏 - 固定在主内容顶部 */}
         {/*进入具体内容页可加上: border-b border-gray-300 */}
         <header className="sticky top-0 flex flex-row px-5 py-3 justify-between z-10 select-none">
           {/* 左侧按钮 */}
           <div className="flex flex-row text-gray-700">
+            
+            {/*显示侧边栏 */}
+            <div className="relative group">
             <button
               onClick={() => setIsOpen(true)}
-              className={`${
-                isOpen ? "hidden" : "block"
-              } flex justify-center items-center size-10 transition rounded-lg hover:shadow-md hover:bg-blue-300`}
+              className={`${isOpen ? "hidden" : "block"
+                } flex justify-center items-center size-10 transition rounded-lg hover:shadow-md hover:bg-blue-300`}
             >
               <SiderBarIcon />
             </button>
+            {/* 说明框：底部显示 */}
+              <div
+                className="absolute top-full left-1/2 transform -translate-x-1/2 opacity-0 group-hover:opacity-100 transition-opacity duration-300 bg-gray-700 text-white text-sm rounded py-1 px-2 whitespace-nowrap mt-2">
+              显示侧边栏
+              </div>
+            </div>
+            
             {/*新对话按钮*/}
+            <div className="relative group">
             <button
-              className={`${
-                isOpen ? "hidden" : "block"
-              } flex justify-center items-center size-10 transition rounded-lg hover:shadow-md hover:bg-blue-300`}
+              className={`${isOpen ? "hidden" : "block"
+                } flex justify-center items-center size-10 transition rounded-lg hover:shadow-md hover:bg-blue-300`}
             >
               <NewChatIcon />
-            </button>
+              </button>
+              {/* 说明框：底部显示 */}
+              <div
+                className="absolute top-full left-1/2 transform -translate-x-1/2 opacity-0 group-hover:opacity-100 transition-opacity duration-300 bg-gray-700 text-white text-sm rounded py-1 px-2 whitespace-nowrap mt-2">
+                创造新对话
+              </div>
+            </div>
+            
             <div ref={modelRef} className="relative group">
               <button
                 onClick={() => setShowModels(!showModels)}
-                className={`relative flex flex-row items-center ml-1 px-2 py-2 rounded-lg min-h-11 hover:bg-gray-50 border ${
-                  showModels ? "bg-gray-50 border-gray-200" : "border-gray-100"
-                }  transition`}
+                className={`relative flex flex-row items-center ml-1 px-2 py-2 rounded-lg min-h-11 hover:bg-gray-50 border ${showModels ? "bg-gray-50 border-gray-200" : "border-gray-100"
+                  }  transition`}
               >
                 <span className="text-md font-semibold text-gray-700">
                   {models[selectedCode]}
@@ -139,7 +154,7 @@ function ChatPage() {
 
             <div
               id="InputContainer"
-              className="flex flex-col h-auto w-[90%] rounded-3xl border border-gray-500 bg-gray-50 
+              className="flex flex-col h-auto w-[90%] rounded-3xl border shadow-md border-gray-200 bg-gray-50 
                  md:static md:w-7/12 
                  absolute bottom-5 px-4 py-1 md:py-2"
             >
@@ -166,11 +181,10 @@ function ChatPage() {
                 <div className="w-full flex justify-between  md:mt-2">
                   <button
                     onClick={() => setDeepThink(!deepThink)}
-                    className={`flex flex-row justify-center items-center gap-1 px-2 my-[0.2rem] rounded-full border ${
-                      deepThink
-                        ? "bg-blue-200 text-blue-600 border-blue-500"
-                        : "bg-white border-gray-300  text-black  hover:bg-gray-100"
-                    } transition`}
+                    className={`flex flex-row justify-center items-center gap-1 px-2 my-[0.2rem] rounded-full border ${deepThink
+                      ? "bg-blue-200 text-blue-600 border-blue-500"
+                      : "bg-white border-gray-300  text-black  hover:bg-gray-100"
+                      } transition`}
                   >
                     <DeepThinkIcon className={"size-4"} />
                     <span className="text-sm select-none">深度思考</span>

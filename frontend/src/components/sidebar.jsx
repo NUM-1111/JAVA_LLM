@@ -43,23 +43,34 @@ export default function SideBar({ isOpen, setIsOpen }) {
             <div className="px-4 py-3 transform">
                 {/* 侧边栏顶部 */}
                 <header className="top-0 flex flex-row transform">
-                    {/* 关闭按钮 */}
-                    <button
-                        onClick={() => setIsOpen(false)}
-                        className={`${isOpen ? "block" : "hidden "
-                            } flex justify-center items-center size-10 rounded-lg hover:shadow-md hover:bg-blue-300`}
-                    >
-                        <SiderBarIcon />
-                    </button>
+                    {/* 隐藏侧边栏按钮 */}
+                    <div className="relative group">
+                        <button
+                            onClick={() => setIsOpen(false)}
+                            className={`${isOpen ? "block" : "hidden"} flex justify-center items-center size-10 rounded-lg hover:shadow-md hover:bg-blue-300`}
+                        >
+                            <SiderBarIcon />
+                        </button>
+                        {/* 说明框：底部显示 */}
+                        <div className="absolute top-full left-1/2  transform -translate-y-1/2 opacity-0 group-hover:opacity-100 transition-opacity duration-300 bg-gray-700 text-white text-sm rounded py-1 px-2 whitespace-nowrap mt-2">
+                            隐藏侧边栏
+                        </div>
+                    </div>
 
-                    {/* 新对话按钮 (icon) */}
-                    <button
-                        onClick={createChat}
-                        className={`${isOpen ? "block" : "hidden "
-                            } flex justify-center items-center size-10 rounded-lg hover:shadow-md hover:bg-blue-300 `}
-                    >
-                        <NewChatIcon />
-                    </button>
+                    {/* 开启新对话按钮 (icon) */}
+                    <div className="relative group">
+                        <button
+                            onClick={createChat}
+                            className={`${isOpen ? "block" : "hidden"} flex justify-center items-center size-10 rounded-lg hover:shadow-md hover:bg-blue-300`}
+                        >
+                            <NewChatIcon />
+                        </button>
+                        {/* 说明框：右侧显示 */}
+                        <div className="absolute left-full top-1/2 transform -translate-y-1/2 opacity-0 group-hover:opacity-100 transition-opacity duration-300 bg-gray-700 text-white text-sm rounded py-1 px-2 whitespace-nowrap ml-2">
+                            开启新对话
+                        </div>
+                    </div>
+
                 </header>
 
                 {/* 新对话模块 */}
