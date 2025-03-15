@@ -1,0 +1,331 @@
+{
+    "title": "介绍与总结",
+    "create_time": 1741968477.195749,
+    "update_time": 1742017259.884263,
+    "mapping": {
+      "client-created-root": {
+        "id": "client-created-root",
+        "message": null,
+        "parent": null,
+        "children": [
+          "49b178b2-a831-4a4f-9730-8adc8bae4b43"
+        ]
+      },
+      "49b178b2-a831-4a4f-9730-8adc8bae4b43": {
+        "id": "49b178b2-a831-4a4f-9730-8adc8bae4b43",
+        "message": {
+          "id": "49b178b2-a831-4a4f-9730-8adc8bae4b43",
+          "author": {
+            "role": "system",
+            "name": null,
+            "metadata": {}
+          },
+          "create_time": null,
+          "update_time": null,
+          "content": {
+            "content_type": "text",
+            "parts": [
+              ""
+            ]
+          },
+          "status": "finished_successfully",
+          "end_turn": true,
+          "weight": 0,
+          "metadata": {
+            "is_visually_hidden_from_conversation": true
+          },
+          "recipient": "all",
+          "channel": null
+        },
+        "parent": "client-created-root",
+        "children": [
+          "92a09d5e-26be-48d4-a66b-633492e59073"
+        ]
+      },
+      "92a09d5e-26be-48d4-a66b-633492e59073": {
+        "id": "92a09d5e-26be-48d4-a66b-633492e59073",
+        "message": {
+          "id": "92a09d5e-26be-48d4-a66b-633492e59073",
+          "author": {
+            "role": "user",
+            "name": null,
+            "metadata": {}
+          },
+          "create_time": null,
+          "update_time": null,
+          "content": {
+            "content_type": "user_editable_context",
+            "user_profile": "",
+            "user_instructions": "The user provided the additional info about how they would like you to respond:\n```尽可能使用中文回答.```"
+          },
+          "status": "finished_successfully",
+          "end_turn": null,
+          "weight": 1,
+          "metadata": {
+            "is_visually_hidden_from_conversation": true,
+            "user_context_message_data": {
+              "about_model_message": "尽可能使用中文回答."
+            },
+            "is_user_system_message": true
+          },
+          "recipient": "all",
+          "channel": null
+        },
+        "parent": "49b178b2-a831-4a4f-9730-8adc8bae4b43",
+        "children": [
+          "f67bce72-9ce5-4765-9059-223ed0ac3de9",
+          "a317c3ee-564f-4fe6-aae7-e767e4ff9c8b"
+        ]
+      },
+      "f67bce72-9ce5-4765-9059-223ed0ac3de9": {
+        "id": "f67bce72-9ce5-4765-9059-223ed0ac3de9",
+        "message": {
+          "id": "f67bce72-9ce5-4765-9059-223ed0ac3de9",
+          "author": {
+            "role": "user",
+            "name": null,
+            "metadata": {}
+          },
+          "create_time": 1741968476.476,
+          "update_time": null,
+          "content": {
+            "content_type": "text",
+            "parts": [
+              "详细介绍一下你直接"
+            ]
+          },
+          "status": "finished_successfully",
+          "end_turn": null,
+          "weight": 1,
+          "metadata": {
+            "serialization_metadata": {
+              "custom_symbol_offsets": []
+            },
+            "request_id": "920506e34af58319-SJC",
+            "message_source": null,
+            "timestamp_": "absolute",
+            "message_type": null
+          },
+          "recipient": "all",
+          "channel": null
+        },
+        "parent": "92a09d5e-26be-48d4-a66b-633492e59073",
+        "children": [
+          "3ef1d0b6-3412-4cda-b4e1-37ed9f48d1a6"
+        ]
+      },
+      "3ef1d0b6-3412-4cda-b4e1-37ed9f48d1a6": {
+        "id": "3ef1d0b6-3412-4cda-b4e1-37ed9f48d1a6",
+        "message": {
+          "id": "3ef1d0b6-3412-4cda-b4e1-37ed9f48d1a6",
+          "author": {
+            "role": "assistant",
+            "name": null,
+            "metadata": {}
+          },
+          "create_time": 1741968478.559803,
+          "update_time": null,
+          "content": {
+            "content_type": "model_editable_context",
+            "model_set_context": "",
+            "repository": null,
+            "repo_summary": null,
+            "structured_context": null
+          },
+          "status": "finished_successfully",
+          "end_turn": null,
+          "weight": 1,
+          "metadata": {
+            "message_type": null,
+            "model_slug": "gpt-4o",
+            "default_model_slug": "auto",
+            "parent_id": "f67bce72-9ce5-4765-9059-223ed0ac3de9",
+            "request_id": "920506e34af58319-SJC",
+            "timestamp_": "absolute",
+            "model_switcher_deny": []
+          },
+          "recipient": "all",
+          "channel": null
+        },
+        "parent": "f67bce72-9ce5-4765-9059-223ed0ac3de9",
+        "children": [
+          "993540a3-e463-49b9-ab57-0ce058fcaedf"
+        ]
+      },
+      "993540a3-e463-49b9-ab57-0ce058fcaedf": {
+        "id": "993540a3-e463-49b9-ab57-0ce058fcaedf",
+        "message": {
+          "id": "993540a3-e463-49b9-ab57-0ce058fcaedf",
+          "author": {
+            "role": "assistant",
+            "name": null,
+            "metadata": {}
+          },
+          "create_time": 1741968477.501931,
+          "update_time": null,
+          "content": {
+            "content_type": "text",
+            "parts": [
+              "你的问题好像不完整？你是想让我详细介绍什么呢？"
+            ]
+          },
+          "status": "finished_successfully",
+          "end_turn": true,
+          "weight": 1,
+          "metadata": {
+            "finish_details": {
+              "type": "stop",
+              "stop_tokens": [
+                200002
+              ]
+            },
+            "is_complete": true,
+            "citations": [],
+            "content_references": [],
+            "message_type": null,
+            "model_slug": "gpt-4o",
+            "default_model_slug": "auto",
+            "parent_id": "3ef1d0b6-3412-4cda-b4e1-37ed9f48d1a6",
+            "request_id": "920506e34af58319-SJC",
+            "timestamp_": "absolute",
+            "model_switcher_deny": []
+          },
+          "recipient": "all",
+          "channel": null
+        },
+        "parent": "3ef1d0b6-3412-4cda-b4e1-37ed9f48d1a6",
+        "children": []
+      },
+      "a317c3ee-564f-4fe6-aae7-e767e4ff9c8b": {
+        "id": "a317c3ee-564f-4fe6-aae7-e767e4ff9c8b",
+        "message": {
+          "id": "a317c3ee-564f-4fe6-aae7-e767e4ff9c8b",
+          "author": {
+            "role": "user",
+            "name": null,
+            "metadata": {}
+          },
+          "create_time": 1742017252.269,
+          "update_time": null,
+          "content": {
+            "content_type": "text",
+            "parts": [
+              "介绍一下你自己"
+            ]
+          },
+          "status": "finished_successfully",
+          "end_turn": null,
+          "weight": 1,
+          "metadata": {
+            "request_id": "9209adb92f68d47b-SJC",
+            "message_source": null,
+            "timestamp_": "absolute",
+            "message_type": null
+          },
+          "recipient": "all",
+          "channel": null
+        },
+        "parent": "92a09d5e-26be-48d4-a66b-633492e59073",
+        "children": [
+          "c43a9fe1-985b-4bd8-82d2-c79686e7dd66"
+        ]
+      },
+      "c43a9fe1-985b-4bd8-82d2-c79686e7dd66": {
+        "id": "c43a9fe1-985b-4bd8-82d2-c79686e7dd66",
+        "message": {
+          "id": "c43a9fe1-985b-4bd8-82d2-c79686e7dd66",
+          "author": {
+            "role": "assistant",
+            "name": null,
+            "metadata": {}
+          },
+          "create_time": 1742017259.486643,
+          "update_time": null,
+          "content": {
+            "content_type": "model_editable_context",
+            "model_set_context": "",
+            "repository": null,
+            "repo_summary": null,
+            "structured_context": null
+          },
+          "status": "finished_successfully",
+          "end_turn": null,
+          "weight": 1,
+          "metadata": {
+            "message_type": null,
+            "model_slug": "gpt-4o",
+            "default_model_slug": "auto",
+            "parent_id": "a317c3ee-564f-4fe6-aae7-e767e4ff9c8b",
+            "request_id": "9209adb92f68d47b-SJC",
+            "timestamp_": "absolute",
+            "model_switcher_deny": []
+          },
+          "recipient": "all",
+          "channel": null
+        },
+        "parent": "a317c3ee-564f-4fe6-aae7-e767e4ff9c8b",
+        "children": [
+          "4b229a76-33b3-41da-857d-70733cdf93d4"
+        ]
+      },
+      "4b229a76-33b3-41da-857d-70733cdf93d4": {
+        "id": "4b229a76-33b3-41da-857d-70733cdf93d4",
+        "message": {
+          "id": "4b229a76-33b3-41da-857d-70733cdf93d4",
+          "author": {
+            "role": "assistant",
+            "name": null,
+            "metadata": {}
+          },
+          "create_time": 1742017253.994343,
+          "update_time": null,
+          "content": {
+            "content_type": "text",
+            "parts": [
+              "我是 ChatGPT，一个由 OpenAI 训练的大型语言模型。我可以用中文与你交流，帮助你解决技术问题、提供编程建议、优化代码，或者讨论各种有趣的想法。  \n\n根据你的背景，你正在开发多个项目，包括：\n- **Windows RPA 框架**（Python）\n- **YOLO 3D 目标识别**\n- **Django 学校师生管理系统**\n- **Go + Redis 邮件分发服务**\n- **Go + Gin + BadgerDB AI 聊天网站**\n- **C++ 向量生成（Linux），封装共享库供 Go 调用**\n\n你的开发方向涉及 Python、Go、C++，同时在研究图像处理、数据库优化、分布式存储等多个领域。我可以帮你优化代码、调试问题、设计架构，或者提供算法建议。  \n\n有什么具体的问题或想法，尽管问我！ 😃"
+            ]
+          },
+          "status": "finished_successfully",
+          "end_turn": true,
+          "weight": 1,
+          "metadata": {
+            "finish_details": {
+              "type": "stop",
+              "stop_tokens": [
+                200002
+              ]
+            },
+            "is_complete": true,
+            "citations": [],
+            "content_references": [],
+            "message_type": null,
+            "model_slug": "gpt-4o",
+            "default_model_slug": "auto",
+            "parent_id": "c43a9fe1-985b-4bd8-82d2-c79686e7dd66",
+            "request_id": "9209adb92f68d47b-SJC",
+            "timestamp_": "absolute",
+            "model_switcher_deny": []
+          },
+          "recipient": "all",
+          "channel": null
+        },
+        "parent": "c43a9fe1-985b-4bd8-82d2-c79686e7dd66",
+        "children": []
+      }
+    },
+    "moderation_results": [],
+    "current_node": "4b229a76-33b3-41da-857d-70733cdf93d4",
+    "plugin_ids": null,
+    "conversation_id": "67d4545c-dc8c-8001-b097-b9a093ee648a",
+    "conversation_template_id": null,
+    "gizmo_id": null,
+    "gizmo_type": null,
+    "is_archived": false,
+    "is_starred": null,
+    "safe_urls": [],
+    "default_model_slug": "auto",
+    "conversation_origin": null,
+    "voice": null,
+    "async_status": null,
+    "disabled_tool_ids": []
+  }
