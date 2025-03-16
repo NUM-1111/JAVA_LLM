@@ -7,6 +7,7 @@ import (
 	"log"
 	"time"
 
+	//"github.com/gin-gonic/gin"
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/mongo"
 	"go.mongodb.org/mongo-driver/mongo/options"
@@ -60,6 +61,33 @@ func FindOneSession(ctx context.Context, query bson.M) (models.ChatSession, erro
 	}
 	return result, nil
 }
+
+//从数据库中查询所有的session
+func FindSessionByUserID(ctx context.Context,query bson.M)([]models.Session,error){
+	//使用Find查询所有符合条件的session
+	cursor, err := ChatSession.Find(ctx,query)
+	if err != nil{
+		return nil,err
+	}
+	defer cursor.Close(ctx)
+
+	//将查询到的结果解码到切片中
+	var sessions []models.Session
+	for cursor.Next(ctx){
+		var session models.Session
+		if err := cursor.Decode(&session);err != nil{
+			return nil,err
+		}
+		sessions = append(sessions, session)
+	}
+
+	if err := cursor.Err(); err != nil{
+		return nil,err
+	}
+
+	//返回查询结构
+	return sessions,nil
+}             
 
 // 查找所有符合的消息
 func FindMessages(ctx context.Context, query bson.M) ([]models.ChatMessage, error) {
