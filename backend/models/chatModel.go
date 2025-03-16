@@ -6,10 +6,11 @@ import (
 
 // 会话集合
 type ChatSession struct {
-	SessionID   string `bson:"session_id"`
-	UserID      string `bson:"user_id"`
-	Title       string `bson:"title"`
-	CurrentNode string `bson:"current_node"` // 记录最新一次消息的id
+	SessionID   string         `bson:"session_id"`
+	UserID      int64          `bson:"user_id"`
+	Title       string         `bson:"title"`
+	CurrentNode string         `bson:"current_node"` // 记录最新一次消息的id
+	Mapping     map[string]any `bson:"mapping"`
 	//TemplateId       string                 `bson:"template_id"`        // 对话模板id, 例如 "g-rmdbtMF7a"
 	//TemplateType     string                 `bson:"template_type"`      // 模板基于的模型, GPT为 "gpt"
 	DefaultModel string `bson:"default_model"` // 默认选择的模型,GPT为 "auto"
@@ -24,6 +25,7 @@ type ChatSession struct {
 // 消息集合
 type ChatMessage struct {
 	MessageID string    `bson:"message_id"`
+	SessionID string    `bson:"session_id"` // 关联会话
 	Message   Message   `bson:"message"`
 	Parent    string    `bson:"parent"`
 	Children  []string  `bson:"children"`
@@ -45,9 +47,9 @@ type Message struct {
 		//UserProfile      string   `bson:"user_profile"`
 		//UserInstructions string   `bson:"user_instructions"`
 	}
-	Status    string  `bson:"status"`     // "finished_successfully"
-	ModelSlug string  `bson:"model_slug"` // 调用的模型
-	Weight    float32 `bson:"weight"`     // 权重
+	Status string  `bson:"status"` // "finished_successfully"
+	Model  string  `bson:"model"`  // 调用的模型
+	Weight float32 `bson:"weight"` // 权重
 	//EndTurn   bool      `bson:"end_turn"` // null | true
 	//MetaData  MetaData  `bson:"metadata"`
 	//Recipient string    `bson:"recipient"`

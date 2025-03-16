@@ -21,8 +21,8 @@ func SetupRoutes(r *gin.Engine) {
 	r.POST("/login", services.UserLogin)
 	r.POST("/register", services.UserRegister)
 	r.POST("/send/email", services.EmailHandler)
-	r.POST("/chat/conversation", services.HandleNewMessage)
 	api := r.Group("/api")
 	api.Use(middleware.AuthSession)
 	api.POST("/change/username", services.ChangeUserName)
+	api.POST("/chat/conversation", services.HandleNewMessage)
 }
