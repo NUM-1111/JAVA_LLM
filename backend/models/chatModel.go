@@ -6,11 +6,11 @@ import (
 
 // 会话集合
 type ChatSession struct {
-	SessionID   string         `bson:"session_id"`
-	UserID      int64          `bson:"user_id"`
-	Title       string         `bson:"title"`
-	CurrentNode string         `bson:"current_node"` // 记录最新一次消息的id
-	Mapping     map[string]any `bson:"mapping"`
+	SessionID   string                 `bson:"session_id"`
+	UserID      int64                  `bson:"user_id"`
+	Title       string                 `bson:"title"`
+	CurrentNode string                 `bson:"current_node"` // 记录最新一次消息的id
+	Mapping     map[string]ChatMessage `bson:"mapping"`
 	//TemplateId       string                 `bson:"template_id"`        // 对话模板id, 例如 "g-rmdbtMF7a"
 	//TemplateType     string                 `bson:"template_type"`      // 模板基于的模型, GPT为 "gpt"
 	DefaultModel string `bson:"default_model"` // 默认选择的模型,GPT为 "auto"

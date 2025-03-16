@@ -1,0 +1,22 @@
+// proto/model.proto
+syntax = "proto3";
+
+package model;
+option go_package = "./proto/model";  // 新增这一行
+
+service ModelStreamer {
+	// 客户端流式RPC（Python -> Golang）
+	rpc StreamData(stream DataChunk) returns (DataSummary) {}
+}
+
+message DataChunk {
+	bytes content = 1; // 二进制数据块
+	int32 sequence = 2; // 数据块序号
+	string metadata = 3; // 元数据（JSON格式）
+}
+
+message DataSummary {
+	int32 total_chunks = 1;
+	int64 total_bytes = 2;
+	string checksum = 3;
+}
