@@ -6,18 +6,18 @@ import (
 
 // 会话集合
 type ChatSession struct {
-	SessionID   string                 `bson:"session_id"`
-	UserID      int64                  `bson:"user_id"`
-	Title       string                 `bson:"title"`
-	CurrentNode string                 `bson:"current_node"` // 记录最新一次消息的id
-	Mapping     map[string]ChatMessage `bson:"mapping"`
+	SessionID   string                 ` bson:"session_id" json:"session_id"`
+	UserID      int64                  `bson:"user_id" `
+	Title       string                 `bson:"title" json:"title"`
+	CurrentNode string                 `bson:"current_node" json:"current_node"` // 记录最新一次消息的id
+	Mapping     map[string]ChatMessage `bson:"mapping" json:"mapping"`
 	//TemplateId       string                 `bson:"template_id"`        // 对话模板id, 例如 "g-rmdbtMF7a"
 	//TemplateType     string                 `bson:"template_type"`      // 模板基于的模型, GPT为 "gpt"
-	DefaultModel string `bson:"default_model"` // 默认选择的模型,GPT为 "auto"
-	IsArchived   bool   `bson:"is_archived"`   // 是否归档
+	DefaultModel string `bson:"default_model" json:"default_model"` // 默认选择的模型,GPT为 "auto"
+	IsArchived   bool   `bson:"is_archived" json:"is_archived"`   // 是否归档
 	//IsStarred        bool                   `bson:"is_starred"`         // 是否收藏(?)
-	CreatedAt time.Time `bson:"created_at"`
-	UpdatedAt time.Time `bson:"updated_at"`
+	CreatedAt time.Time `bson:"created_at" json:"created_at"`
+	UpdatedAt time.Time `bson:"updated_at" json:"updated_at"`
 	//SafeUrls         []string               `bson:"safe_urls"`          // 安全外链
 	//PluginIds        []string               `bson:"plugin_ids"`         // 使用的插件id
 }

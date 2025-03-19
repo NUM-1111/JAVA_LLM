@@ -63,7 +63,7 @@ func FindOneSession(ctx context.Context, query bson.M) (models.ChatSession, erro
 }
 
 //从数据库中查询所有的session
-func FindSessionByUserID(ctx context.Context,query bson.M)([]models.Session,error){
+func FindSessions(ctx context.Context,query bson.M)([]models.ChatSession,error){
 	//使用Find查询所有符合条件的session
 	cursor, err := ChatSession.Find(ctx,query)
 	if err != nil{
@@ -72,17 +72,14 @@ func FindSessionByUserID(ctx context.Context,query bson.M)([]models.Session,erro
 	defer cursor.Close(ctx)
 
 	//将查询到的结果解码到切片中
-	var sessions []models.Session
-	for cursor.Next(ctx){
-		var session models.Session
-		if err := cursor.Decode(&session);err != nil{
-			return nil,err
-		}
-		sessions = append(sessions, session)
+	var sessions = []models.ChatSession{}
+	if err := cursor.All(ctx, &sessions); err != nil {
+		return nil, fmt.Errorf("解码失败: %v", err)
 	}
 
-	if err := cursor.Err(); err != nil{
-		return nil,err
+	// 检查游标错误
+	if err := cursor.Err(); err != nil {
+		return nil, fmt.Errorf("游标错误: %v", err)
 	}
 
 	//返回查询结构

@@ -1,8 +1,8 @@
 package middleware
 
 import (
-	"Go_LLM_Web/db"      // 数据库操作包
-	"Go_LLM_Web/models"  // 数据模型
+	"Go_LLM_Web/db"     // 数据库操作包
+	"Go_LLM_Web/models" // 数据模型
 	"fmt"
 	"net/http"
 	"time"
@@ -27,16 +27,15 @@ func GetSession(sessionID string) (*models.Session, error) {
 // AuthSession 认证中间件，验证 session_id 并存入上下文
 func AuthSession(c *gin.Context) {
 	// 从 Cookie 中获取 session_id
-	session_id, err := c.Cookie("session_id")
-	if err != nil {
-		// 没有找到 session_id，返回 401 未授权
-		c.JSON(http.StatusUnauthorized, gin.H{"error": "Session ID missing"})
+	authHeader := c.GetHeader("Authorization")
+	if authHeader == "" || len(authHeader) < 8 {
+		c.JSON(http.StatusUnauthorized, gin.H{"error": "未授权，缺少 Authorization"})
 		c.Abort()
 		return
 	}
 
 	// 调用 GetSession 获取 session 信息
-	session, err := GetSession(session_id)
+	session, err := GetSession(authHeader)
 	if err != nil {
 		// Session 不存在或过期，返回 401 未授权
 		c.JSON(http.StatusUnauthorized, gin.H{"error": "Invalid session or session expired"})

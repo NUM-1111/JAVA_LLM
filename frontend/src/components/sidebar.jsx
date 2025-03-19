@@ -68,7 +68,7 @@ export default function SideBar({ isOpen, setIsOpen }) {
 
                     {/* 新对话按钮 */}
                     <div>
-                        <button  className="py-2">
+                        <button className="py-2">
                             开启新对话
                         </button>
                     </div>
@@ -90,7 +90,7 @@ export default function SideBar({ isOpen, setIsOpen }) {
                         ))
                     )}
                 </div>
-                
+
             </div>
         </div>
     );
@@ -99,10 +99,18 @@ export default function SideBar({ isOpen, setIsOpen }) {
 async function fetchConversations() {
     try {
         // 发送请求，获取响应对象
-        const response = await fetch("http://localhost:5173/api/query/conversation");
+        const response = await fetch("http://localhost:8080/api/query/conversation", {
+            method: "GET",
+            headers: {
+                "Authorization": localStorage.auth,
+                "Content-Type": "application/json",
+            },
+        });
 
         // 判断是否请求成功（HTTP 状态码 200-299）
         if (!response.ok) {
+            const data = await response.text();
+            console.log(data);
             throw new Error(`HTTP 错误！状态码: ${response.status}`);
         }
 
@@ -112,7 +120,7 @@ async function fetchConversations() {
         // 打印数据（用于调试）
         console.log("获取的会话数据:", data);
 
-        return data.sessions; // 返回会话列表
+        return data.sessions ; // 返回会话列表
     } catch (error) {
         console.error("获取会话失败:", error);
         return []; // 发生错误时返回空数组，防止程序崩溃
