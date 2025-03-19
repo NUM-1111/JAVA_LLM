@@ -14,7 +14,7 @@ import (
 /*
 查询session会话
 */
-func QuerySession(c *gin.Context) {
+func QueryConversation(c *gin.Context) {
 	// 从上下文中获取session信息（由中间件 AuthSession 提供）
 	session, exists := c.Get("session")
 	if !exists {
