@@ -31,9 +31,15 @@ type StreamChunk struct {
 
 // 元数据分块
 type MetaChunk struct {
-	Type      string `json:"type"`
-	Title     string `json:"title"`
-	SessionID string `json:"session_id"`
+	Type           string `json:"type"`
+	Title          string `json:"title"`
+	ConversationID string `json:"conversation_id"`
+}
+
+// gRPC接口数据格式
+type GRPCData struct {
+	ConversationID string `json:"conversation_id"`
+	CurrentNode    string `json:"current_node"`
 }
 
 // 向python服务请求生成title
@@ -56,31 +62,18 @@ func getValidModel(model string) (string, bool) {
 	validModels := map[string]bool{
 		"auto":        true,
 		"DeepSeek-R1": true,
-		"QwQ-32B":     true,
+		"QwQ32B":      true,
 	}
 	if !validModels[model] {
 		return "", false
 	} else if model == "auto" {
-		return "DeepSeek-R1", true
+		return "QwQ32B", true
 	}
 	return model, true
 }
 
-func ParseStreamContent(contentChan chan string, fullContent *string) {
-	for rawData := range contentChan {
-		var respData map[string]string
-		if err := json.Unmarshal([]byte(rawData), &respData); err != nil {
-			log.Println("响应解析出错:", err)
-			return
-		}
-		if respData["type"] == "answer_chunk" {
-			*fullContent += respData["content"]
-		}
-	}
-}
-
 // 向python服务请求生成回答
-func GenerateMessage(ctx context.Context, chunkChan chan any, session_id string, title *string, stream grpc.ServerStreamingClient[pb.Response]) {
+func GenerateMessage(ctx context.Context, chunkChan chan any, conversation_id string, stream grpc.ServerStreamingClient[pb.Response]) {
 	defer close(chunkChan)
 
 	// 发送请求
@@ -97,19 +90,14 @@ func GenerateMessage(ctx context.Context, chunkChan chan any, session_id string,
 				log.Println("流式响应接收完成.")
 				return
 			} else if err != nil {
-				log.Printf("接收响应时发生错误: %v", err)
+				log.Printf("gRPC 读取失败: %v", err)
+				chunkChan <- "data: {\"type\":\"error\",\"msg\":\"gRPC 服务错误\"}\n\n"
 				return
 			}
 			// 解析响应
 			var rawData = resp.GetData()
-			if strings.Contains(rawData, "[DONE]") {
-				*title = GenerateTitle() // 生成标题
-				metadata := MetaChunk{
-					Type:      "meta",
-					Title:     *title,
-					SessionID: session_id,
-				}
-				chunkChan <- metadata // 写入元数据
+			if strings.TrimSpace(rawData) == "[DONE]" {
+				log.Println("流式响应接收完成.")
 				chunkChan <- "[DONE]" // 写入终止信号
 				return
 			}
@@ -122,7 +110,7 @@ func GenerateMessage(ctx context.Context, chunkChan chan any, session_id string,
 // 处理消息分块
 func handleChunk(w io.Writer, rawChunk any) bool {
 	switch chunk := rawChunk.(type) {
-	case StreamChunk, MetaChunk:
+	case MetaChunk:
 		jsonData, err := json.Marshal(chunk)
 		if err != nil {
 			fmt.Fprintf(w, "data: {\"type\":\"error\",\"msg\":\"JSON序列化失败\"}\n\n")
@@ -151,109 +139,115 @@ func HandleNewMessage(c *gin.Context) {
 	session, exist := c.Get("session")
 	if !exist {
 		c.JSON(http.StatusBadRequest, gin.H{"type": "error", "msg": "session获取失败"})
-	}
-	// 判断使用的模型
-	var model, ok = getValidModel(chatRequest.Model)
-	if !ok {
-		c.JSON(http.StatusBadRequest, gin.H{"type": "error", "msg": "unknown model"})
 		return
 	}
+	// 判断使用的模型
+	// var model, ok = getValidModel(chatRequest.Model)
+	// if !ok {
+	// 	c.JSON(http.StatusBadRequest, gin.H{"type": "error", "msg": "unknown model"})
+	// 	return
+	// }
 
 	// 获取请求上下文, 限时10min
 	ctx, cancel := context.WithTimeout(c.Request.Context(), 10*time.Minute)
 	defer cancel()
 
-	user_id := session.(*models.Session).UserID // 获取用户ID
+	user_id := session.(*models.Conversation).UserID // 获取用户ID
 
 	// 构建用户消息体
 	var user_chatMessage = models.ChatMessage{
-		MessageID: chatRequest.MessageID,
-		SessionID: chatRequest.SessionID,
-		Message:   chatRequest.Messages[0],
-		Parent:    chatRequest.ParentMessageID,
-		CreatedAt: chatRequest.CreatedAt,
-		UpdatedAt: time.Now(),
-		Children:  make([]string, 0),
+		MessageID:      chatRequest.MessageID,
+		ConversationID: chatRequest.ConversationID,
+		Message:        chatRequest.Message,
+		Parent:         chatRequest.ParentMessageID,
+		CreatedAt:      chatRequest.CreatedAt,
+		UpdatedAt:      time.Now(),
+		Children:       make([]string, 0),
 	}
 
-	// 如果是新对话,则创建一个ChatSession
-	var chatSession models.ChatSession
+	// 如果是新对话,则创建一个Conversation
+	var conversation models.Conversation
 	if user_chatMessage.Parent == "client-created-root" {
-		chatSession = models.ChatSession{
-			SessionID:    uuid.NewString(),
-			UserID:       user_id,
-			CurrentNode:  user_chatMessage.MessageID, // 当前仍是用户信息
-			Mapping:      make(map[string]models.ChatMessage),
-			DefaultModel: "auto",
-			IsArchived:   false,
-			CreatedAt:    user_chatMessage.CreatedAt, // 使用最早消息的时间点
-			UpdatedAt:    time.Now(),
+		conversation = models.Conversation{
+			ConversationID: uuid.NewString(),
+			UserID:         user_id,
+			Title:          "New Chat",
+			CurrentNode:    user_chatMessage.MessageID, // 当前仍是用户信息
+			DefaultModel:   "auto",
+			IsArchived:     false,                      // 新会话默认不会归档
+			CreatedAt:      user_chatMessage.CreatedAt, // 使用最早消息的时间点
+			UpdatedAt:      time.Now(),
 		}
-		// 直接存入根节点
-		chatSession.Mapping["client-created-root"] = models.ChatMessage{
-			MessageID: "client-created-root",
-			Message:   models.Message{},
-			Parent:    "",
-			Children:  append(make([]string, 1), user_chatMessage.MessageID),
+		insertResult, err := db.Conversation.InsertOne(ctx, conversation)
+		if err != nil {
+			log.Println("插入失败:", err)
+			c.JSON(http.StatusInternalServerError, gin.H{"msg": "会话插入失败", "err": err.Error()})
+			return
 		}
-		// 添加用户消息到Session映射
-		chatSession.Mapping[user_chatMessage.MessageID] = user_chatMessage
+		log.Printf("插入成功，ID: %v\n", insertResult.InsertedID)
 	} else {
-		// 判断是否存在session_id
-		if user_chatMessage.SessionID == "" {
-			c.JSON(http.StatusBadRequest, gin.H{"msg": "未提供session_id,请求失败"})
+		// 判断是否存在conversation_id
+		if user_chatMessage.ConversationID == "" {
+			c.JSON(http.StatusBadRequest, gin.H{"msg": "未提供conversation_id,请求失败"})
 			return
 		}
 		var err error
-		// 查找session_id对应会话
-		chatSession, err = db.FindOneSession(ctx, bson.M{"session_id": user_chatMessage.SessionID})
+		// 查找conversation_id对应会话
+		conversation, err = db.FindOneConversation(ctx, bson.M{"conversation_id": user_chatMessage.ConversationID})
 		if err != nil {
 			log.Println(err)
-			c.JSON(http.StatusBadRequest, gin.H{"msg": err.Error()})
+			c.JSON(http.StatusBadRequest, gin.H{"msg": "会话查询失败", "err": err.Error()})
 			return
 		}
-		// 查找会话的所有消息
-		chatMessages, err := db.FindMessages(ctx, bson.M{"session_id": chatSession.SessionID})
+		// 更新用户消息的父节点
+		err = db.UpdateOneMessage(ctx, bson.M{"message_id": user_chatMessage.Parent},
+			bson.M{
+				"$push": bson.M{"children": user_chatMessage.MessageID},
+				"$set":  bson.M{"updated_at": time.Now()},
+			})
 		if err != nil {
-			log.Println(err)
-			c.JSON(http.StatusBadRequest, gin.H{"msg": err.Error()})
+			log.Println("err:", err)
+			c.JSON(http.StatusInternalServerError, gin.H{"msg": "消息更新失败", "err": err.Error()})
 			return
 		}
-		for _, message := range chatMessages {
-			// 给上一条消息添加子节点
-			if message.MessageID == user_chatMessage.Parent {
-				message.Children = append(message.Children, user_chatMessage.MessageID)
-				// 更新该消息到数据库
-				err := db.UpdateOneMessage(ctx, bson.M{"message_id": message.MessageID}, bson.M{"children": message.Children, "created_at": time.Now()})
-				if err != nil {
-					log.Println("err:", err)
-					c.JSON(http.StatusInternalServerError, gin.H{"msg": "消息更新失败"})
-				}
-				log.Println("消息更新成功.")
-			}
-			// 给Session添加mapping
-			chatSession.Mapping[message.MessageID] = message
+		log.Printf("父节点%s 更新成功", user_chatMessage.Parent)
+		// 更新conversation的当前节点
+		conversation.CurrentNode = user_chatMessage.MessageID
+		err = db.UpdateOneConversation(ctx, bson.M{"conversation_id": conversation.ConversationID}, bson.M{
+			"$set": bson.M{"current_node": conversation.CurrentNode, "updated_at": time.Now()},
+		})
+		if err != nil {
+			log.Println("err:", err)
+			c.JSON(http.StatusInternalServerError, gin.H{"msg": "会话更新失败", "err": err.Error()})
+			return
 		}
+		log.Printf("会话%s 更新成功", conversation.ConversationID)
 	}
-
-	// 存储title和ai文本
-	var title string
-	var fullContent string
-	var aiCreateAt = time.Now()
-	var status = "in_progress"
+	// 更新并插入用户消息
+	user_chatMessage.ConversationID = conversation.ConversationID
+	user_chatMessage.UpdatedAt = time.Now()
+	insertResult, err := db.ChatMessage.InsertOne(ctx, user_chatMessage)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"msg": "消息插入失败", "err": err.Error()})
+		return
+	}
+	fmt.Printf("插入成功，ID: %v\n", insertResult.InsertedID)
 
 	// 生成gRPC客户端
 	var client = middleware.NewStreamClient()
 
-	// 将Session转换为JSON
-	jsonData, err := json.Marshal(chatSession)
+	// 将Conversation转换为JSON
+	jsonData, err := json.Marshal(GRPCData{
+		ConversationID: conversation.ConversationID,
+		CurrentNode:    conversation.CurrentNode,
+	})
 	if err != nil {
 		log.Printf("转换JSON失败: %v", err)
-		c.JSON(http.StatusInternalServerError, gin.H{"msg": "chatSession marshal failed."})
+		c.JSON(http.StatusInternalServerError, gin.H{"msg": "conversation marshal failed."})
 		return
 	}
 	// 发送请求
-	fmt.Println("发送请求...")
+	fmt.Println("发送请求至gRPC...")
 	stream, err := client.ProcessRequest(ctx, &pb.Request{JsonData: string(jsonData)})
 	if err != nil {
 		log.Println("调用gRPC服务失败:", err)
@@ -262,8 +256,13 @@ func HandleNewMessage(c *gin.Context) {
 	}
 
 	// 开启协程来获取生成的内容
-	chunkChan := make(chan any)
-	go GenerateMessage(ctx, chunkChan, chatSession.SessionID, &title, &fullContent, stream)
+	chunkChan := make(chan any, 1)
+	metadata := MetaChunk{
+		Type:           "meta",
+		ConversationID: conversation.ConversationID,
+	}
+	chunkChan <- metadata // 写入元数据
+	go GenerateMessage(ctx, chunkChan, conversation.ConversationID, stream)
 
 	// 设置流式响应头
 	SetStreamHeaders(c)
@@ -272,7 +271,6 @@ func HandleNewMessage(c *gin.Context) {
 		select {
 		case <-ctx.Done():
 			log.Printf("客户端 %d 断开连接.", user_id)
-			status = "client_abort"
 			close(chunkChan) // 提前关闭channel
 			return false
 		case rawChunk, ok := <-chunkChan:
@@ -283,56 +281,4 @@ func HandleNewMessage(c *gin.Context) {
 		}
 	})
 
-	// 构建ai消息体
-	if status == "in_progress" {
-		status = "finished_successfully"
-	}
-	var ai_messageID = uuid.NewString()
-	var ai_message = models.Message{
-		Status: status,
-		Weight: 1.0,
-		Model:  model,
-	}
-	ai_message.Author.Role = "assistant"
-	ai_message.Content.ContentType = "text"
-	ai_message.Content.Parts = append(ai_message.Content.Parts, fullContent)
-
-	var ai_chatMessage = models.ChatMessage{
-		MessageID: ai_messageID,
-		SessionID: chatSession.SessionID,
-		Message:   ai_message,
-		Parent:    user_chatMessage.MessageID,
-		Children:  make([]string, 0),
-		CreatedAt: aiCreateAt,
-		UpdatedAt: time.Now(),
-	}
-
-	// 更新并插入用户消息
-	user_chatMessage.SessionID = chatSession.SessionID
-	user_chatMessage.Children = append(user_chatMessage.Children, ai_messageID)
-	user_chatMessage.UpdatedAt = time.Now()
-	insertResult, err := db.ChatMessage.InsertOne(ctx, user_chatMessage)
-	if err != nil {
-		log.Fatal("插入失败:", err)
-	}
-	fmt.Printf("插入成功，ID: %v\n", insertResult.InsertedID)
-
-	// 插入ai消息
-	ai_chatMessage.CreatedAt = time.Now()
-	insertResult, err = db.ChatMessage.InsertOne(ctx, ai_chatMessage)
-	if err != nil {
-		log.Fatal("插入失败:", err)
-	}
-	fmt.Printf("插入成功，ID: %v\n", insertResult.InsertedID)
-
-	// 更新 chatSession 的 CurrentNode 并清理 Mapping
-	chatSession.CurrentNode = ai_chatMessage.MessageID
-	chatSession.Mapping = map[string]models.ChatMessage{
-		"client-created-root": chatSession.Mapping["client-created-root"],
-	}
-	db.UpdateOneSession(ctx, bson.M{"session_id": chatSession.SessionID}, bson.M{
-		"current_node": chatSession.CurrentNode,
-		"mapping":      chatSession.Mapping,
-		"created_at":   time.Now(),
-	})
 }

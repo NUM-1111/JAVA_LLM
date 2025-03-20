@@ -14,7 +14,7 @@ import (
 )
 
 var client *mongo.Client
-var ChatSession *mongo.Collection
+var Conversation *mongo.Collection
 var ChatMessage *mongo.Collection
 
 func InitMongoDB(url string) {
@@ -33,7 +33,7 @@ func InitMongoDB(url string) {
 	if err = client.Ping(ctx, nil); err != nil {
 		panic(err)
 	}
-	ChatSession = client.Database("users_db").Collection("chat_session")
+	Conversation = client.Database("users_db").Collection("conversation")
 	ChatMessage = client.Database("users_db").Collection("chat_message")
 	log.Println("[Mongo] service is running.")
 }
@@ -51,9 +51,9 @@ func CloseMongoDB() {
 }
 
 // 查找一个会话
-func FindOneSession(ctx context.Context, query bson.M) (models.ChatSession, error) {
-	var result models.ChatSession
-	err := ChatSession.FindOne(ctx, query).Decode(result)
+func FindOneConversation(ctx context.Context, query bson.M) (models.Conversation, error) {
+	var result models.Conversation
+	err := Conversation.FindOne(ctx, query).Decode(result)
 	if err == mongo.ErrNoDocuments {
 		return result, fmt.Errorf("找不到会话: %v", err)
 	} else if err != nil {
@@ -63,17 +63,17 @@ func FindOneSession(ctx context.Context, query bson.M) (models.ChatSession, erro
 }
 
 // 从数据库中查询所有的session
-func FindSessions(ctx context.Context, query bson.M) ([]models.ChatSession, error) {
+func FindConversations(ctx context.Context, query bson.M) ([]models.Conversation, error) {
 	//使用Find查询所有符合条件的session
-	cursor, err := ChatSession.Find(ctx, query)
+	cursor, err := Conversation.Find(ctx, query)
 	if err != nil {
 		return nil, err
 	}
 	defer cursor.Close(ctx)
 
 	//将查询到的结果解码到切片中
-	var sessions = []models.ChatSession{}
-	if err := cursor.All(ctx, &sessions); err != nil {
+	var conversations = []models.Conversation{}
+	if err := cursor.All(ctx, &conversations); err != nil {
 		return nil, fmt.Errorf("解码失败: %v", err)
 	}
 
@@ -83,7 +83,7 @@ func FindSessions(ctx context.Context, query bson.M) ([]models.ChatSession, erro
 	}
 
 	//返回查询结构
-	return sessions, nil
+	return conversations, nil
 }
 
 // 查找一个消息
@@ -127,7 +127,7 @@ func UpdateOneMessage(ctx context.Context, query bson.M, update bson.M) error {
 	result, err := ChatMessage.UpdateOne(
 		ctx,
 		query,
-		bson.M{"$set": update},            // 确保使用更新操作符
+		update,                            // 确保使用更新操作符
 		options.Update().SetUpsert(false), // 明确关闭 upsert
 	)
 	if err != nil {
@@ -139,22 +139,17 @@ func UpdateOneMessage(ctx context.Context, query bson.M, update bson.M) error {
 		return fmt.Errorf("未找到匹配消息")
 	}
 
-	// 可选：检查是否实际修改
-	if result.ModifiedCount == 0 {
-		log.Println("消息已存在但未修改:", query)
-	}
-
 	return nil
 }
 
 // 更新单条消息
-func UpdateOneSession(ctx context.Context, query bson.M, update bson.M) error {
+func UpdateOneConversation(ctx context.Context, query bson.M, update bson.M) error {
 	// 必须使用 $set 或其他更新操作符
-	result, err := ChatSession.UpdateOne(
+	result, err := Conversation.UpdateOne(
 		ctx,
 		query,
-		bson.M{"$set": update},            // 确保使用更新操作符
-		options.Update().SetUpsert(false), // 明确关闭 upsert
+		update,
+		options.Update().SetUpsert(false),
 	)
 	if err != nil {
 		return fmt.Errorf("会话更新操作失败: %w", err)
@@ -163,11 +158,6 @@ func UpdateOneSession(ctx context.Context, query bson.M, update bson.M) error {
 	// 检查匹配情况
 	if result.MatchedCount == 0 {
 		return fmt.Errorf("未找到匹配会话")
-	}
-
-	// 可选：检查是否实际修改
-	if result.ModifiedCount == 0 {
-		log.Println("会话已存在但未修改:", query)
 	}
 
 	return nil

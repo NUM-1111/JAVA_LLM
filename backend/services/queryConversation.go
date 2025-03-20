@@ -35,7 +35,7 @@ func QueryConversation(c *gin.Context) {
 	fmt.Println(query)
 
 	// 调用数据库查询函数
-	sessions, err := db.FindSessions(c.Request.Context(), query)
+	sessions, err := db.FindConversations(c.Request.Context(), query)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "数据库查询失败"})
 		return
