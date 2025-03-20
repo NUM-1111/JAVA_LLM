@@ -26,6 +26,17 @@ function ChatPage() {
   const onLoginClick = () => navigate("/login"); // 直接跳转
   const onRegisterClick = () => navigate("/register"); // 直接跳转
   const [isOpen, setIsOpen] = useState(true); // 控制侧边栏展开/折叠
+  const [isLoggedIn, setIsLoggedIn] = useState(false); //用户是否登录成功(登录后才能够使用)
+  const [username, setUsername] = useState("");
+
+  useEffect(() => {
+    async function getUsername() {
+      const name = await fetchusername();
+      setUsername(name);
+    }
+    getUsername();
+  }, []);
+  
 
   // 监听点击外部区域来关闭下拉菜单
   useEffect(() => {
@@ -37,6 +48,18 @@ function ChatPage() {
     document.addEventListener("mousedown", handleClickOutside);
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
+
+  // 监听localStore是否存储了Session(即用户是否登录成功)
+  useEffect(() => {
+    // 检查 localStorage 是否有 Session_id
+    const sessionId = localStorage.getItem("auth");
+    setIsLoggedIn(!!sessionId);//!!sessionId 是一种 JavaScript 逻辑转换技巧，用于将变量 sessionId 转换为布尔值
+  }, []);
+
+  const handleLogout = () => {
+    localStorage.removeItem("auth");
+    setIsLoggedIn(false);
+  };
 
   return (
     <div className="flex flex-row  max-h-screen bg-gray-100 gap">
@@ -54,7 +77,7 @@ function ChatPage() {
           {/* 左侧按钮 */}
           <div className="flex flex-row text-gray-700">
             
-            {/*显示侧边栏 */}
+            {/*显示侧边栏按钮 */}
             <div className="relative group">
             <button
               onClick={() => setIsOpen(true)}
@@ -70,7 +93,7 @@ function ChatPage() {
               </div>
             </div>
             
-            {/*新对话按钮*/}
+            {/*开启新对话按钮*/}
             <div className="relative group">
             <button
               className={`${isOpen ? "hidden" : "block"
@@ -85,6 +108,7 @@ function ChatPage() {
               </div>
             </div>
             
+            {/*模型选择 */}
             <div ref={modelRef} className="relative group">
               <button
                 onClick={() => setShowModels(!showModels)}
@@ -127,21 +151,41 @@ function ChatPage() {
             </div>
           </div>
 
-          {/* 右侧登录/注册按钮 */}
+          {/* 右侧登录/注册按钮 --- 登录成功后为用户功能菜单*/}
           <div className="flex flex-row justify-center items-center gap-2">
-            <button
-              className="px-4 py-[0.40rem] rounded-full bg-blue-500 border-blue-500 border text-white hover:text-blue-600 hover:bg-blue-200 transition"
-              onClick={onLoginClick}
-            >
-              <span className="text-sm">登录</span>
-            </button>
+            {isLoggedIn ? (
+              // 用户已登录，显示用户菜单
+              <div className="relative group">
+                <button className="px-4 py-[0.40rem] rounded-full bg-blue-500 text-white hover:bg-blue-600 transition">
+                  {username || "Guest"}
+                </button>
+                <div className="absolute right-0 mt-2 w-32 bg-white border rounded-lg shadow-lg opacity-0 group-hover:opacity-100 transition-opacity duration-300">
+                  <ul>
+                    <li className="px-4 py-2 hover:bg-gray-100 cursor-pointer">设置</li>
+                    <li className="px-4 py-2 hover:bg-gray-100 cursor-pointer" onClick={handleLogout}>
+                      退出登录  
+                    </li>
+                  </ul>
+                </div>
+              </div>
+            ) : (
+              // 未登录，显示登录/注册按钮
+              <>
+                <button
+                  className="px-4 py-[0.40rem] rounded-full bg-blue-500 border-blue-500 border text-white hover:text-blue-600 hover:bg-blue-200 transition"
+                  onClick={onLoginClick}
+                >
+                  <span className="text-sm">登录</span>
+                </button>
 
-            <button
-              className="px-4 py-[0.40rem] rounded-full bg-white border-gray-300 border text-black hover:bg-gray-100 transition hidden md:block"
-              onClick={onRegisterClick}
-            >
-              <span className="text-sm">注册</span>
-            </button>
+                <button
+                  className="px-4 py-[0.40rem] rounded-full bg-white border-gray-300 border text-black hover:bg-gray-100 transition hidden md:block"
+                  onClick={onRegisterClick}
+                >
+                  <span className="text-sm">注册</span>
+                </button>
+              </>
+            )}
           </div>
         </header>
 
@@ -201,5 +245,28 @@ function ChatPage() {
     </div>
   );
 }
+
+async function fetchusername() {
+  try {
+    const response = await fetch("http://localhost:8080/api/user/info", {
+      method: "GET",
+      headers: {
+        "Authorization": localStorage.auth,
+        "Content-Type": "application/json",
+      },
+    });
+
+    if (!response.ok) {
+      throw new Error(`HTTP error! Status: ${response.status}`);
+    }
+
+    const data = await response.json();
+    return typeof data.username === "string" ? data.username : "";
+  } catch (error) {
+    console.error("Failed to fetch username:", error);
+    return "";
+  }
+}
+
 
 export default ChatPage;

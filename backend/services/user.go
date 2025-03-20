@@ -269,3 +269,29 @@ func ChangeUserName(c *gin.Context) {
 	// 返回成功的响应
 	c.JSON(http.StatusOK, gin.H{"msg": "用户名更改成功."})
 }
+
+/*
+通过Session获取用户名
+*/
+func GetUserNameBySession(c *gin.Context) {
+	// 从请求上下文中获取 session 信息
+	session, exist := c.Get("session")
+	if !exist {
+		c.JSON(http.StatusBadRequest, gin.H{"msg": "session获取失败"})
+		return
+	}
+
+	// 获取用户 ID
+	user_id := session.(*models.Session).UserID
+
+	// 查询数据库获取用户名
+	var user models.User
+	err := db.DB.Select("username").Where("user_id=?", user_id).First(&user).Error
+	if err != nil {
+		c.JSON(http.StatusNotFound, gin.H{"msg": "用户不存在."})
+		return
+	}
+
+	// 返回成功的响应
+	c.JSON(http.StatusOK, gin.H{"username": user.Username})
+}
