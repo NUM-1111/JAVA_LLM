@@ -9,6 +9,7 @@ import (
 	"fmt"
 	"io"
 	"log"
+	"strings"
 	"time"
 
 	"net/http"
@@ -23,8 +24,9 @@ import (
 
 // 分块数据结构
 type StreamChunk struct {
-	Type string `json:"type"`
-	Data string `json:"data"`
+	Type    string `json:"type"`
+	Message string `json:"message,omitempty"`
+	Content string `json:"content,omitempty"`
 }
 
 // 元数据分块
@@ -64,8 +66,21 @@ func getValidModel(model string) (string, bool) {
 	return model, true
 }
 
+func ParseStreamContent(contentChan chan string, fullContent *string) {
+	for rawData := range contentChan {
+		var respData map[string]string
+		if err := json.Unmarshal([]byte(rawData), &respData); err != nil {
+			log.Println("响应解析出错:", err)
+			return
+		}
+		if respData["type"] == "answer_chunk" {
+			*fullContent += respData["content"]
+		}
+	}
+}
+
 // 向python服务请求生成回答
-func GenerateMessage(ctx context.Context, chunkChan chan any, session_id string, title *string, fullResponse *string, stream grpc.ServerStreamingClient[pb.Response]) {
+func GenerateMessage(ctx context.Context, chunkChan chan any, session_id string, title *string, stream grpc.ServerStreamingClient[pb.Response]) {
 	defer close(chunkChan)
 
 	// 发送请求
@@ -79,6 +94,15 @@ func GenerateMessage(ctx context.Context, chunkChan chan any, session_id string,
 			resp, err := stream.Recv()
 			// 流结束
 			if err == io.EOF {
+				log.Println("流式响应接收完成.")
+				return
+			} else if err != nil {
+				log.Printf("接收响应时发生错误: %v", err)
+				return
+			}
+			// 解析响应
+			var rawData = resp.GetData()
+			if strings.Contains(rawData, "[DONE]") {
 				*title = GenerateTitle() // 生成标题
 				metadata := MetaChunk{
 					Type:      "meta",
@@ -86,20 +110,11 @@ func GenerateMessage(ctx context.Context, chunkChan chan any, session_id string,
 					SessionID: session_id,
 				}
 				chunkChan <- metadata // 写入元数据
-				log.Println("流式响应接收完成.")
-				chunkChan <- "[DONE]" // 发送终止信号
+				chunkChan <- "[DONE]" // 写入终止信号
 				return
 			}
-			if err != nil {
-				log.Fatalf("接收响应时发生错误: %v", err)
-			}
-			// 解析响应
-			var respData = StreamChunk{
-				Type: "text",
-				Data: resp.GetData(),
-			}
-			fmt.Println("流式接收:", respData)
-			chunkChan <- respData
+			fmt.Println("流式响应:", rawData)
+			chunkChan <- rawData
 		}
 	}
 }
@@ -153,6 +168,7 @@ func HandleNewMessage(c *gin.Context) {
 	// 构建用户消息体
 	var user_chatMessage = models.ChatMessage{
 		MessageID: chatRequest.MessageID,
+		SessionID: chatRequest.SessionID,
 		Message:   chatRequest.Messages[0],
 		Parent:    chatRequest.ParentMessageID,
 		CreatedAt: chatRequest.CreatedAt,
@@ -183,9 +199,14 @@ func HandleNewMessage(c *gin.Context) {
 		// 添加用户消息到Session映射
 		chatSession.Mapping[user_chatMessage.MessageID] = user_chatMessage
 	} else {
+		// 判断是否存在session_id
+		if user_chatMessage.SessionID == "" {
+			c.JSON(http.StatusBadRequest, gin.H{"msg": "未提供session_id,请求失败"})
+			return
+		}
 		var err error
-		// 查找当前会话
-		chatSession, err = db.FindOneSession(ctx, bson.M{"user_id": user_id})
+		// 查找session_id对应会话
+		chatSession, err = db.FindOneSession(ctx, bson.M{"session_id": user_chatMessage.SessionID})
 		if err != nil {
 			log.Println(err)
 			c.JSON(http.StatusBadRequest, gin.H{"msg": err.Error()})
@@ -217,7 +238,7 @@ func HandleNewMessage(c *gin.Context) {
 
 	// 存储title和ai文本
 	var title string
-	var fullResponse string
+	var fullContent string
 	var aiCreateAt = time.Now()
 	var status = "in_progress"
 
@@ -242,7 +263,7 @@ func HandleNewMessage(c *gin.Context) {
 
 	// 开启协程来获取生成的内容
 	chunkChan := make(chan any)
-	go GenerateMessage(ctx, chunkChan, chatSession.SessionID, &title, &fullResponse, stream)
+	go GenerateMessage(ctx, chunkChan, chatSession.SessionID, &title, &fullContent, stream)
 
 	// 设置流式响应头
 	SetStreamHeaders(c)
@@ -274,7 +295,7 @@ func HandleNewMessage(c *gin.Context) {
 	}
 	ai_message.Author.Role = "assistant"
 	ai_message.Content.ContentType = "text"
-	ai_message.Content.Parts = append(ai_message.Content.Parts, fullResponse)
+	ai_message.Content.Parts = append(ai_message.Content.Parts, fullContent)
 
 	var ai_chatMessage = models.ChatMessage{
 		MessageID: ai_messageID,

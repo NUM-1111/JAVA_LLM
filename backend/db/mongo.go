@@ -61,6 +61,18 @@ func FindOneSession(ctx context.Context, query bson.M) (models.ChatSession, erro
 	return result, nil
 }
 
+// 查找一个消息
+func FindOneMessage(ctx context.Context, query bson.M) (models.ChatMessage, error) {
+	var result models.ChatMessage
+	err := ChatMessage.FindOne(ctx, query).Decode(result)
+	if err == mongo.ErrNoDocuments {
+		return result, fmt.Errorf("找不到消息: %v", err)
+	} else if err != nil {
+		return result, fmt.Errorf("消息查找失败: %v", err)
+	}
+	return result, nil
+}
+
 // 查找所有符合的消息
 func FindMessages(ctx context.Context, query bson.M) ([]models.ChatMessage, error) {
 	// 获取游标
