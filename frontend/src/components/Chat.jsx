@@ -27,6 +27,15 @@ function ChatPage() {
   const onRegisterClick = () => navigate("/register"); // 直接跳转
   const [isOpen, setIsOpen] = useState(true); // 控制侧边栏展开/折叠
   const [isLoggedIn, setIsLoggedIn] = useState(false); //用户是否登录成功(登录后才能够使用)
+  const [username, setUsername] = useState("");
+
+  useEffect(() => {
+    async function getUsername() {
+      const name = await fetchusername();
+      setUsername(name);
+    }
+    getUsername();
+  }, []);
   
 
   // 监听点击外部区域来关闭下拉菜单
@@ -148,7 +157,7 @@ function ChatPage() {
               // 用户已登录，显示用户菜单
               <div className="relative group">
                 <button className="px-4 py-[0.40rem] rounded-full bg-blue-500 text-white hover:bg-blue-600 transition">
-                  个人中心
+                  {username || "Guest"}
                 </button>
                 <div className="absolute right-0 mt-2 w-32 bg-white border rounded-lg shadow-lg opacity-0 group-hover:opacity-100 transition-opacity duration-300">
                   <ul>
@@ -236,5 +245,28 @@ function ChatPage() {
     </div>
   );
 }
+
+async function fetchusername() {
+  try {
+    const response = await fetch("http://localhost:8080/api/user/info", {
+      method: "GET",
+      headers: {
+        "Authorization": localStorage.auth,
+        "Content-Type": "application/json",
+      },
+    });
+
+    if (!response.ok) {
+      throw new Error(`HTTP error! Status: ${response.status}`);
+    }
+
+    const data = await response.json();
+    return typeof data.username === "string" ? data.username : "";
+  } catch (error) {
+    console.error("Failed to fetch username:", error);
+    return "";
+  }
+}
+
 
 export default ChatPage;
