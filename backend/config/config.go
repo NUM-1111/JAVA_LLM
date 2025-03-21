@@ -55,15 +55,16 @@ var (
 
 func init() {
 	// 加载 .env 文件
-	err := godotenv.Load()
+	err := godotenv.Load("config/.env")
 	if err != nil {
-		log.Fatal("Error loading .env file")
+		log.Fatalf("Error loading .env file. err:%s", err)
 	}
 	//Postgres
-	PG_dsn = fmt.Sprintf("host=%s user=%s password=%s dbname=%s port=5432 sslmode=disable",
-		os.Getenv("POSTGRES_HOST"), os.Getenv("POSTGRES_USER"), os.Getenv("POSTGRES_PASSWORD"), os.Getenv("POSTGRES_DB"))
+	PG_dsn = fmt.Sprintf("host=%s user=%s password=%s dbname=%s port=%s sslmode=disable",
+		os.Getenv("POSTGRES_HOST"), os.Getenv("POSTGRES_USER"), os.Getenv("POSTGRES_PASSWORD"), os.Getenv("POSTGRES_DB"), os.Getenv("POSTGRES_PORT"))
 	// MongoDB
-	Mongo_url = fmt.Sprintf("mongo://%s:%s@%s", os.Getenv("MONGO_USER"), os.Getenv("MONGO_PASSWORD"), os.Getenv("MONGO_HOST"))
+	Mongo_url = fmt.Sprintf("mongodb://%s:%s@%s", os.Getenv("MONGO_USER"), os.Getenv("MONGO_PASSWORD"), os.Getenv("MONGO_ADDR"))
+	fmt.Println(Mongo_url)
 	// Redis
 	RedisOpt.Addr = os.Getenv("REDIS_ADDR")
 	// Create a new Node with Node number 1

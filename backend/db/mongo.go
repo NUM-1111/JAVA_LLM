@@ -22,7 +22,7 @@ func InitMongoDB(url string) {
 	clientOptions := options.Client().ApplyURI(url)
 
 	// 建立连接（设置超时时间为10秒）
-	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+	ctx, cancel := context.WithTimeout(context.Background(), 20*time.Second)
 	defer cancel()
 	var err error
 	client, err = mongo.Connect(ctx, clientOptions)
@@ -33,6 +33,7 @@ func InitMongoDB(url string) {
 	if err = client.Ping(ctx, nil); err != nil {
 		panic(err)
 	}
+	// 两个Collection分别存储会话和消息
 	Conversation = client.Database("users_db").Collection("conversation")
 	ChatMessage = client.Database("users_db").Collection("chat_message")
 	log.Println("[Mongo] service is running.")
