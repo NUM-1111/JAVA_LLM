@@ -153,7 +153,10 @@ function HeadBar({ isOpen, setIsOpen, selectedCode, setSelectedCode }) {
             </button>
             <div className="absolute right-0 mt-2 w-32 bg-white border rounded-lg shadow-lg opacity-0 group-hover:opacity-100 transition-opacity duration-300">
               <ul>
-                <li className="px-4 py-2 hover:bg-gray-100 cursor-pointer">
+                <li
+                  className="px-4 py-2 hover:bg-gray-100 cursor-pointer"
+                  onClick={() => navigate("/settings")}
+                >
                   设置
                 </li>
                 <li
