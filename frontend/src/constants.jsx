@@ -4,5 +4,5 @@ const globalData = {
   domain: `http://${Host}:${Port}`,  // 后端服务器地址
 };
 
-
-export { globalData };
+const models = { 1: "DeepSeek-R1", 2: "QwQ-32B" };
+export { globalData,models };

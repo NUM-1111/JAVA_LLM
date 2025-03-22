@@ -23,27 +23,16 @@ import (
 
 // 分块数据结构
 type StreamChunk struct {
-	Type    string `json:"type"`
-	Message string `json:"message,omitempty"`
-	Content string `json:"content,omitempty"`
-}
-
-// 元数据分块
-type MetaChunk struct {
 	Type           string `json:"type"`
-	Title          string `json:"title"`
-	ConversationID string `json:"conversation_id"`
+	Content        string `json:"content,omitempty"`
+	Message        string `json:"message,omitempty"`
+	ConversationID string `json:"conversation_id,omitempty"`
 }
 
 // gRPC接口数据格式
 type GRPCData struct {
 	ConversationID string `json:"conversation_id"`
 	CurrentNode    string `json:"current_node"`
-}
-
-// 向python服务请求生成title
-func GenerateTitle() string {
-	return "New chat"
 }
 
 // 添加流式响应头
@@ -53,22 +42,6 @@ func SetStreamHeaders(c *gin.Context) {
 	headers.Set("Cache-Control", "no-cache")
 	headers.Set("Connection", "keep-alive")
 	headers.Set("Transfer-Encoding", "chunked")
-}
-
-// 验证请求的模型
-func getValidModel(model string) (string, bool) {
-	// 模型验证逻辑
-	validModels := map[string]bool{
-		"auto":        true,
-		"DeepSeek-R1": true,
-		"QwQ32B":      true,
-	}
-	if !validModels[model] {
-		return "", false
-	} else if model == "auto" {
-		return "QwQ32B", true
-	}
-	return model, true
 }
 
 // 向python服务请求生成回答
@@ -109,7 +82,7 @@ func GenerateMessage(ctx context.Context, chunkChan chan any, conversation_id st
 // 处理消息分块
 func handleChunk(w io.Writer, rawChunk any) bool {
 	switch chunk := rawChunk.(type) {
-	case MetaChunk:
+	case StreamChunk:
 		jsonData, err := json.Marshal(chunk)
 		if err != nil {
 			fmt.Fprintf(w, "data: {\"type\":\"error\",\"msg\":\"JSON序列化失败\"}\n\n")
@@ -256,7 +229,7 @@ func HandleNewMessage(c *gin.Context) {
 
 	// 开启协程来获取生成的内容
 	chunkChan := make(chan any, 1)
-	metadata := MetaChunk{
+	metadata := StreamChunk{
 		Type:           "meta",
 		ConversationID: conversation.ConversationID,
 	}
