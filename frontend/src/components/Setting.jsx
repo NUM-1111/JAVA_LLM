@@ -49,8 +49,25 @@ export default function SettingsPage() {
     };
 
 
-    const handleClearChat = () => {
-        console.log("清除聊天记录");
+    const handleClearChat = async () => {
+        try {
+            const res = await axios.post(
+                "http://localhost:8080/api/delete/chat",
+                {},
+                {
+                    headers: {
+                        "Authorization": localStorage.auth, // 添加Authorization头
+                        "Content-Type": "application/json"  // 设置Content-Type
+                    },
+                    withCredentials: true // 保持当前设置
+                }
+            );
+            console.log(res.data.msg);
+            setMessage(res.data.msg);
+        } catch (err) {
+            console.log(err);
+            setMessage(err.response?.data?.msg || "请求失败");
+        }
     };
 
     const handleDeleteAccount = async () => {
@@ -68,7 +85,7 @@ export default function SettingsPage() {
             );
             console.log(res.data.msg);
             localStorage.removeItem("auth"); // 清除本地存储的auth
-            window.location.href = "/"; // 跳转到登录页面
+            window.location.href = "/login"; // 跳转到登录页面
         } catch (err) {
             console.log(err);
             setMessage(err.response?.data?.msg || "请求失败");

@@ -63,9 +63,9 @@ func FindOneConversation(ctx context.Context, query bson.M) (models.Conversation
 	return result, nil
 }
 
-// 从数据库中查询所有的session
+// 从数据库中查询所有的conversation
 func FindConversations(ctx context.Context, query bson.M) ([]models.Conversation, error) {
-	//使用Find查询所有符合条件的session
+	//使用Find查询所有符合条件的conversation
 	cursor, err := Conversation.Find(ctx, query)
 	if err != nil {
 		return nil, err
@@ -85,6 +85,24 @@ func FindConversations(ctx context.Context, query bson.M) ([]models.Conversation
 
 	//返回查询结构
 	return conversations, nil
+}
+
+//根据query条件删除conversation
+func DeleteConversation(ctx context.Context, query bson.M) error {
+	result, err := Conversation.DeleteMany(ctx, query)
+	if err != nil {
+		fmt.Println(err)
+		log.Printf("Database error: %v", err)  // 记录详细错误信息
+		return fmt.Errorf("会话删除操作失败: %w", err)
+	}
+
+	// 检查匹配情况
+	if result.DeletedCount == 0 {
+		log.Printf("未找到匹配会话")  // 记录详细错误信息
+		return fmt.Errorf("未找到匹配会话")
+	}
+
+	return nil
 }
 
 // 查找一个消息
