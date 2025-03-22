@@ -223,7 +223,9 @@ func UserLogin(c *gin.Context) {
 }
 
 
-// 用户更改用户名处理函数
+/*
+ChangeUserName用户更改用户名处理函数
+*/
 func ChangeUserName(c *gin.Context) {
 	// 定义一个结构体用于绑定前端传来的 JSON 数据
 	var userData struct {
@@ -268,6 +270,88 @@ func ChangeUserName(c *gin.Context) {
 
 	// 返回成功的响应
 	c.JSON(http.StatusOK, gin.H{"msg": "用户名更改成功."})
+}
+
+/*
+ChangeUserEmail用户更改邮箱处理函数
+*/
+func ChangeUserEmail(c *gin.Context) {
+	// 定义一个结构体用于绑定前端传来的 JSON 数据
+	var userData struct {
+		Email string `json:"email" binding:"required"`
+	}
+	// 解析 JSON 数据
+	if err := c.ShouldBindJSON(&userData); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"msg": "数据格式异常,邮箱更改失败."})
+		return
+	}
+
+	// 从请求上下文中获取 session 信息
+	session, exist := c.Get("session")
+	if !exist {
+		c.JSON(http.StatusBadRequest, gin.H{"msg": "session获取失败"})
+		return
+	}
+
+	// 获取用户 ID
+	user_id := session.(*models.Session).UserID
+
+	// 更新数据库中的邮箱
+	result := db.DB.Model(&models.User{}).Where("user_id=?", user_id).Update("email", userData.Email)
+
+	// 检测是否是邮箱重复导致的失败
+	if errors.Is(result.Error, gorm.ErrDuplicatedKey) {
+		c.JSON(http.StatusBadRequest, gin.H{"msg": "邮箱已存在,修改失败"})
+		return
+	}
+
+	// 检测数据库更新是否发生错误
+	if result.Error != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"msg": "数据库更新出错", "err": result.Error})
+		return
+	}
+
+	// 检测是否真的修改了数据
+	if result.RowsAffected == 0 {
+		c.JSON(http.StatusNotModified, gin.H{"msg": "新邮箱不可与旧邮箱相同"})
+		return
+	}
+
+	// 返回成功的响应
+	c.JSON(http.StatusOK, gin.H{"msg": "邮箱更改成功."})
+}
+
+/*
+注销账号处理函数
+*/
+func UserDelete(c *gin.Context) {
+	// 从请求上下文中获取 session 信息
+	session, exist := c.Get("session")
+	if !exist {
+		c.JSON(http.StatusBadRequest, gin.H{"msg": "session获取失败"})
+		return
+	}
+
+	// 获取用户 ID
+	user_id := session.(*models.Session).UserID
+
+	// 删除用户数据
+	result := db.DB.Delete(&models.User{}, "user_id=?", user_id)
+
+	// 检测数据库删除是否发生错误
+	if result.Error != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"msg": "数据库删除出错", "err": result.Error})
+		return
+	}
+
+	// 检测是否真的删除了数据
+	if result.RowsAffected == 0 {
+		c.JSON(http.StatusNotFound, gin.H{"msg": "用户不存在."})
+		return
+	}
+
+	// 返回成功的响应
+	c.JSON(http.StatusOK, gin.H{"msg": "用户删除成功."})
 }
 
 /*

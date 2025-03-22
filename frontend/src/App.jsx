@@ -8,6 +8,7 @@ import LoginPage from "./components/Login";
 import RegisterPage from "./components/Register";
 import NewChatPage from "./components/NewChat";
 import ChatPage from "./components/Conversation";
+import SettingsPage from "./components/Setting";
 function Layout() {
   return (
     <>
@@ -16,7 +17,8 @@ function Layout() {
         <Route path="/login" element={<LoginPage/>}/>
         <Route path="/register" element={<RegisterPage />} />
         <Route path="/chat" element={<NewChatPage />} />
-        <Route path="/c/:conversationId" element={<ChatPage/>}/>
+        <Route path="/c/:conversationId" element={<ChatPage />} />
+        <Route path="/settings" element={<SettingsPage />} />
       </Routes>
     </>
   );
