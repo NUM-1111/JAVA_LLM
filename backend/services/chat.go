@@ -17,7 +17,6 @@ import (
 	pb "Go_LLM_Web/middleware/streamservice"
 
 	"github.com/gin-gonic/gin"
-	"github.com/google/uuid"
 	"go.mongodb.org/mongo-driver/bson"
 	"google.golang.org/grpc"
 )
@@ -152,14 +151,14 @@ func HandleNewMessage(c *gin.Context) {
 	ctx, cancel := context.WithTimeout(c.Request.Context(), 10*time.Minute)
 	defer cancel()
 
-	user_id := session.(*models.Conversation).UserID // 获取用户ID
+	user_id := session.(*models.Session).UserID // 获取用户ID
 
 	// 构建用户消息体
 	var user_chatMessage = models.ChatMessage{
 		MessageID:      chatRequest.MessageID,
 		ConversationID: chatRequest.ConversationID,
 		Message:        chatRequest.Message,
-		Parent:         chatRequest.ParentMessageID,
+		Parent:         chatRequest.Parent,
 		CreatedAt:      chatRequest.CreatedAt,
 		UpdatedAt:      time.Now(),
 		Children:       make([]string, 0),
@@ -169,7 +168,7 @@ func HandleNewMessage(c *gin.Context) {
 	var conversation models.Conversation
 	if user_chatMessage.Parent == "client-created-root" {
 		conversation = models.Conversation{
-			ConversationID: uuid.NewString(),
+			ConversationID: user_chatMessage.ConversationID,
 			UserID:         user_id,
 			Title:          "New Chat",
 			CurrentNode:    user_chatMessage.MessageID, // 当前仍是用户信息

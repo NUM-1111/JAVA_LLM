@@ -6,15 +6,17 @@ import {
 import "./index.css";
 import LoginPage from "./components/Login";
 import RegisterPage from "./components/Register";
-import ChatPage from "./components/Chat";
+import NewChatPage from "./components/NewChat";
+import ChatPage from "./components/Conversation";
 function Layout() {
   return (
     <>
       <Routes>
-        <Route path="/" element={<ChatPage />} />
-        <Route path="/chat" element={<ChatPage />} />
+        <Route path="/" element={<NewChatPage />} />
         <Route path="/login" element={<LoginPage/>}/>
         <Route path="/register" element={<RegisterPage />} />
+        <Route path="/chat" element={<NewChatPage />} />
+        <Route path="/c/:conversationId" element={<ChatPage/>}/>
       </Routes>
     </>
   );
