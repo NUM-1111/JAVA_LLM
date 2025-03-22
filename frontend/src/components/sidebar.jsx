@@ -117,9 +117,6 @@ async function fetchConversations() {
         // 解析 JSON 数据
         const data = await response.json();
 
-        // 打印数据（用于调试）
-        console.log("获取的会话数据:", data);
-
         return data.sessions ; // 返回会话列表
     } catch (error) {
         console.error("获取会话失败:", error);

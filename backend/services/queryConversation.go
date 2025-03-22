@@ -4,7 +4,6 @@ import (
 	//"Go_LLM_Web/config"
 	"Go_LLM_Web/db"
 	"Go_LLM_Web/models"
-	"fmt"
 
 	"net/http"
 
@@ -32,7 +31,6 @@ func QueryConversation(c *gin.Context) {
 
 	// 构造查询条件，按照 user_id 查询该用户的所有会话
 	query := bson.M{"user_id": s.UserID}
-	fmt.Println(query)
 
 	// 调用数据库查询函数
 	sessions, err := db.FindConversations(c.Request.Context(), query)
@@ -40,7 +38,6 @@ func QueryConversation(c *gin.Context) {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "数据库查询失败"})
 		return
 	}
-	fmt.Println(sessions)
 
 	// 返回数据给前端
 	c.JSON(http.StatusOK, gin.H{"sessions": sessions})
