@@ -3,6 +3,7 @@ package middleware
 import (
 	"log"
 
+	"Go_LLM_Web/config"
 	pb "Go_LLM_Web/middleware/streamservice"
 
 	"google.golang.org/grpc"
@@ -15,7 +16,7 @@ var ClientConn *grpc.ClientConn
 func InitGRPCConn() {
 	// 连接到Python gRPC服务器
 	var err error
-	ClientConn, err = grpc.NewClient("localhost:50051", grpc.WithTransportCredentials(insecure.NewCredentials()))
+	ClientConn, err = grpc.NewClient(config.GRPCHost, grpc.WithTransportCredentials(insecure.NewCredentials()))
 	if err != nil {
 		log.Fatalf("无法连接到服务器: %v", err)
 	}

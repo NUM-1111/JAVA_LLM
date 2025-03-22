@@ -6,14 +6,14 @@ import (
 
 // 前端请求的消息结构
 type ChatRequest struct {
-	Action          string    `json:"action"`     // 执行动作如 "next"
-	Message         Message   `json:"messages"`   //本次用户请求的消息
-	MessageID       string    `json:"message_id"` //当前消息的唯一标识符
-	ConversationID  string    `json:"conversation_id"`
-	ParentMessageID string    `json:"parent_message_id"` //父消息的唯一标识符，用于构建对话上下文
-	Model           string    `json:"model"`             //指定使用的 AI 语言模型，如 "gpt-4"、"claude-3"
-	UseDeepThink    bool      `json:"use_deep_think"`    // 是否启用深度思考模式，提高回答质量
-	CreatedAt       time.Time `bson:"created_at"`        //// 请求创建时间
+	Action         string    `json:"action"`     // 执行动作如 "next"
+	Message        Message   `json:"message"`    //本次用户请求的消息
+	MessageID      string    `json:"message_id"` //当前消息的唯一标识符
+	ConversationID string    `json:"conversation_id"`
+	Parent         string    `json:"parent"`         //父消息的唯一标识符，用于构建对话上下文
+	Model          string    `json:"model"`          //指定使用的 AI 语言模型，如 "gpt-4"、"claude-3"
+	UseDeepThink   bool      `json:"use_deep_think"` // 是否启用深度思考模式，提高回答质量
+	CreatedAt      time.Time `bson:"created_at"`     //// 请求创建时间
 	//SystemHints []string `json:"system_hints"`
 }
 
@@ -50,13 +50,13 @@ type ChatMessage struct {
 type Message struct {
 	//MessageID string `bson:"message_id"`
 	Author struct {
-		Role string `bson:"role"`
+		Role string `json:"role" bson:"role"`
 		//Name     string         `bson:"name"`
 		//MetaData map[string]any `bson:"metadata"`
 	}
 	Content struct {
-		ContentType string `bson:"content_type"`
-		Text        string `bson:"text"`
+		ContentType string `json:"content_type" bson:"content_type"`
+		Text        string `json:"text" bson:"text"`
 		//Parts       []string `bson:"parts"`
 		//UserProfile      string   `bson:"user_profile"`
 		//UserInstructions string   `bson:"user_instructions"`

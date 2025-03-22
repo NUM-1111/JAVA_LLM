@@ -138,7 +138,7 @@ function RegisterPage() {
         setShowMsg(false);
       }, 2000);
     } else {
-      localStorage.auth = data.auth;
+      localStorage.auth = data.session_id;
       setMsgStruct({
         title: "登录成功",
         description: "即将跳转至聊天界面...",
