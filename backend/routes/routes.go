@@ -31,6 +31,9 @@ func SetupRoutes(r *gin.Engine) {
 	api.Use(middleware.AuthSession) // 使用会话认证中间件，确保用户已登录
 
 	api.POST("/change/username", services.ChangeUserName)      // 允许用户修改用户名
+	api.POST("/change/email", services.ChangeUserEmail)    // 允许用户修改邮箱
+	api.POST("/delete/account", services.UserDelete)                 // 允许用户注销账户
+	api.POST("/delete/chat", services.DeleteAllConversations) // 允许用户删除所有聊天记录
 	api.POST("/new/message", services.HandleNewMessage)        // 处理新的聊天消息
 	api.GET("/query/conversation", services.QueryConversation) //侧边栏查询历史记录
 	api.GET("/user/info", services.GetUserNameBySession)       //返回用户名信息
