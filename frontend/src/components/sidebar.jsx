@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
 import {
     SiderBarIcon,
     AddIcon,
@@ -6,13 +7,14 @@ import {
 } from "./svg-icons";
 
 export default function SideBar({ isOpen, setIsOpen }) {
-    const [sessions, setSessions] = useState([]); // 存储对话列表
+    const [conversations, setConversations] = useState([]); // 存储对话列表
+    const navigate = useNavigate(); // 获取导航函数
 
     //从后端API获取会话内容
     useEffect(() => {
         async function loadConversations() {
             const data = await fetchConversations();
-            setSessions(data); // 更新状态
+            setConversations(data); // 更新状态
         }
 
         loadConversations();
@@ -48,6 +50,7 @@ export default function SideBar({ isOpen, setIsOpen }) {
                     <div className="relative group">
                         <button
                             className={` flex justify-center items-center size-10 rounded-lg hover:shadow-md hover:bg-blue-300`}
+                            onClick={() => navigate("/")}    // 跳转到新建对话页面
                         >
                             <NewChatIcon />
                         </button>
@@ -68,7 +71,10 @@ export default function SideBar({ isOpen, setIsOpen }) {
 
                     {/* 新对话按钮 */}
                     <div>
-                        <button className="py-2">
+                        <button
+                            className="py-2"
+                            onClick={() => navigate("/")}    // 跳转到新建对话页面
+                        >
                             开启新对话
                         </button>
                     </div>
@@ -76,20 +82,26 @@ export default function SideBar({ isOpen, setIsOpen }) {
 
                 {/* 侧边栏对话列表 */}
                 <div className="mt-6">
-                    {sessions.length === 0 ? (
+                    {conversations.length === 0 ? (
                         <p className="text-gray-500 text-center">暂无对话</p>
                     ) : (
-                        sessions.map((session) => (
+                        conversations.map((conversation, index) => (
                             <button
-                                key={session.id}
+                                key={index} // 这里使用 index 作为 key
                                 className="block w-full text-left px-4 py-2 my-1 text-gray-700 hover:bg-gray-200 rounded-lg"
-                                onClick={() => console.log(`跳转到对话 ${session.id}`)}
+                                onClick={() =>
+                                {
+                                    console.log(`跳转到对话 ${conversation.conversation_id}`) // 跳转到指定对话页面
+                                    navigate(`/c/${conversation.conversation_id}`)
+                                }
+                                }
                             >
-                                {session.title || "未命名对话"}
+                                {conversation.title || "未命名对话"}
                             </button>
                         ))
                     )}
                 </div>
+
 
             </div>
         </div>

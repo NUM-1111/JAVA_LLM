@@ -1,7 +1,11 @@
 import { models } from "@/constants";
 import { useNavigate } from "react-router-dom";
+import { toast } from "react-toastify";
 import { useState, useEffect, useRef } from "react";
 import { SiderBarIcon, NewChatIcon, BreadcrumbIcon } from "./svg-icons";
+import "react-toastify/dist/ReactToastify.css";
+
+// 获取用户名
 async function fetchUsername() {
   try {
     const response = await fetch("http://localhost:8080/api/user/info", {
@@ -24,12 +28,14 @@ async function fetchUsername() {
   }
 }
 
+
 function HeadBar({ isOpen, setIsOpen, selectedCode, setSelectedCode }) {
   const modelRef = useRef(null);
   const navigate = useNavigate(); // 获取导航函数
   const onLoginClick = () => navigate("/login"); // 直接跳转
   const onRegisterClick = () => navigate("/register"); // 直接跳转
   const [isLoggedIn, setIsLoggedIn] = useState(false); //用户是否登录成功(登录后才能够使用)
+  const [menuOpen, setMenuOpen] = useState(false); // 用户菜单是否展开
   const [username, setUsername] = useState("");
   const [showModels, setShowModels] = useState(false);
 
@@ -59,9 +65,23 @@ function HeadBar({ isOpen, setIsOpen, selectedCode, setSelectedCode }) {
     setIsLoggedIn(!!sessionId); //!!sessionId 是一种 JavaScript 逻辑转换技巧，用于将变量 sessionId 转换为布尔值
   }, []);
 
+  // 退出登录
   const handleLogout = () => {
     localStorage.removeItem("auth");
     setIsLoggedIn(false);
+
+    toast.success("退出成功, 即将跳转到登录页面", {
+      position: "top-center",  // 提示显示在页面顶部
+      autoClose: 1000,         // 1秒后自动关闭
+      hideProgressBar: true,   // 隐藏进度条
+      closeOnClick: true,      // 点击后关闭
+      pauseOnHover: false,     // 鼠标悬停时不会暂停
+      draggable: false,        // 不能拖动
+    });
+
+    setTimeout(() => {
+      navigate("/login");
+    }, 1200); // 确保提示弹出后再跳转
   };
 
   return (
@@ -147,26 +167,40 @@ function HeadBar({ isOpen, setIsOpen, selectedCode, setSelectedCode }) {
       <div className="flex flex-row justify-center items-center gap-2">
         {isLoggedIn ? (
           // 用户已登录，显示用户菜单
-          <div className="relative group">
-            <button className="px-4 py-[0.40rem] rounded-full bg-blue-500 text-white hover:bg-blue-600 transition">
+          <div className="relative">
+            {/* 点击按钮展开/收起菜单 */}
+            <button
+              className="px-4 py-[0.40rem] rounded-full bg-blue-500 text-white hover:bg-blue-600 transition"
+              onClick={() => setMenuOpen(!menuOpen)}
+            >
               {username || "Guest"}
             </button>
-            <div className="absolute right-0 mt-2 w-32 bg-white border rounded-lg shadow-lg opacity-0 group-hover:opacity-100 transition-opacity duration-300">
-              <ul>
-                <li
-                  className="px-4 py-2 hover:bg-gray-100 cursor-pointer"
-                  onClick={() => navigate("/settings")}
-                >
-                  设置
-                </li>
-                <li
-                  className="px-4 py-2 hover:bg-gray-100 cursor-pointer"
-                  onClick={handleLogout}
-                >
-                  退出登录
-                </li>
-              </ul>
-            </div>
+
+            {/* 下拉菜单：用 menuOpen 控制显示/隐藏 */}
+            {menuOpen && (
+              <div className="absolute right-0 mt-2 w-32 bg-white border rounded-lg shadow-lg">
+                <ul>
+                  <li
+                    className="px-4 py-2 hover:bg-gray-100 cursor-pointer"
+                    onClick={() => {
+                      setMenuOpen(false);
+                      navigate("/settings");
+                    }}
+                  >
+                    设置
+                  </li>
+                  <li
+                    className="px-4 py-2 hover:bg-gray-100 cursor-pointer"
+                    onClick={() => {
+                      setMenuOpen(false);
+                      handleLogout();
+                    }}
+                  >
+                    退出登录
+                  </li>
+                </ul>
+              </div>
+            )}
           </div>
         ) : (
           // 未登录，显示登录/注册按钮
