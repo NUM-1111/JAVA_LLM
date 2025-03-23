@@ -87,18 +87,18 @@ func FindConversations(ctx context.Context, query bson.M) ([]models.Conversation
 	return conversations, nil
 }
 
-//根据query条件删除conversation
+// 根据query条件删除conversation
 func DeleteConversation(ctx context.Context, query bson.M) error {
 	result, err := Conversation.DeleteMany(ctx, query)
 	if err != nil {
 		fmt.Println(err)
-		log.Printf("Database error: %v", err)  // 记录详细错误信息
+		log.Printf("Database error: %v", err) // 记录详细错误信息
 		return fmt.Errorf("会话删除操作失败: %w", err)
 	}
 
 	// 检查匹配情况
 	if result.DeletedCount == 0 {
-		log.Printf("未找到匹配会话")  // 记录详细错误信息
+		log.Printf("未找到匹配会话") // 记录详细错误信息
 		return fmt.Errorf("未找到匹配会话")
 	}
 

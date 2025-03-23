@@ -24,7 +24,9 @@ func SetupRoutes(r *gin.Engine) {
 	// 公开的 API 路由（不需要身份认证）
 	r.POST("/login", services.UserLogin)         // 处理用户登录请求
 	r.POST("/register", services.UserRegister)   // 处理用户注册请求
-	r.POST("/send/email", services.EmailHandler) // 发送邮件（可能用于验证码验证）
+	r.POST("/send/email", services.EmailHandler) // 发送邮件
+	r.POST("/checkcode", services.VerifyEmailCode) // 验证邮箱验证码
+	r.POST("/reset/password", services.ResetPassword) // 重置密码
 
 	// 受保护的 API 路由（需要用户身份认证）
 	api := r.Group("/api")

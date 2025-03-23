@@ -184,7 +184,7 @@ function LoginPage() {
                     href=""
                     className="text-indigo-500 hover:text-indigo-400"
                     onClick={() => {
-                      !loading && navigate("/register");
+                      !loading && navigate("/forgot-password");
                     }}
                   >
                     忘记密码

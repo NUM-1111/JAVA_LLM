@@ -17,7 +17,7 @@ import (
 )
 
 /*
-邮件验证码
+邮件验证码发送函数
 */
 
 func EmailHandler(c *gin.Context) {
@@ -55,6 +55,106 @@ func EmailHandler(c *gin.Context) {
 
 	c.JSON(http.StatusOK, gin.H{"msg": "邮箱验证码已发送!"})
 }
+
+/*
+验证邮箱验证码函数
+*/
+func VerifyEmailCode(c *gin.Context) {
+	var request struct {
+		Email string `json:"email"`
+		Code  string `json:"code"`
+	}
+
+	// 解析请求JSON
+	if err := c.ShouldBindJSON(&request); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"msg": "参数类型异常, 验证失败."})
+		return
+	}
+
+	// 校验邮箱格式
+	if !IsValidEmail(request.Email) {
+		c.JSON(http.StatusBadRequest, gin.H{"msg": "邮箱格式异常, 验证失败."})
+		return
+	}
+
+	// 校验邮箱验证码
+	isValidCode, err := ValidateCode(request.Email, request.Code)
+	if err == redis.Nil {
+		c.JSON(http.StatusNotFound, gin.H{"msg": "验证码不存在或已过期."})
+		return
+	} else if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"msg": "邮箱验证码读取失败."})
+		return
+	}
+
+	if !isValidCode {
+		c.JSON(http.StatusUnauthorized, gin.H{"msg": "邮箱验证码有误."})
+		return
+	}
+
+	// 生成 Token
+    resetToken := uuid.New().String()
+    err = db.Redis.Set(db.CTX, "reset:"+resetToken, request.Email, 10*time.Minute).Err()
+    if err != nil {
+        c.JSON(http.StatusInternalServerError, gin.H{"msg": "生成密码重置 Token 失败."})
+        return
+    }
+
+    c.JSON(http.StatusOK, gin.H{
+        "msg":   "邮箱验证码验证成功.",
+        "token": resetToken, // 让前端获取这个 token
+    })
+}
+
+/*
+重置密码函数
+*/
+func ResetPassword(c *gin.Context) {
+    var request struct {
+        Token    string `json:"token"`
+        NewPwd   string `json:"new_password"`
+    }
+
+    if err := c.ShouldBindJSON(&request); err != nil {
+        c.JSON(http.StatusBadRequest, gin.H{"msg": "参数类型异常, 重置失败."})
+        return
+    }
+
+    if len(request.NewPwd) < 6 {
+        c.JSON(http.StatusBadRequest, gin.H{"msg": "密码长度需大于6位."})
+        return
+    }
+
+    // 从 Redis 获取 Email
+    email, err := db.Redis.Get(db.CTX, "reset:"+request.Token).Result()
+    if err == redis.Nil {
+        c.JSON(http.StatusUnauthorized, gin.H{"msg": "无效或已过期的 Token."})
+        return
+    } else if err != nil {
+        c.JSON(http.StatusInternalServerError, gin.H{"msg": "Token 读取失败."})
+        return
+    }
+
+    // 加密新密码
+    hashedPwd, err := HashPassword(request.NewPwd)
+    if err != nil {
+        c.JSON(http.StatusInternalServerError, gin.H{"msg": "密码加密失败."})
+        return
+    }
+
+    // 更新数据库密码
+    result := db.DB.Model(&models.User{}).Where("email = ?", email).Update("password", hashedPwd)
+    if result.Error != nil {
+        c.JSON(http.StatusInternalServerError, gin.H{"msg": "密码更新失败."})
+        return
+    }
+
+    // 删除 Redis 中的 Token
+    db.Redis.Del(db.CTX, "reset:"+request.Token)
+
+    c.JSON(http.StatusOK, gin.H{"msg": "密码重置成功!"})
+}
+
 
 /*
 用户注册处理函数
