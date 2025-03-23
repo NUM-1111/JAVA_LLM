@@ -21,10 +21,10 @@ export default function SideBar({ isOpen, setIsOpen }) {
     return (
         <div
             className={`${isOpen
-                ? "translate-x-0 md:relative md:z-auto"
-                : "-translate-x-full hidden"
+                ? "translate-x-0 lg:relative lg:z-auto"
+                : "-translate-x-full"
                 } 
-         md:flex  md:w-1/5 absolute w-3/5 z-50 inset-y-0 left-0 flex flex-col max-h-screen justify-between border-e 
+          flex absolute xl:w-1/5 lg:w-1/4 md:w-1/3 sm:w-2/5 w-7/12 z-50 inset-y-0 left-0  flex-col max-h-screen justify-between border-e 
           border-gray-100 bg-white shadow-sm transition-all duration-300 overflow-hidden overflow-y-auto`}
         >
             <div className="px-4 py-3 transform">
@@ -34,7 +34,7 @@ export default function SideBar({ isOpen, setIsOpen }) {
                     <div className="relative group">
                         <button
                             onClick={() => setIsOpen(false)}
-                            className={`${isOpen ? "block" : "hidden"} flex justify-center items-center size-10 rounded-lg hover:shadow-md hover:bg-blue-300`}
+                            className={`flex justify-center items-center size-10 rounded-lg hover:shadow-md hover:bg-blue-300`}
                         >
                             <SiderBarIcon />
                         </button>
@@ -47,7 +47,7 @@ export default function SideBar({ isOpen, setIsOpen }) {
                     {/* 开启新对话按钮 (icon) */}
                     <div className="relative group">
                         <button
-                            className={`${isOpen ? "block" : "hidden"} flex justify-center items-center size-10 rounded-lg hover:shadow-md hover:bg-blue-300`}
+                            className={` flex justify-center items-center size-10 rounded-lg hover:shadow-md hover:bg-blue-300`}
                         >
                             <NewChatIcon />
                         </button>
@@ -116,6 +116,7 @@ async function fetchConversations() {
 
         // 解析 JSON 数据
         const data = await response.json();
+
 
         return data.sessions ; // 返回会话列表
     } catch (error) {

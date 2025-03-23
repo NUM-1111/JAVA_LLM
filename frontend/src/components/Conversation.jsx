@@ -69,7 +69,7 @@ function ChatPage() {
     const aiMessage = {
       message: {
         author: { role: "assistant" },
-        content: { content_type: "text", Text: "" },
+        content: { content_type: "text", text: "你好,我是人工智能助手" },
         status: "processing",
         model: models[selectedCode],
       },
@@ -140,14 +140,14 @@ function ChatPage() {
   }, [handleSendMessage]);
 
   return (
-    <div className="flex flex-row  max-h-screen bg-gray-100 gap">
+    <div className="flex flex-row max-h-screen bg-gray-100 gap-2">
       {/*侧边栏部分 */}
       <SideBar isOpen={isOpen} setIsOpen={setIsOpen} />
 
       {/*对话部分*/}
       <div
         className={`${
-          isOpen ? "w-4/5" : "w-full"
+          isOpen ? "w-full lg:w-4/5" : "w-full"
         } flex flex-col h-full max-h-screen bg-gray-100`}
       >
         {/* 头部导航栏 - 固定在主内容顶部 */}
@@ -160,18 +160,54 @@ function ChatPage() {
         />
 
         {/* 可滚动的主内容区域 */}
-        <main className="flex-grow h-screen overflow-auto flex flex-col">
-          <div className="flex flex-col text-base mx-5 items-center mt-44 gap-5 flex-grow">
-            {messages.map((msg, index) => (
-              <div key={index}>{msg.content?.Text}</div>
-            ))}
+        <main className="flex-grow h-screen overflow-y-auto flex flex-col">
+          <div className="flex flex-col text-base mx-5 items-center gap-5 h-auto flex-grow mb-40">
+            {/* 消息容器 */}
             <div
-              id="InputContainer"
-              className="flex flex-col h-auto w-[90%] rounded-3xl border shadow-md border-gray-200 bg-gray-50 
-                md:w-7/12 
-                 absolute bottom-5 px-4 py-1 md:py-2"
+              className={`${
+                isOpen ? "w-full" : "w-full xl:w-[80%]"
+              } flex flex-col text-base h-auto items-center gap-5 flex-grow overflow-hidden`}
             >
-              <div className="mx-3 mt-1 flex flex-col bg-inherit mb-2">
+              {messages.map((msg, index) =>
+                index % 2 === 0 ? (
+                  <div
+                    key={index}
+                    className="ml-[30%] w-[60%] md:mr-[15%] p-5 h-30 bg-gray-50 border-gray-200 border shadow-sm rounded-3xl"
+                  >
+                    {msg.message.content.text}
+                  </div>
+                ) : (
+                  <div
+                    key={index}
+                    className="w-[78%] py-5 h-30 leading-relaxed"
+                  >
+                    {msg.message.content.text}
+                  </div>
+                )
+              )}
+              {messages.map((msg, index) =>
+                index % 2 === 0 ? (
+                  <div
+                    key={index}
+                    className="ml-[30%] w-[60%] md:mr-[15%] p-5 h-30 bg-gray-50 border-gray-200 border shadow-sm rounded-3xl"
+                  >
+                    {msg.message.content.text}
+                  </div>
+                ) : (
+                  <div
+                    key={index}
+                    className="w-[78%] py-5 h-30 leading-relaxed"
+                  >
+                    {msg.message.content.text}
+                  </div>
+                )
+              )}
+            </div>
+            <div
+              className="flex flex-col h-auto w-[90%] rounded-3xl border shadow-sm border-gray-300 bg-gray-50 
+                md:w-9/12 xl:w-7/12 absolute bottom-8 px-4 py-1 md:py-2"
+            >
+              <div className="mx-3 mt-1 flex flex-col bg-inherit">
                 <textarea
                   rows={1}
                   className="w-full rounded-lg p-3 pe-12 pb-6 text-base bg-inherit outline-none resize-none overflow-y-auto"
@@ -195,7 +231,7 @@ function ChatPage() {
                     )}px`; // 根据内容调整高度
                   }}
                 ></textarea>
-                <div className="w-full flex justify-between  md:mt-2">
+                <div className="w-full flex justify-between md:mt-2">
                   <button
                     onClick={() => setDeepThink(!deepThink)}
                     className={`flex flex-row justify-center items-center gap-1 px-2 my-[0.2rem] rounded-full border ${
@@ -209,11 +245,16 @@ function ChatPage() {
                   </button>
                   <button
                     onClick={async () => await handleSendMessage()}
-                    className="size-9 bg-indigo-600 text-white rounded-full hover:bg-indigo-500"
+                    className="size-9 mb-1 bg-indigo-600 text-white rounded-full hover:bg-indigo-500"
                   >
                     <ArrowUpIcon className={"size-9"} />
                   </button>
                 </div>
+              </div>
+            </div>
+            <div className="absolute bottom-0 w-[70%] md:pt-0 bg-gray-50 flex flex-grow">
+              <div class="text-gray-800 mt-auto flex min-h-8 w-full items-center justify-center  text-center text-xs">
+                <div>AI助手也可能会犯错, 请核查重要信息。</div>
               </div>
             </div>
           </div>

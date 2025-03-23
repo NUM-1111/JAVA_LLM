@@ -20,7 +20,7 @@ function NewChatPage() {
       author: { role: "user" },
       content: {
         content_type: "text",
-        Text: text,
+        text: text,
       },
       status: "finished_successfully",
     };
