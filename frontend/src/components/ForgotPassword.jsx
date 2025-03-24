@@ -67,23 +67,41 @@ function ForgotPasswordPage() {
         const data = await req.json();
         setMsgStruct({ title: "验证码验证", description: data.msg, type: req.status === 200 ? "success" : "error" });
         setShowMsg(true);
-        if (req.status === 200) setStep(3);
+        if (req.status === 200) {
+            // 存储 token，确保后续请求能用到
+            localStorage.setItem("token", data.token);
+            setStep(3);
+        }
     };
 
     // 重置密码
     const resetPassword = async () => {
         if (!validatePassword()) return;
+
+        const token = localStorage.getItem("token"); // 取出存储的 token
+        if (!token) {
+            setMsgStruct({ title: "密码重置", description: "Token 缺失，请重新获取验证码。", type: "error" });
+            setShowMsg(true);
+            return;
+        }
+
         const url = globalData.domain + "/reset/password";
         const req = await fetch(url, {
             method: "POST",
             headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ email: formData.email, newPassword: formData.newPassword }),
+            body: JSON.stringify({ token, newPassword: formData.newPassword }), // 发送 token
         });
         const data = await req.json();
+
         setMsgStruct({ title: "密码重置", description: data.msg, type: req.status === 200 ? "success" : "error" });
         setShowMsg(true);
-        if (req.status === 200) setTimeout(() => navigate("/login"), 2000);
+
+        if (req.status === 200) {
+            localStorage.removeItem("resetToken"); // 重置成功后清除 token
+            setTimeout(() => navigate("/login"), 2000);
+        }
     };
+
 
     return (
         <>

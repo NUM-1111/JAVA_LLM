@@ -5,6 +5,8 @@ import (
 	"Go_LLM_Web/db"
 	"Go_LLM_Web/models"
 	"errors"
+	"fmt"
+	"log"
 	"net/http"
 	"strings"
 	"time"
@@ -112,7 +114,7 @@ func VerifyEmailCode(c *gin.Context) {
 func ResetPassword(c *gin.Context) {
     var request struct {
         Token    string `json:"token"`
-        NewPwd   string `json:"new_password"`
+        NewPwd   string `json:"newPassword"`
     }
 
     if err := c.ShouldBindJSON(&request); err != nil {
@@ -120,7 +122,13 @@ func ResetPassword(c *gin.Context) {
         return
     }
 
+	//测试密码长度
+	fmt.Println(request.NewPwd)
+	fmt.Println(len(request.NewPwd))
+	fmt.Println(request.Token)
+
     if len(request.NewPwd) < 6 {
+			
         c.JSON(http.StatusBadRequest, gin.H{"msg": "密码长度需大于6位."})
         return
     }
@@ -150,6 +158,7 @@ func ResetPassword(c *gin.Context) {
     }
 
     // 删除 Redis 中的 Token
+	log.Println("删除前 Token 是否存在:", db.Redis.Exists(db.CTX, "reset:"+request.Token).Val())
     db.Redis.Del(db.CTX, "reset:"+request.Token)
 
     c.JSON(http.StatusOK, gin.H{"msg": "密码重置成功!"})
