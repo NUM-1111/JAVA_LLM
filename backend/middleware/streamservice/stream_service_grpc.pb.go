@@ -20,6 +20,7 @@ const _ = grpc.SupportPackageIsVersion9
 
 const (
 	StreamService_ProcessRequest_FullMethodName = "/streamservice.StreamService/ProcessRequest"
+	StreamService_ListSessions_FullMethodName   = "/streamservice.StreamService/ListSessions"
 )
 
 // StreamServiceClient is the client API for StreamService service.
@@ -28,8 +29,10 @@ const (
 //
 // 流服务定义
 type StreamServiceClient interface {
-	// 发送请求并获取流式响应
+	// 流式处理请求
 	ProcessRequest(ctx context.Context, in *Request, opts ...grpc.CallOption) (grpc.ServerStreamingClient[Response], error)
+	// 列出所有会话
+	ListSessions(ctx context.Context, in *Empty, opts ...grpc.CallOption) (*Response, error)
 }
 
 type streamServiceClient struct {
@@ -59,14 +62,26 @@ func (c *streamServiceClient) ProcessRequest(ctx context.Context, in *Request, o
 // This type alias is provided for backwards compatibility with existing code that references the prior non-generic stream type by name.
 type StreamService_ProcessRequestClient = grpc.ServerStreamingClient[Response]
 
+func (c *streamServiceClient) ListSessions(ctx context.Context, in *Empty, opts ...grpc.CallOption) (*Response, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(Response)
+	err := c.cc.Invoke(ctx, StreamService_ListSessions_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 // StreamServiceServer is the server API for StreamService service.
 // All implementations must embed UnimplementedStreamServiceServer
 // for forward compatibility.
 //
 // 流服务定义
 type StreamServiceServer interface {
-	// 发送请求并获取流式响应
+	// 流式处理请求
 	ProcessRequest(*Request, grpc.ServerStreamingServer[Response]) error
+	// 列出所有会话
+	ListSessions(context.Context, *Empty) (*Response, error)
 	mustEmbedUnimplementedStreamServiceServer()
 }
 
@@ -79,6 +94,9 @@ type UnimplementedStreamServiceServer struct{}
 
 func (UnimplementedStreamServiceServer) ProcessRequest(*Request, grpc.ServerStreamingServer[Response]) error {
 	return status.Errorf(codes.Unimplemented, "method ProcessRequest not implemented")
+}
+func (UnimplementedStreamServiceServer) ListSessions(context.Context, *Empty) (*Response, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method ListSessions not implemented")
 }
 func (UnimplementedStreamServiceServer) mustEmbedUnimplementedStreamServiceServer() {}
 func (UnimplementedStreamServiceServer) testEmbeddedByValue()                       {}
@@ -112,13 +130,36 @@ func _StreamService_ProcessRequest_Handler(srv interface{}, stream grpc.ServerSt
 // This type alias is provided for backwards compatibility with existing code that references the prior non-generic stream type by name.
 type StreamService_ProcessRequestServer = grpc.ServerStreamingServer[Response]
 
+func _StreamService_ListSessions_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(Empty)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(StreamServiceServer).ListSessions(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: StreamService_ListSessions_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(StreamServiceServer).ListSessions(ctx, req.(*Empty))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 // StreamService_ServiceDesc is the grpc.ServiceDesc for StreamService service.
 // It's only intended for direct use with grpc.RegisterService,
 // and not to be introspected or modified (even as a copy)
 var StreamService_ServiceDesc = grpc.ServiceDesc{
 	ServiceName: "streamservice.StreamService",
 	HandlerType: (*StreamServiceServer)(nil),
-	Methods:     []grpc.MethodDesc{},
+	Methods: []grpc.MethodDesc{
+		{
+			MethodName: "ListSessions",
+			Handler:    _StreamService_ListSessions_Handler,
+		},
+	},
 	Streams: []grpc.StreamDesc{
 		{
 			StreamName:    "ProcessRequest",

@@ -54,9 +54,9 @@ func CloseMongoDB() {
 // 查找一个会话
 func FindOneConversation(ctx context.Context, query bson.M) (models.Conversation, error) {
 	var result models.Conversation
-	err := Conversation.FindOne(ctx, query).Decode(result)
+	err := Conversation.FindOne(ctx, query).Decode(&result)
 	if err == mongo.ErrNoDocuments {
-		return result, fmt.Errorf("找不到会话: %v", err)
+		return result, err
 	} else if err != nil {
 		return result, fmt.Errorf("会话查找失败: %v", err)
 	}

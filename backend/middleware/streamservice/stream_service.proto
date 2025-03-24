@@ -6,16 +6,19 @@ option go_package = "godemo/streamservice";
 
 // 流服务定义
 service StreamService {
-	// 发送请求并获取流式响应
-	rpc ProcessRequest (Request) returns (stream Response) {}
+	// 流式处理请求
+	rpc ProcessRequest(Request) returns (stream Response) {}
+
+	// 列出所有会话
+	rpc ListSessions(Empty) returns (Response) {}
 }
 
-// 请求消息
 message Request {
 	string json_data = 1;
 }
 
-// 响应消息
 message Response {
 	string data = 1;
 }
+
+message Empty {}

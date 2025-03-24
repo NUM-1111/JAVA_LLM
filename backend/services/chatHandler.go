@@ -9,7 +9,7 @@ import (
 	"fmt"
 	"io"
 	"log"
-	"strings"
+
 	"time"
 
 	"net/http"
@@ -18,6 +18,7 @@ import (
 
 	"github.com/gin-gonic/gin"
 	"go.mongodb.org/mongo-driver/bson"
+	"go.mongodb.org/mongo-driver/mongo"
 	"google.golang.org/grpc"
 )
 
@@ -45,7 +46,7 @@ func SetStreamHeaders(c *gin.Context) {
 }
 
 // 向python服务请求生成回答
-func GenerateMessage(ctx context.Context, chunkChan chan any, conversation_id string, stream grpc.ServerStreamingClient[pb.Response]) {
+func GenerateMessage(ctx context.Context, chunkChan chan string, conversation_id string, stream grpc.ServerStreamingClient[pb.Response]) {
 	defer close(chunkChan)
 
 	// 发送请求
@@ -68,12 +69,6 @@ func GenerateMessage(ctx context.Context, chunkChan chan any, conversation_id st
 			}
 			// 解析响应
 			var rawData = resp.GetData()
-			if strings.TrimSpace(rawData) == "[DONE]" {
-				log.Println("流式响应接收完成.")
-				chunkChan <- "[DONE]" // 写入终止信号
-				return
-			}
-			fmt.Println("流式响应:", rawData)
 			chunkChan <- rawData
 		}
 	}
@@ -90,11 +85,14 @@ func handleChunk(w io.Writer, rawChunk any) bool {
 		}
 		fmt.Fprintf(w, "data: %s\n\n", jsonData)
 	case string:
-		if chunk == "[DONE]" {
-			fmt.Fprintf(w, "data: [DONE]\n\n")
-			return false // 终止流
-		}
+		fmt.Fprintf(w, "data: %s\n\n", chunk)
 	}
+	// 显式刷新缓冲区
+	if f, ok := w.(http.Flusher); ok {
+		f.Flush()
+		//time.Sleep(100 * time.Millisecond) // 强制拆分
+	}
+	fmt.Println("流式响应:", rawChunk)
 	return true
 }
 
@@ -137,55 +135,60 @@ func HandleNewMessage(c *gin.Context) {
 		Children:       make([]string, 0),
 	}
 
-	// 如果是新对话,则创建一个Conversation
-	var conversation models.Conversation
-	if user_chatMessage.Parent == "client-created-root" {
-		conversation = models.Conversation{
-			ConversationID: user_chatMessage.ConversationID,
-			UserID:         user_id,
-			Title:          "New Chat",
-			CurrentNode:    user_chatMessage.MessageID, // 当前仍是用户信息
-			DefaultModel:   "auto",
-			IsArchived:     false,                      // 新会话默认不会归档
-			CreatedAt:      user_chatMessage.CreatedAt, // 使用最早消息的时间点
-			UpdatedAt:      time.Now(),
-		}
-		insertResult, err := db.Conversation.InsertOne(ctx, conversation)
-		if err != nil {
-			log.Println("插入失败:", err)
-			c.JSON(http.StatusInternalServerError, gin.H{"msg": "会话插入失败", "err": err.Error()})
+	// 处理会话
+	conversation, err := db.FindOneConversation(ctx, bson.M{"user_id": user_id, "conversation_id": user_chatMessage.ConversationID})
+	if err == mongo.ErrNoDocuments {
+		if user_chatMessage.Parent == "client-created-root" {
+			conversation = models.Conversation{
+				ConversationID: user_chatMessage.ConversationID,
+				UserID:         user_id,
+				Title:          "New Chat",
+				CurrentNode:    user_chatMessage.MessageID,
+				DefaultModel:   "auto",
+				IsArchived:     false,
+				CreatedAt:      user_chatMessage.CreatedAt,
+				UpdatedAt:      time.Now(),
+			}
+
+			// 确保 conversation_id 不能为空
+			if conversation.ConversationID == "" {
+				log.Println("错误: conversation_id 为空，无法插入新会话")
+				c.JSON(http.StatusBadRequest, gin.H{"msg": "会话 ID 不能为空"})
+				return
+			}
+
+			insertResult, err := db.Conversation.InsertOne(ctx, conversation)
+			if err != nil {
+				log.Println("插入失败:", err)
+				c.JSON(http.StatusInternalServerError, gin.H{"msg": "会话插入失败", "err": err.Error()})
+				return
+			}
+			log.Printf("插入成功，ID: %v\n", insertResult.InsertedID)
+		} else {
+			log.Println("找不到会话，且 parent 不是 'client-created-root'")
+			c.JSON(http.StatusNotFound, gin.H{"msg": "会话不存在!"})
 			return
 		}
-		log.Printf("插入成功，ID: %v\n", insertResult.InsertedID)
+	} else if err != nil {
+		log.Println("err:", err)
+		c.JSON(http.StatusBadRequest, gin.H{"msg": "会话查询失败", "err": err.Error()})
+		return
 	} else {
-		// 判断是否存在conversation_id
-		if user_chatMessage.ConversationID == "" {
-			c.JSON(http.StatusBadRequest, gin.H{"msg": "未提供conversation_id,请求失败"})
-			return
-		}
-		var err error
-		// 查找conversation_id对应会话
-		conversation, err = db.FindOneConversation(ctx, bson.M{"conversation_id": user_chatMessage.ConversationID})
-		if err != nil {
-			log.Println(err)
-			c.JSON(http.StatusBadRequest, gin.H{"msg": "会话查询失败", "err": err.Error()})
-			return
-		}
-		// 更新用户消息的父节点
-		err = db.UpdateOneMessage(ctx, bson.M{"message_id": user_chatMessage.Parent},
+		// 更新消息父节点的 children
+		err := db.UpdateOneMessage(ctx, bson.M{"conversation_id": conversation.ConversationID, "message_id": user_chatMessage.Parent},
 			bson.M{
-				"$push": bson.M{"children": user_chatMessage.MessageID},
-				"$set":  bson.M{"updated_at": time.Now()},
+				"$addToSet": bson.M{"children": user_chatMessage.MessageID}, // 避免重复
+				"$set":      bson.M{"updated_at": time.Now()},
 			})
 		if err != nil {
 			log.Println("err:", err)
 			c.JSON(http.StatusInternalServerError, gin.H{"msg": "消息更新失败", "err": err.Error()})
 			return
 		}
-		log.Printf("父节点%s 更新成功", user_chatMessage.Parent)
-		// 更新conversation的当前节点
+
+		// 更新 conversation 的 current_node
 		conversation.CurrentNode = user_chatMessage.MessageID
-		err = db.UpdateOneConversation(ctx, bson.M{"conversation_id": conversation.ConversationID}, bson.M{
+		err = db.UpdateOneConversation(ctx, bson.M{"user_id": user_id, "conversation_id": conversation.ConversationID}, bson.M{
 			"$set": bson.M{"current_node": conversation.CurrentNode, "updated_at": time.Now()},
 		})
 		if err != nil {
@@ -193,8 +196,8 @@ func HandleNewMessage(c *gin.Context) {
 			c.JSON(http.StatusInternalServerError, gin.H{"msg": "会话更新失败", "err": err.Error()})
 			return
 		}
-		log.Printf("会话%s 更新成功", conversation.ConversationID)
 	}
+
 	// 更新并插入用户消息
 	user_chatMessage.ConversationID = conversation.ConversationID
 	user_chatMessage.UpdatedAt = time.Now()
@@ -228,12 +231,12 @@ func HandleNewMessage(c *gin.Context) {
 	}
 
 	// 开启协程来获取生成的内容
-	chunkChan := make(chan any, 1)
-	metadata := StreamChunk{
-		Type:           "meta",
-		ConversationID: conversation.ConversationID,
-	}
-	chunkChan <- metadata // 写入元数据
+	chunkChan := make(chan string)
+	// metadata := StreamChunk{
+	// 	Type:           "meta",
+	// 	ConversationID: conversation.ConversationID,
+	// }
+	// chunkChan <- metadata // 写入元数据
 	go GenerateMessage(ctx, chunkChan, conversation.ConversationID, stream)
 
 	// 设置流式响应头
@@ -252,5 +255,4 @@ func HandleNewMessage(c *gin.Context) {
 			return handleChunk(w, rawChunk)
 		}
 	})
-
 }

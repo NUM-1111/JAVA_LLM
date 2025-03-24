@@ -20,7 +20,7 @@ type ChatRequest struct {
 // 会话集合
 type Conversation struct {
 	ConversationID string ` bson:"conversation_id" json:"conversation_id"`
-	UserID         int64  `bson:"user_id" `
+	UserID         int64  `bson:"user_id" json:"omitempty"`
 	Title          string `bson:"title" json:"title"`
 	CurrentNode    string `bson:"current_node" json:"current_node"` // 记录最新一次消息的id
 	//Mapping     map[string]ChatMessage `bson:"mapping" json:"mapping"`
@@ -37,13 +37,13 @@ type Conversation struct {
 
 // 消息集合
 type ChatMessage struct {
-	ConversationID string    `bson:"conversation_id"` // 关联会话
-	MessageID      string    `bson:"message_id"`
-	Message        Message   `bson:"message"`
-	Parent         string    `bson:"parent"`
-	Children       []string  `bson:"children"`
-	CreatedAt      time.Time `bson:"created_at"`
-	UpdatedAt      time.Time `bson:"updated_at"`
+	ConversationID string    `bson:"conversation_id" json:"conversation_id"` // 关联会话
+	MessageID      string    `bson:"message_id" json:"message_id"`
+	Message        Message   `bson:"message" json:"message"`
+	Parent         string    `bson:"parent" json:"parent"`
+	Children       []string  `bson:"children" json:"children"`
+	CreatedAt      time.Time `bson:"created_at" json:"created_at"`
+	UpdatedAt      time.Time `bson:"updated_at" json:"updated_at"`
 }
 
 // 消息内容
@@ -53,14 +53,14 @@ type Message struct {
 		Role string `json:"role" bson:"role"`
 		//Name     string         `bson:"name"`
 		//MetaData map[string]any `bson:"metadata"`
-	}
+	} `bson:"author" json:"author"`
 	Content struct {
 		ContentType string `json:"content_type" bson:"content_type"`
 		Text        string `json:"text" bson:"text"`
 		//Parts       []string `bson:"parts"`
 		//UserProfile      string   `bson:"user_profile"`
 		//UserInstructions string   `bson:"user_instructions"`
-	}
+	} `bson:"content" json:"content"`
 	Status string  `bson:"status,omitempty"` // "finished_successfully"
 	Model  string  `bson:"model,omitempty"`  // 调用的模型
 	Weight float32 `bson:"weight,omitempty"` // 权重
