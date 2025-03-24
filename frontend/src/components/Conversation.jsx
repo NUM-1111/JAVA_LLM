@@ -1,5 +1,5 @@
-import { useLocation } from "react-router-dom";
-import { useState, useEffect, useRef, useCallback } from "react";
+import { useLocation, useParams, useNavigate } from "react-router-dom";
+import { useState, useEffect, useCallback, useRef } from "react";
 import SideBar from "./sidebar";
 import { globalData, models } from "@/constants";
 import { DeepThinkIcon, ArrowUpIcon } from "./svg-icons";
@@ -7,137 +7,188 @@ import HeadBar from "./HeadBar";
 
 function ChatPage() {
   const location = useLocation();
-  // 控制模型选择
-
+  const navigate = useNavigate();
+  const { conversation_id } = useParams();
   const [selectedCode, setSelectedCode] = useState(2);
   const [deepThink, setDeepThink] = useState(false);
-  const [text, setText] = useState(""); // 存储 textarea 内容
+  const [text, setText] = useState("");
+  const [isOpen, setIsOpen] = useState(true);
+  const [messages, setMessages] = useState([]);
+  const messagesRef = useRef(messages);
+  const [conversationId, setConversationId] = useState(conversation_id || "");
 
-  const [isOpen, setIsOpen] = useState(true); // 控制侧边栏展开/折叠
-
-  // 存储所有消息
-  const [messages, setMessages] = useState([]); // 存储所有消息（用户 & AI）
-  const [conversationId, setConversationId] = useState("");
-  const initialMessageRef = useRef(null); // 用 ref 存储初始消息，防止 useEffect 依赖问题
-
-  // 获取新对话页传递的初始消息
-  const initialMessage = location.state?.initialMessage;
-
+  // 同步最新消息到 ref
   useEffect(() => {
-    if (initialMessage) {
-      initialMessageRef.current = initialMessage; // 存入 ref
-      setMessages([initialMessage]);
-      setConversationId(initialMessage.conversation_id);
-      setDeepThink(location.state?.useDeepTink);
-      setSelectedCode(location.state?.selectedCode);
+    messagesRef.current = messages;
+  }, [messages]);
+
+  // 处理 conversationId 更新
+  useEffect(() => {
+    if (conversation_id) {
+      setConversationId(conversation_id);
     }
-  }, [
-    initialMessage,
-    location.state?.useDeepTink,
-    location.state?.selectedCode,
-  ]);
+  }, [conversation_id]);
 
-  // **优化后的 handleSendMessage**
-  const handleSendMessage = useCallback(async () => {
-    // **封装获取用户消息的方法**
-    const getUserMessage = () => {
-      if (messages.length === 1 && initialMessageRef.current)
-        return initialMessageRef.current;
-      else if (messages.length > 2 && text.trim() !== "") {
-        const userMessage = {
-          author: { role: "user" },
-          content: { content_type: "text", Text: text.trim() },
-          status: "finished_successfully",
-          message_id: crypto.randomUUID(),
-          conversation_id: conversationId,
-          parent: messages[messages.length - 1].message_id,
-          children: [],
-          created_at: new Date().toISOString(),
-        };
-        setMessages((prevMessages) => [...prevMessages, userMessage]);
-        setText(""); // 发送后清空输入框
-        return userMessage;
-      } else {
-        console.log("不符合发送条件!");
-      }
-      return null;
-    };
-    const userMessage = getUserMessage();
-    if (!userMessage) return;
-
-    // 生成 AI 占位消息
-    const aiMessage = {
-      message: {
-        author: { role: "assistant" },
-        content: { content_type: "text", text: "你好,我是人工智能助手" },
-        status: "processing",
-        model: models[selectedCode],
-      },
-      message_id: crypto.randomUUID(),
-      conversation_id: conversationId,
-      parent: userMessage.message_id,
-      children: [],
-      created_at: new Date().toISOString(),
-    };
-
-    setMessages((prevMessages) => [...prevMessages, aiMessage]); // 添加占位消息
-
-    try {
-      const response = await fetch(globalData.domain + "/api/new/message", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: localStorage.auth,
+  // 处理初始消息（独立 effect）
+  useEffect(() => {
+    const initialMessage = location.state?.initialMessage;
+    if (!conversationId) return;
+    if (initialMessage) {
+      // 立即清理 location.state
+      navigate(location.pathname, {
+        replace: true,
+        state: {
+          ...location.state,
+          initialMessage: undefined,
         },
-        body: JSON.stringify({
-          action: "next",
-          message: userMessage.message,
-          message_id: userMessage.message_id,
-          conversation_id: userMessage.conversation_id,
-          parent: userMessage.parent,
-          model: aiMessage.message.model,
-          use_deep_think: deepThink,
-          created_at: userMessage.created_at,
-        }),
       });
 
-      if (!response.ok) throw new Error("服务器返回错误");
+      // 原子化更新消息并发送
+      setMessages((prev) => {
+        const newMessages = [...prev, initialMessage];
+        setTimeout(() => handleSendMessage(initialMessage), 0);
+        return newMessages;
+      });
 
-      const contentType = response.headers.get("Content-Type") || "";
+      setDeepThink(location.state?.useDeepTink || false);
+      setSelectedCode(location.state?.selectedCode || 1);
+    } else {
+      const fetchMessages = async () => {
+        try {
+          const response = await fetch(
+            globalData.domain + "/api/query/messages",
+            {
+              method: "POST",
+              headers: {
+                "Content-Type": "application/json",
+                Authorization: localStorage.auth,
+              },
+              body: JSON.stringify({ conversation_id: conversationId }),
+            }
+          );
 
-      if (contentType.includes("application/json")) {
-        const data = await response.json();
-        console.log("错误:", data);
-        return;
+          if (!response.ok) throw new Error("服务器返回错误");
+          const data = await response.json();
+          setMessages(data.messages || []);
+        } catch (error) {
+          console.error("请求失败:", error);
+        }
+      };
+      fetchMessages();
+    }
+  }, [conversationId]); // 不要加其他的!
+
+  const handleSendMessage = useCallback(
+    async (initialMessage = null) => {
+      // 使用 ref 获取最新消息或传入的初始消息
+      const currentMessages = messagesRef.current;
+      const userMessage =
+        initialMessage ||
+        (() => {
+          if (currentMessages.length >= 2 && text.trim() !== "") {
+            return {
+              message: {
+                author: { role: "user" },
+                content: { content_type: "text", text: text.trim() },
+                status: "finished_successfully",
+              },
+              message_id: crypto.randomUUID(),
+              conversation_id: conversationId,
+              parent:
+                currentMessages[currentMessages.length - 1]?.message_id || null,
+              children: [],
+              created_at: new Date().toISOString(),
+            };
+          }
+          return null;
+        })();
+
+      if (!userMessage) return;
+
+      // 如果是文本输入的消息，更新状态
+      if (!initialMessage) {
+        setText("");
+        setMessages((prev) => [...prev, userMessage]);
       }
 
-      if (contentType.includes("text/event-stream") && response.body) {
-        const reader = response.body.getReader();
-        const decoder = new TextDecoder("utf-8");
+      // 创建 AI 消息
+      const aiMessage = {
+        message: {
+          author: { role: "assistant" },
+          content: { content_type: "text", text: "这是ai测试文本" },
+          status: "processing",
+          model: models[selectedCode],
+        },
+        message_id: crypto.randomUUID(),
+        conversation_id: conversationId,
+        parent: userMessage.message_id,
+        children: [],
+        created_at: new Date().toISOString(),
+      };
 
-        while (true) {
-          const { done, value } = await reader.read();
-          if (done) break;
+      setMessages((prev) => [...prev, aiMessage]);
+      try {
+        const response = await fetch(globalData.domain + "/api/new/message", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: localStorage.auth,
+          },
+          body: JSON.stringify({
+            action: "next",
+            message: userMessage.message,
+            message_id: userMessage.message_id,
+            conversation_id: userMessage.conversation_id,
+            parent: userMessage.parent,
+            model: aiMessage.message.model,
+            use_deep_think: deepThink,
+            created_at: userMessage.created_at,
+          }),
+        });
 
-          let dataStr = decoder.decode(value, { stream: true });
-          if (dataStr.startsWith("data:")) {
-            const jsonStr = dataStr.replace("data:", "").trim();
-            if (jsonStr === "[DONE]") return;
-            console.log("SSE 响应:", JSON.parse(jsonStr));
+        const contentType = response.headers.get("Content-Type") || "";
+        if (contentType.includes("application/json")) {
+          const data = await response.json();
+          console.log("错误:", data);
+          return;
+        }
+
+        if (contentType.includes("text/event-stream") && response.body) {
+          const reader = response.body.getReader();
+          const decoder = new TextDecoder("utf-8");
+
+          while (true) {
+            const { done, value } = await reader.read();
+            if (done) {
+              console.log("SSE完毕");
+              break;
+            }
+            let dataStr = decoder.decode(value, { stream: true });
+            console.log(JSON.stringify(dataStr)); 
+            if (dataStr.startsWith("data:")) {
+              const jsonStr = dataStr.replaceAll("data:", "").trim();
+              try {
+                const jsonData = JSON.parse(jsonStr);
+                if (
+                  jsonData.type == "status" &&
+                  jsonData.message == "ANSWER_DONE"
+                ) {
+                  console.log("SSE 响应接受完成.");
+                  return;
+                }
+                console.log("SSE 响应:", jsonData);
+              } catch {
+                console.log("json parse error,content:", jsonStr);
+              }
+            }
           }
         }
+      } catch (error) {
+        console.error("请求失败:", error);
       }
-    } catch (error) {
-      console.error("请求失败:", error);
-    }
-  }, [selectedCode, conversationId, messages, text, deepThink]);
-
-  // **确保页面渲染完成后自动发送初始消息**
-  useEffect(() => {
-    if (initialMessageRef.current) {
-      handleSendMessage();
-    }
-  }, [handleSendMessage]);
+    },
+    [selectedCode, conversationId, deepThink, text]
+  );
 
   return (
     <div className="flex flex-row max-h-screen bg-gray-100 gap-2">
@@ -174,31 +225,14 @@ function ChatPage() {
                     key={index}
                     className="ml-[30%] w-[60%] md:mr-[15%] p-5 h-30 bg-gray-50 border-gray-200 border shadow-sm rounded-3xl"
                   >
-                    {msg.message.content.text}
+                    {msg.message?.content.text}
                   </div>
                 ) : (
                   <div
                     key={index}
                     className="w-[78%] py-5 h-30 leading-relaxed"
                   >
-                    {msg.message.content.text}
-                  </div>
-                )
-              )}
-              {messages.map((msg, index) =>
-                index % 2 === 0 ? (
-                  <div
-                    key={index}
-                    className="ml-[30%] w-[60%] md:mr-[15%] p-5 h-30 bg-gray-50 border-gray-200 border shadow-sm rounded-3xl"
-                  >
-                    {msg.message.content.text}
-                  </div>
-                ) : (
-                  <div
-                    key={index}
-                    className="w-[78%] py-5 h-30 leading-relaxed"
-                  >
-                    {msg.message.content.text}
+                    {msg.message?.content.text}
                   </div>
                 )
               )}
@@ -253,7 +287,7 @@ function ChatPage() {
               </div>
             </div>
             <div className="absolute bottom-0 w-[70%] md:pt-0 bg-gray-50 flex flex-grow">
-              <div class="text-gray-800 mt-auto flex min-h-8 w-full items-center justify-center  text-center text-xs">
+              <div className="text-gray-800 mt-auto flex min-h-8 w-full items-center justify-center  text-center text-xs">
                 <div>AI助手也可能会犯错, 请核查重要信息。</div>
               </div>
             </div>
