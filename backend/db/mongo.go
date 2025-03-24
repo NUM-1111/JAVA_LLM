@@ -87,23 +87,32 @@ func FindConversations(ctx context.Context, query bson.M) ([]models.Conversation
 	return conversations, nil
 }
 
-// 根据query条件删除conversation
+// 根据query(user_id)查找所有conversation,取出conversion_id后,删除所有的message,然后删除conversation
 func DeleteConversation(ctx context.Context, query bson.M) error {
-	result, err := Conversation.DeleteMany(ctx, query)
+	// 先查找所有符合条件的conversation
+	conversations, err := FindConversations(ctx, query)
 	if err != nil {
-		fmt.Println(err)
-		log.Printf("Database error: %v", err) // 记录详细错误信息
-		return fmt.Errorf("会话删除操作失败: %w", err)
+		return fmt.Errorf("查找会话失败: %v", err)
 	}
 
-	// 检查匹配情况
-	if result.DeletedCount == 0 {
-		log.Printf("未找到匹配会话") // 记录详细错误信息
-		return fmt.Errorf("未找到匹配会话")
+	// 遍历conversation,删除所有的message,然后删除conversation
+	for _, conversation := range conversations {
+		// 删除所有message
+		if err := DeleteMessage(ctx, bson.M{"conversation_id": conversation.ConversationID}); err != nil {
+			return fmt.Errorf("删除消息失败: %v", err)
+		}
+
+		// 删除conversation
+		if result, err := Conversation.DeleteOne(ctx, bson.M{"conversation_id": conversation.ConversationID}); err != nil {
+			return fmt.Errorf("删除会话失败: %v", err)
+		} else if result.DeletedCount == 0 {
+			return fmt.Errorf("未找到匹配会话")
+		}
 	}
 
 	return nil
 }
+
 
 // 查找一个消息
 func FindOneMessage(ctx context.Context, query bson.M) (models.ChatMessage, error) {
@@ -138,6 +147,21 @@ func FindMessages(ctx context.Context, query bson.M) ([]models.ChatMessage, erro
 	}
 
 	return results, nil
+}
+
+//删除符合条件的消息
+func DeleteMessage(ctx context.Context, query bson.M) error {
+	result, err := ChatMessage.DeleteMany(ctx, query)
+	if err != nil {
+		return fmt.Errorf("消息删除操作失败: %w", err)
+	}
+
+	// 检查匹配情况
+	if result.DeletedCount == 0 {
+		return fmt.Errorf("未找到匹配消息")
+	}
+
+	return nil
 }
 
 // 更新单条消息

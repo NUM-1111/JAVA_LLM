@@ -4,6 +4,7 @@ import (
 	//"Go_LLM_Web/config"
 	"Go_LLM_Web/db"
 	"Go_LLM_Web/models"
+	"fmt"
 
 	"net/http"
 
@@ -69,7 +70,7 @@ func QueryMessages(c *gin.Context) {
 }
 
 /*
-删除所有会话
+删除所有会话(先删除Conversion中的message_id，再删除Conversation)
 */
 func DeleteAllConversations(c *gin.Context) {
 	// 从上下文中获取session信息（由中间件 AuthSession 提供）
@@ -91,6 +92,7 @@ func DeleteAllConversations(c *gin.Context) {
 
 	// 调用数据库删除函数
 	err := db.DeleteConversation(c.Request.Context(), query)
+	fmt.Println(err)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"err": "数据库删除失败"})
 		return
