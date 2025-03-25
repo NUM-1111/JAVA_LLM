@@ -93,16 +93,19 @@ const RedStarIcon = ({ className }) => {
 const BreadcrumbIcon = ({ className }) => {
   return (
     <svg
-      className={className ? className : "size-5"}
+      width="24"
+      height="24"
+      viewBox="0 0 24 24"
+      fill="none"
       xmlns="http://www.w3.org/2000/svg"
-      viewBox="0 0 20 20"
-      fill="currentColor"
+      className={className ? className : "size-5"}
     >
       <path
         fillRule="evenodd"
-        d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z"
         clipRule="evenodd"
-      />
+        d="M5.29289 9.29289C5.68342 8.90237 6.31658 8.90237 6.70711 9.29289L12 14.5858L17.2929 9.29289C17.6834 8.90237 18.3166 8.90237 18.7071 9.29289C19.0976 9.68342 19.0976 10.3166 18.7071 10.7071L12.7071 16.7071C12.5196 16.8946 12.2652 17 12 17C11.7348 17 11.4804 16.8946 11.2929 16.7071L5.29289 10.7071C4.90237 10.3166 4.90237 9.68342 5.29289 9.29289Z"
+        fill="currentColor"
+      ></path>
     </svg>
   );
 };
@@ -317,17 +320,14 @@ const OpenEyeIcon = ({ className }) => {
 const SelectedIcon = ({ className }) => {
   return (
     <svg
-      className={className?className:"mt-1 size-6"}
-      fill= "currentColor"
+      className={className ? className : "mt-1 size-6"}
+      fill="currentColor"
       overflow="hidden"
       viewBox="0 0 1024 1024"
       version="1.1"
       xmlns="http://www.w3.org/2000/svg"
     >
-      <path
-        d="M464.248 677.488c9.967 9.161 25.418 8.714 34.838-1.009l299.819-309.441c9.598-9.906 9.349-25.718-0.558-35.317-9.906-9.598-25.718-9.348-35.316 0.558L463.21 641.72l34.84-1.008L316.608 473.94c-10.156-9.334-25.955-8.668-35.29 1.487-9.334 10.156-8.668 25.955 1.487 35.29l181.442 166.77z"
-
-      ></path>
+      <path d="M464.248 677.488c9.967 9.161 25.418 8.714 34.838-1.009l299.819-309.441c9.598-9.906 9.349-25.718-0.558-35.317-9.906-9.598-25.718-9.348-35.316 0.558L463.21 641.72l34.84-1.008L316.608 473.94c-10.156-9.334-25.955-8.668-35.29 1.487-9.334 10.156-8.668 25.955 1.487 35.29l181.442 166.77z"></path>
     </svg>
   );
 };

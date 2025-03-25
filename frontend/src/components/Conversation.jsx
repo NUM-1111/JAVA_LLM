@@ -1,5 +1,6 @@
 import { useLocation, useParams, useNavigate } from "react-router-dom";
 import { useState, useEffect, useCallback, useRef } from "react";
+import { EventSourceParserStream } from "eventsource-parser/stream";
 import SideBar from "./sidebar";
 import { globalData, models } from "@/constants";
 import { DeepThinkIcon, ArrowUpIcon } from "./svg-icons";
@@ -12,10 +13,14 @@ function ChatPage() {
   const [selectedCode, setSelectedCode] = useState(2);
   const [deepThink, setDeepThink] = useState(false);
   const [text, setText] = useState("");
-  const [isOpen, setIsOpen] = useState(true);
+  const [isOpen, setIsOpen] = useState(false);
   const [messages, setMessages] = useState([]);
   const messagesRef = useRef(messages);
   const [conversationId, setConversationId] = useState(conversation_id || "");
+  // 处理自动滚动页面事件
+  const bottomRef = useRef(null);
+  const chatContainerRef = useRef(null);
+  const [shouldAutoScroll, setShouldAutoScroll] = useState(true);
 
   // 同步最新消息到 ref
   useEffect(() => {
@@ -76,8 +81,30 @@ function ChatPage() {
       };
       fetchMessages();
     }
-  }, [conversationId]); // 不要加其他的!
+  }, [conversationId]); // 只需要conversationId
 
+  // 监听用户滚动，判断是否应该停止自动滚动
+  useEffect(() => {
+    const chatContainer = chatContainerRef.current;
+    if (!chatContainer) return;
+
+    const handleScroll = () => {
+      const { scrollTop, scrollHeight, clientHeight } = chatContainer;
+      const isUserScrollingUp = scrollTop + clientHeight < scrollHeight - 100; // 离底部100px
+      setShouldAutoScroll(!isUserScrollingUp);
+    };
+
+    chatContainer.addEventListener("scroll", handleScroll);
+    return () => chatContainer.removeEventListener("scroll", handleScroll);
+  }, []);
+
+  // 当消息更新时，如果 shouldAutoScroll 为 true，则滚动到底部
+  useEffect(() => {
+    if (shouldAutoScroll && bottomRef.current) {
+      bottomRef.current.scrollIntoView({ behavior: "smooth" });
+    }
+  }, [messages, shouldAutoScroll]);
+  // 发送消息
   const handleSendMessage = useCallback(
     async (initialMessage = null) => {
       // 使用 ref 获取最新消息或传入的初始消息
@@ -115,7 +142,7 @@ function ChatPage() {
       const aiMessage = {
         message: {
           author: { role: "assistant" },
-          content: { content_type: "text", text: "这是ai测试文本" },
+          content: { content_type: "text", text: "" },
           status: "processing",
           model: models[selectedCode],
         },
@@ -154,8 +181,10 @@ function ChatPage() {
         }
 
         if (contentType.includes("text/event-stream") && response.body) {
-          const reader = response.body.getReader();
-          const decoder = new TextDecoder("utf-8");
+          const reader = response.body
+            .pipeThrough(new TextDecoderStream()) // 解码 UTF-8 文本
+            .pipeThrough(new EventSourceParserStream()) // 解析 SSE
+            .getReader();
 
           while (true) {
             const { done, value } = await reader.read();
@@ -163,23 +192,30 @@ function ChatPage() {
               console.log("SSE完毕");
               break;
             }
-            let dataStr = decoder.decode(value, { stream: true });
-            console.log(JSON.stringify(dataStr)); 
-            if (dataStr.startsWith("data:")) {
-              const jsonStr = dataStr.replaceAll("data:", "").trim();
-              try {
-                const jsonData = JSON.parse(jsonStr);
-                if (
-                  jsonData.type == "status" &&
-                  jsonData.message == "ANSWER_DONE"
-                ) {
-                  console.log("SSE 响应接受完成.");
-                  return;
-                }
-                console.log("SSE 响应:", jsonData);
-              } catch {
-                console.log("json parse error,content:", jsonStr);
+            console.log(JSON.stringify(value));
+            try {
+              const jsonData = JSON.parse(value.data);
+              if (jsonData.type === "answer_chunk" && jsonData.content) {
+                setMessages((prev) => {
+                  const newMessages = [...prev];
+                  const aiMsg = newMessages[newMessages.length - 1];
+                  if (aiMsg.message.author.role != "assistant") {
+                    console.log("最新消息为用户消息,ai消息更新失败!");
+                    return;
+                  }
+                  aiMsg.message.content.text += jsonData.content;
+                  return newMessages;
+                });
+              } else if (
+                jsonData.type === "status" &&
+                jsonData.message === "ANSWER_DONE"
+              ) {
+                console.log("SSE 响应接受完成.");
+                return;
               }
+              console.log("SSE 响应:", jsonData);
+            } catch (e) {
+              console.error("JSON 解析错误:", e, "内容:", value.data);
             }
           }
         }
@@ -187,11 +223,11 @@ function ChatPage() {
         console.error("请求失败:", error);
       }
     },
-    [selectedCode, conversationId, deepThink, text]
+    [selectedCode, conversationId, text, deepThink]
   );
 
   return (
-    <div className="flex flex-row max-h-screen bg-gray-100 gap-2">
+    <div className="flex flex-row h-screen bg-gray-100 gap-2">
       {/*侧边栏部分 */}
       <SideBar isOpen={isOpen} setIsOpen={setIsOpen} />
 
@@ -211,88 +247,94 @@ function ChatPage() {
         />
 
         {/* 可滚动的主内容区域 */}
-        <main className="flex-grow h-screen overflow-y-auto flex flex-col">
-          <div className="flex flex-col text-base mx-5 items-center gap-5 h-auto flex-grow mb-40">
+        <main
+          ref={chatContainerRef}
+          className="flex-grow h-full overflow-y-auto flex flex-col"
+        >
+          <div className="flex flex-col text-base mx-5 my-5 items-center gap-5 h-auto flex-grow">
             {/* 消息容器 */}
             <div
-              className={`${
-                isOpen ? "w-full" : "w-full xl:w-[80%]"
-              } flex flex-col text-base h-auto items-center gap-5 flex-grow overflow-hidden`}
+              className={`w-[90%] md:w-9/12 xl:w-7/12 flex flex-col text-base h-auto items-center gap-5 flex-grow overflow-hidden`}
             >
               {messages.map((msg, index) =>
                 index % 2 === 0 ? (
                   <div
                     key={index}
-                    className="ml-[30%] w-[60%] md:mr-[15%] p-5 h-30 bg-gray-50 border-gray-200 border shadow-sm rounded-3xl"
+                    className="md:max-w-[60%] max-w-[70%] ml-auto p-5 h-30 bg-gray-50 border-gray-200 border shadow-sm rounded-3xl"
                   >
                     {msg.message?.content.text}
                   </div>
                 ) : (
                   <div
                     key={index}
-                    className="w-[78%] py-5 h-30 leading-relaxed"
+                    className="w-[95%] py-5 h-30 leading-relaxed"
                   >
                     {msg.message?.content.text}
                   </div>
                 )
               )}
-            </div>
-            <div
-              className="flex flex-col h-auto w-[90%] rounded-3xl border shadow-sm border-gray-300 bg-gray-50 
-                md:w-9/12 xl:w-7/12 absolute bottom-8 px-4 py-1 md:py-2"
-            >
-              <div className="mx-3 mt-1 flex flex-col bg-inherit">
-                <textarea
-                  rows={1}
-                  className="w-full rounded-lg p-3 pe-12 pb-6 text-base bg-inherit outline-none resize-none overflow-y-auto"
-                  placeholder="问你所想 畅所欲言"
-                  value={text}
-                  onChange={(e) => {
-                    setText(e.target.value);
-                  }}
-                  onInput={(e) => {
-                    e.target.style.height = "auto"; // 先重置高度，防止高度收缩不生效
-                    const lineHeight = parseInt(
-                      window.getComputedStyle(e.target).lineHeight
-                    );
-                    const isSmallScreen = window.innerWidth < 768; // 判断是否为 md 以下
-                    let maxHeight = isSmallScreen
-                      ? lineHeight * 5.5
-                      : lineHeight * 7;
-                    e.target.style.height = `${Math.min(
-                      e.target.scrollHeight,
-                      maxHeight
-                    )}px`; // 根据内容调整高度
-                  }}
-                ></textarea>
-                <div className="w-full flex justify-between md:mt-2">
-                  <button
-                    onClick={() => setDeepThink(!deepThink)}
-                    className={`flex flex-row justify-center items-center gap-1 px-2 my-[0.2rem] rounded-full border ${
-                      deepThink
-                        ? "bg-blue-200 text-blue-600 border-blue-500"
-                        : "bg-white border-gray-300  text-black  hover:bg-gray-100"
-                    } transition`}
-                  >
-                    <DeepThinkIcon className={"size-4"} />
-                    <span className="text-sm select-none">深度思考</span>
-                  </button>
-                  <button
-                    onClick={async () => await handleSendMessage()}
-                    className="size-9 mb-1 bg-indigo-600 text-white rounded-full hover:bg-indigo-500"
-                  >
-                    <ArrowUpIcon className={"size-9"} />
-                  </button>
-                </div>
-              </div>
-            </div>
-            <div className="absolute bottom-0 w-[70%] md:pt-0 bg-gray-50 flex flex-grow">
-              <div className="text-gray-800 mt-auto flex min-h-8 w-full items-center justify-center  text-center text-xs">
-                <div>AI助手也可能会犯错, 请核查重要信息。</div>
-              </div>
+              {/* 滚动定位到最底部 */}
+              <div ref={bottomRef}></div>
             </div>
           </div>
         </main>
+        <footer className="items-center flex flex-col w-full">
+          <div
+            className="flex flex-col h-auto w-[90%] rounded-3xl border shadow-sm border-gray-300 bg-gray-50 
+              md:w-9/12 xl:w-7/12 px-4 py-1 md:py-2"
+          >
+            <div className="mx-3 mt-1 flex flex-col bg-inherit">
+              <textarea
+                rows={1}
+                className="w-full rounded-lg p-3 pe-12 pb-6 text-base bg-inherit outline-none resize-none overflow-y-auto"
+                placeholder="问你所想 畅所欲言"
+                value={text}
+                onChange={(e) => setText(e.target.value)}
+                onInput={(e) => {
+                  e.target.style.height = "auto";
+                  const lineHeight = parseInt(
+                    window.getComputedStyle(e.target).lineHeight
+                  );
+                  const isSmallScreen = window.innerWidth < 768;
+                  let maxHeight = isSmallScreen
+                    ? lineHeight * 5.5
+                    : lineHeight * 7;
+                  e.target.style.height = `${Math.min(
+                    e.target.scrollHeight,
+                    maxHeight
+                  )}px`;
+                }}
+              ></textarea>
+              <div className="w-full flex justify-between md:mt-2">
+                <button
+                  onClick={() => setDeepThink(!deepThink)}
+                  className={`flex flex-row justify-center items-center gap-1 px-2 my-[0.2rem] rounded-full border ${
+                    deepThink
+                      ? "bg-blue-200 text-blue-600 border-blue-500"
+                      : "bg-white border-gray-300 text-black hover:bg-gray-100"
+                  } transition`}
+                >
+                  <DeepThinkIcon className={"size-4"} />
+                  <span className="text-sm select-none">深度思考</span>
+                </button>
+                <button
+                  onClick={async () => {
+                    await handleSendMessage();
+                    setShouldAutoScroll(true);
+                  }}
+                  className="size-9 mb-1 bg-indigo-600 text-white rounded-full hover:bg-indigo-500"
+                >
+                  <ArrowUpIcon className={"size-9"} />
+                </button>
+              </div>
+            </div>
+          </div>
+          <div className="w-[70%] md:pt-0 bg-gray-50 flex">
+            <div className="text-gray-800 mt-auto flex min-h-8 w-full items-center justify-center text-center text-xs">
+              <div>AI助手也可能会犯错, 请核查重要信息。</div>
+            </div>
+          </div>
+        </footer>
       </div>
     </div>
   );

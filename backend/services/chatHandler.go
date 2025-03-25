@@ -9,6 +9,7 @@ import (
 	"fmt"
 	"io"
 	"log"
+	"sync"
 
 	"time"
 
@@ -47,8 +48,6 @@ func SetStreamHeaders(c *gin.Context) {
 
 // 向python服务请求生成回答
 func GenerateMessage(ctx context.Context, chunkChan chan string, conversation_id string, stream grpc.ServerStreamingClient[pb.Response]) {
-	defer close(chunkChan)
-
 	// 发送请求
 	log.Println("开始接收流式响应:")
 	for {
@@ -64,7 +63,7 @@ func GenerateMessage(ctx context.Context, chunkChan chan string, conversation_id
 				return
 			} else if err != nil {
 				log.Printf("gRPC 读取失败: %v", err)
-				chunkChan <- "data: {\"type\":\"error\",\"msg\":\"gRPC 服务错误\"}\n\n"
+				//chunkChan <- "data: {\"type\":\"error\",\"msg\":\"gRPC 服务错误\"}\n\n"
 				return
 			}
 			// 解析响应
@@ -92,7 +91,7 @@ func handleChunk(w io.Writer, rawChunk any) bool {
 		f.Flush()
 		//time.Sleep(100 * time.Millisecond) // 强制拆分
 	}
-	fmt.Println("流式响应:", rawChunk)
+	//fmt.Println("流式响应:", rawChunk)
 	return true
 }
 
@@ -237,7 +236,11 @@ func HandleNewMessage(c *gin.Context) {
 	// 	ConversationID: conversation.ConversationID,
 	// }
 	// chunkChan <- metadata // 写入元数据
-	go GenerateMessage(ctx, chunkChan, conversation.ConversationID, stream)
+	var once sync.Once
+	go func(once *sync.Once) {
+		defer once.Do(func() { close(chunkChan) })
+		GenerateMessage(ctx, chunkChan, conversation.ConversationID, stream)
+	}(&once)
 
 	// 设置流式响应头
 	SetStreamHeaders(c)
@@ -246,7 +249,7 @@ func HandleNewMessage(c *gin.Context) {
 		select {
 		case <-ctx.Done():
 			log.Printf("客户端 %d 断开连接.", user_id)
-			close(chunkChan) // 提前关闭channel
+			once.Do(func() { close(chunkChan) })
 			return false
 		case rawChunk, ok := <-chunkChan:
 			if !ok {

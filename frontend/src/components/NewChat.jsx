@@ -12,7 +12,7 @@ function NewChatPage() {
   const [deepThink, setDeepThink] = useState(false);
   const [text, setText] = useState(""); // 存储 textarea 内容
 
-  const [isOpen, setIsOpen] = useState(true); // 控制侧边栏展开/折叠
+  const [isOpen, setIsOpen] = useState(false); // 控制侧边栏展开/折叠
 
   const handleSendMessage = () => {
     if (!text.trim()) return; // 防止发送空消息
@@ -43,14 +43,14 @@ function NewChatPage() {
   };
 
   return (
-    <div className="flex flex-row  max-h-screen bg-gray-100 gap">
+    <div className="flex flex-row  max-h-screen bg-gray-100 gap-2">
       {/*侧边栏部分 */}
       <SideBar isOpen={isOpen} setIsOpen={setIsOpen} />
-
+      {isOpen && <div className="absolute left-0 z-20 bg-black opacity-20 w-full lg:w-0 h-full transition-all duration-200"> </div>}
       {/*对话部分*/}
       <div
         className={`${
-          isOpen ? "w-4/5" : "w-full"
+          isOpen ? "w-full lg:w-4/5" : "w-full"
         } flex flex-col h-full max-h-screen bg-gray-100`}
       >
         {/* 头部导航栏 - 固定在主内容顶部 */}
