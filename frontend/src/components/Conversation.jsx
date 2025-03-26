@@ -3,13 +3,14 @@ import { useState, useEffect, useCallback, useRef } from "react";
 import { EventSourceParserStream } from "eventsource-parser/stream";
 import { MarkdownRenderer } from "./chat/Markdown"; // markdown渲染组件
 import { createUserMessage, createAIMessage, processSSE } from "./chat/utils";
-import {toastIfLogin} from "./user/utils"
+import { toastIfLogin } from "./user/utils";
 import { globalData, models } from "@/constants";
 import {
   BreadcrumbIcon,
   DeepThinkIcon,
   ArrowUpIcon,
   StopIcon,
+  ImageUpLoadIcon,
 } from "./svg-icons";
 import HeadBar from "./HeadBar";
 import SideBar from "./Sidebar";
@@ -36,10 +37,28 @@ function ChatPage() {
   const chatContainerRef = useRef(null);
   const [shouldAutoScroll, setShouldAutoScroll] = useState(true);
 
-  // 同步最新消息到 ref
-  useEffect(() => {
-    messagesRef.current = messages;
-  }, [messages]);
+  //处理上传图片
+  const fileInputRef = useRef(null);
+
+  // 触发文件选择窗口
+  const handleButtonClick = () => {
+    if (fileInputRef.current) {
+      fileInputRef.current.click();
+    }
+  };
+
+  // 处理文件选择变化
+  const handleFileChange = (event) => {
+    const files = event.target.files;
+    if (files && files.length > 0) {
+      const file = files[0];
+      if (file && file.type.startsWith("image/")) {
+        console.log("选择的图片文件:", file);
+      } else {
+        alert("请选择一个图片文件");
+      }
+    }
+  };
 
   // 处理 conversationId 更新
   useEffect(() => {
@@ -188,10 +207,13 @@ function ChatPage() {
   const handleSendMessage = useCallback(
     async (initialMessage = null) => {
       // 检测是否登录
-    if (!localStorage.getItem("auth") || localStorage.getItem("loginStatus")!=="login"){
-      toastIfLogin(0,500);
-      return
-    }
+      if (
+        !localStorage.getItem("auth") ||
+        localStorage.getItem("loginStatus") !== "login"
+      ) {
+        toastIfLogin(0, 500);
+        return;
+      }
       const userMessage =
         initialMessage ||
         createUserMessage(inputText, messagesRef, conversationId);
@@ -281,7 +303,8 @@ function ChatPage() {
                       </span>
                       <BreadcrumbIcon
                         className={`${
-                          showThinkText[msg.message_id] && "transform scale-y-[-1]"
+                          showThinkText[msg.message_id] &&
+                          "transform scale-y-[-1]"
                         } absolute right-2 size-5 `}
                       />
                     </button>
@@ -332,23 +355,43 @@ function ChatPage() {
                   }
                 }}
               ></textarea>
-              <div className="w-full flex justify-between md:mt-2">
-                <button
-                  onClick={() => setDeepThink(!deepThink)}
-                  className={`flex flex-row justify-center items-center gap-1 px-2 my-[0.2rem] rounded-full border ${
-                    deepThink
-                      ? "bg-blue-200 text-blue-600 border-blue-500"
-                      : "bg-white border-gray-300 text-black hover:bg-gray-100"
-                  } transition`}
-                >
-                  <DeepThinkIcon className={"size-4"} />
-                  <span className="text-sm select-none">深度思考</span>
-                </button>
+              <div className="w-full flex flex-row justify-between md:mt-2">
+                <div className="flex flex-row justify-start gap-2">
+                  {/*深度思考icon*/}
+                  <button
+                    onClick={() => setDeepThink(!deepThink)}
+                    className={`flex flex-row justify-center items-center gap-1 px-2 my-[0.2rem] rounded-full border ${
+                      deepThink
+                        ? "bg-blue-200 text-blue-600 border-blue-500"
+                        : "bg-white border-gray-300 text-black hover:bg-gray-100"
+                    } transition`}
+                  >
+                    <DeepThinkIcon className={"size-4"} />
+                    <span className="text-sm select-none">深度思考</span>
+                  </button>
+
+                  {/* 图片上传icon */}
+                  <button
+                    className=" flex flex-row justify-start items-center gap-1 px-2 my-[0.2rem] rounded-full border bg-white border-gray-300 text-black hover:bg-gray-100 transition"
+                    onClick={handleButtonClick}
+                  >
+                    <ImageUpLoadIcon className={"size-5"} />
+                  </button>
+                  <input
+                    type="file"
+                    ref={fileInputRef}
+                    onChange={handleFileChange}
+                    style={{ display: "none" }}
+                    accept="image/*" // 限制只能选择图片
+                  />
+                </div>
+
+                {/*上传按钮/中断按钮 */}
                 {finishText ? (
                   <button
                     onClick={() => {
                       handleSendMessage();
-                      
+
                       setShouldAutoScroll(true);
                     }}
                     className="size-9 mb-1 bg-indigo-600 text-white rounded-full hover:bg-indigo-500"
