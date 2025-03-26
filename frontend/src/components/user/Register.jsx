@@ -138,6 +138,7 @@ function RegisterPage() {
         setShowMsg(false);
       }, 2000);
     } else {
+      localStorage.loginStatus = "login";
       localStorage.auth = data.session_id;
       setMsgStruct({
         title: "登录成功",
@@ -147,7 +148,7 @@ function RegisterPage() {
       setShowMsg(true);
       setTimeout(() => {
         setShowMsg(false);
-        navigate("/chat");
+        navigate("/");
       }, 500);
     }
   };

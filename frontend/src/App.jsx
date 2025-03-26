@@ -19,7 +19,6 @@ function Layout() {
         <Route path="/" element={<NewChatPage />} />
         <Route path="/login" element={<LoginPage/>}/>
         <Route path="/register" element={<RegisterPage />} />
-        <Route path="/chat" element={<NewChatPage />} />
         <Route path="/c/:conversation_id" element={<ChatPage />} />
         <Route path="/settings" element={<SettingsPage />} />
         <Route path="/forgot-password" element={<ForgotPasswordPage />} />

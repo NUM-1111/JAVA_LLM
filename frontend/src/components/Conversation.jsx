@@ -112,6 +112,7 @@ function ChatPage() {
     return () => chatContainer.removeEventListener("scroll", handleScroll);
   }, []);
 
+  //自适应输入栏
   useEffect(() => {
     if (textareaRef.current) {
       const e = textareaRef.current;
