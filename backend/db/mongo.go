@@ -87,8 +87,31 @@ func FindConversations(ctx context.Context, query bson.M) ([]models.Conversation
 	return conversations, nil
 }
 
+//根据query(conversation_id)删除单个conversation
+func DeleteOneConversation(ctx context.Context, query bson.M) error {
+	// 先查找会话
+	conversation, err := FindOneConversation(ctx, query)
+	if err != nil {
+		return fmt.Errorf("查找会话失败: %v", err)
+	}
+
+	// 删除所有message
+	if err := DeleteMessages(ctx, bson.M{"conversation_id": conversation.ConversationID}); err != nil {
+		return fmt.Errorf("删除消息失败: %v", err)
+	}
+
+	// 删除conversation
+	if result, err := Conversation.DeleteOne(ctx, bson.M{"conversation_id": conversation.ConversationID}); err != nil {
+		return fmt.Errorf("删除会话失败: %v", err)
+	} else if result.DeletedCount == 0 {
+		return fmt.Errorf("未找到匹配会话")
+	}
+
+	return nil
+}
+
 // 根据query(user_id)查找所有conversation,取出conversion_id后,删除所有的message,然后删除conversation
-func DeleteConversation(ctx context.Context, query bson.M) error {
+func DeleteConversations(ctx context.Context, query bson.M) error {
 	// 先查找所有符合条件的conversation
 	conversations, err := FindConversations(ctx, query)
 	if err != nil {
@@ -98,7 +121,7 @@ func DeleteConversation(ctx context.Context, query bson.M) error {
 	// 遍历conversation,删除所有的message,然后删除conversation
 	for _, conversation := range conversations {
 		// 删除所有message
-		if err := DeleteMessage(ctx, bson.M{"conversation_id": conversation.ConversationID}); err != nil {
+		if err := DeleteMessages(ctx, bson.M{"conversation_id": conversation.ConversationID}); err != nil {
 			return fmt.Errorf("删除消息失败: %v", err)
 		}
 
@@ -150,7 +173,7 @@ func FindMessages(ctx context.Context, query bson.M) ([]models.ChatMessage, erro
 }
 
 //删除符合条件的消息
-func DeleteMessage(ctx context.Context, query bson.M) error {
+func DeleteMessages(ctx context.Context, query bson.M) error {
 	result, err := ChatMessage.DeleteMany(ctx, query)
 	if err != nil {
 		return fmt.Errorf("消息删除操作失败: %w", err)

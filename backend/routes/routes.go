@@ -36,7 +36,9 @@ func SetupRoutes(r *gin.Engine) {
 	api.POST("/change/email", services.ChangeUserEmail)        // 允许用户修改邮箱
 	api.POST("/delete/account", services.UserDelete)           // 允许用户注销账户
 	api.POST("/delete/chat", services.DeleteAllConversations)  // 允许用户删除所有聊天记录
+	api.POST("/delete/conversation", services.DeleteConversation) // 允许用户删除单条聊天记录
 	api.POST("/new/message", services.HandleNewMessage)        // 处理新的聊天消息
+	api.PUT("/rename/conversation", services.RenameConversation) // 允许用户重命名对话
 	api.GET("/query/conversation", services.QueryConversation) //侧边栏查询历史记录
 	api.POST("/query/messages", services.QueryMessages)        // 对话页查询历史消息
 	api.GET("/user/info", services.GetUserNameBySession)       //返回用户名信息
