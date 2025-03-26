@@ -13,6 +13,9 @@ export default function SideBar({ isOpen, setIsOpen }) {
   const [conversations, setConversations] = useState([]); // 存储对话列表
   const navigate = useNavigate(); // 获取导航函数
   const [hoveredIndex, setHoveredIndex] = useState(null);// 鼠标悬停
+  const [editingId, setEditingId] = useState(null);
+  const [newTitle, setNewTitle] = useState("");
+
 
   //从后端API获取会话内容
   useEffect(() => {
@@ -40,13 +43,77 @@ export default function SideBar({ isOpen, setIsOpen }) {
     };
   }, []);
 
+
+
+
+  //前端传conversion_id到后端，后端根据conversion_id删除会话
+  const deleteConversation = async ({conversation_id}) => {
+    try {
+      const response = await fetch(
+        "http://localhost:8080/api/delete/conversation",
+        {
+          method: "POST",
+          headers: {
+            Authorization: localStorage.auth,
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({ conversation_id }),
+        }
+      );
+
+      console.log(conversation_id);
+      console.log(response);
+      if (!response.ok) {
+        const data = await response.text();
+        console.log(data);
+        throw new Error(`HTTP 错误！状态码: ${response.status}`);
+      }
+
+      // 更新会话列表
+      const data = await fetchConversations();
+      setConversations(data);
+    } catch (error) {
+      console.error("删除会话失败:", error);
+    }
+  };
+  
+
+  // 重命名对话
+  const renameConversation = async ({ conversation_id, title }) => {
+    try {
+      const response = await fetch(
+        "http://localhost:8080/api/rename/conversation",
+        {
+          method: "PUT",
+          headers: {
+            Authorization: localStorage.auth,
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({conversation_id, title }),
+        }
+      );
+
+      if (!response.ok) {
+        const data = await response.text();
+        console.log(data);
+        throw new Error(`HTTP 错误！状态码: ${response.status}`);
+      }
+
+      // 更新会话列表
+      const data = await fetchConversations();
+      setConversations(data);
+    } catch (error) {
+      console.error("重命名会话失败:", error);
+    }
+  };
+
   return (
     <div
       className={`${
         isOpen ? "translate-x-0 lg:relative lg:z-auto" : "-translate-x-full"
       } 
           flex absolute xl:w-1/5 lg:w-1/4 md:w-1/3 sm:w-2/5 w-7/12 z-50 inset-y-0 left-0  flex-col max-h-screen justify-between border-e 
-          border-gray-100 bg-white shadow-sm transition-all duration-300 overflow-hidden overflow-y-auto`}
+          border-gray-100 bg-gray-100 shadow-sm transition-all duration-300 overflow-hidden overflow-y-auto`}
     >
       <div className="px-4 py-3 transform">
         {/* 侧边栏顶部 */}
@@ -103,26 +170,50 @@ export default function SideBar({ isOpen, setIsOpen }) {
           {conversations.length === 0 ? (
             <p className="text-gray-500 text-center">暂无对话</p>
           ) : (
-            conversations.map((conversation,index) => (
+            conversations.map((conversation) => (
               <div
-                key={index}
+                key={conversation.conversation_id}
                 className="flex flex-row items-center justify-between hover:bg-gray-200 rounded-lg"
-                onMouseEnter={() => setHoveredIndex(index)}
+                onMouseEnter={() => setHoveredIndex(conversation.conversation_id)}
                 onMouseLeave={() => setHoveredIndex(null)}
               >
                 {/* 对话按钮 */}
-                <button
-                  className="block w-full text-left px-4 py-2 my-1 text-gray-700"
-                  onClick={() => {
-                    console.log(`跳转到对话 ${conversation.conversation_id}`);
-                    navigate(`/c/${conversation.conversation_id}`);
-                  }}
-                >
-                  {conversation.title || "未命名对话"}
-                </button>
-
+                {editingId === conversation.conversation_id ? (
+                  <input
+                    type="text"
+                    value={newTitle}
+                    onChange={(e) => setNewTitle(e.target.value)}
+                    onBlur={() => {
+                      if (newTitle.trim() !== "") {
+                        renameConversation({
+                          conversation_id: conversation.conversation_id,
+                          title: newTitle
+                        });
+                      }
+                      setEditingId(null);
+                    }}
+                    onKeyDown={(e) => {
+                      if (e.key === "Enter") {
+                        e.target.blur();
+                      }
+                    }}
+                    autoFocus
+                    className="border rounded px-2 py-1 w-48"
+                  />
+                ) : (
+                    <button
+                      className="block w-full text-left px-4 py-2 my-1 text-gray-700"
+                      onClick={() => {
+                        console.log(`跳转到对话 ${conversation.conversation_id}`);
+                        navigate(`/c/${conversation.conversation_id}`);
+                      }}
+                    >
+                      {conversation.title || "未命名对话"}
+                    </button>
+                )
+                }
                 {/* 右侧菜单按钮，只有 hoveredIndex === index 时显示 */}
-                {hoveredIndex === index && (
+                {hoveredIndex === conversation.conversation_id && (
                   <button
                     className="flex flex-row items-center"
                     onClick={() =>
@@ -141,13 +232,15 @@ export default function SideBar({ isOpen, setIsOpen }) {
                   {selectedConversationId === conversation.conversation_id && (
                     <div
                       ref={optionsRef}
-                      className="absolute right-0 top-10 w-32 bg-white shadow-lg rounded-lg border border-gray-200 " 
+                      className="absolute right-0 top-7 w-32 bg-white shadow-lg rounded-lg border border-gray-200 " 
                     >
                       <button
                         className="w-full px-4 py-2 text-left hover:bg-gray-100"
                         onClick={() => {
                           console.log(`重命名对话 ${conversation.conversation_id}`);
                           setSelectedConversationId(null);
+                          setEditingId(conversation.conversation_id);
+                          setNewTitle(conversation.title || "");
                         }}
                       >
                         重命名
@@ -157,6 +250,7 @@ export default function SideBar({ isOpen, setIsOpen }) {
                         onClick={() => {
                           console.log(`删除对话 ${conversation.conversation_id}`);
                           setSelectedConversationId(null);
+                          deleteConversation({ conversation_id: conversation.conversation_id });
                         }}
                       >
                         删除

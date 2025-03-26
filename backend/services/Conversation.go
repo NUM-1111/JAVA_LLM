@@ -70,6 +70,30 @@ func QueryMessages(c *gin.Context) {
 }
 
 /*
+删除单个会话
+*/
+func DeleteConversation(c *gin.Context) {
+	var reqData struct {
+		ConversationID string `json:"conversation_id"`
+	}
+	if err := c.ShouldBindJSON(&reqData); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"msg": "参数格式异常,未获取到conversation_id."})
+		return
+	}
+	// 构造查询条件，按照conversion_id删除该会话 
+	query := bson.M{"conversation_id": reqData.ConversationID}
+
+	// 调用数据库删除函数
+	err := db.DeleteOneConversation(c.Request.Context(), query)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"err": "数据库删除失败"})
+		return
+	}
+
+	// 返回数据给前端
+	c.JSON(http.StatusOK, gin.H{"msg": "删除聊天记录成功"})
+}
+/*
 删除所有会话(先删除Conversion中的message_id，再删除Conversation)
 */
 func DeleteAllConversations(c *gin.Context) {
@@ -91,7 +115,7 @@ func DeleteAllConversations(c *gin.Context) {
 	query := bson.M{"user_id": s.UserID}
 
 	// 调用数据库删除函数
-	err := db.DeleteConversation(c.Request.Context(), query)
+	err := db.DeleteConversations(c.Request.Context(), query)
 	fmt.Println(err)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"err": "数据库删除失败"})
@@ -100,4 +124,31 @@ func DeleteAllConversations(c *gin.Context) {
 
 	// 返回数据给前端
 	c.JSON(http.StatusOK, gin.H{"msg": "删除聊天记录成功"})
+}
+
+/*
+重命名接口
+*/
+func RenameConversation(c *gin.Context) {
+	var reqData struct {
+		ConversationID string `json:"conversation_id"`
+		Title          string `json:"title"`
+	}
+	if err := c.ShouldBindJSON(&reqData); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"msg": "参数格式异常,未获取到conversation_id."})
+		return
+	}
+	// 构造查询条件，按照conversion_id修改该会话的title 
+	query := bson.M{"conversation_id": reqData.ConversationID}
+	update := bson.M{"$set": bson.M{"title": reqData.Title}}
+
+	// 调用数据库更新函数
+	err := db.UpdateOneConversation(c.Request.Context(), query, update)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"err": "数据库更新失败"})
+		return
+	}
+
+	// 返回数据给前端
+	c.JSON(http.StatusOK, gin.H{"msg": "修改聊天记录成功"})
 }
