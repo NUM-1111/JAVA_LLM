@@ -1,10 +1,18 @@
-import { useState, useEffect } from "react";
+import { useState, useRef, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import { SiderBarIcon, AddIcon, NewChatIcon } from "./svg-icons";
+import {
+  SiderBarIcon,
+  AddIcon,
+  NewChatIcon,
+  OneConversationIcon,
+  //TrashIcon,
+  //RenameIcon,
+} from "./svg-icons";
 
 export default function SideBar({ isOpen, setIsOpen }) {
   const [conversations, setConversations] = useState([]); // 存储对话列表
   const navigate = useNavigate(); // 获取导航函数
+  const [hoveredIndex, setHoveredIndex] = useState(null);// 鼠标悬停
 
   //从后端API获取会话内容
   useEffect(() => {
@@ -15,6 +23,22 @@ export default function SideBar({ isOpen, setIsOpen }) {
 
     loadConversations();
   }, []); // 组件挂载时请求数据
+
+  const [selectedConversationId, setSelectedConversationId] = useState(null);
+  const optionsRef = useRef(null);
+
+  // 监听点击外部区域，隐藏菜单
+  useEffect(() => {
+    function handleClickOutside(event) {
+      if (optionsRef.current && !optionsRef.current.contains(event.target)) {
+        setSelectedConversationId(null);
+      }
+    }
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside);
+    };
+  }, []);
 
   return (
     <div
@@ -79,17 +103,68 @@ export default function SideBar({ isOpen, setIsOpen }) {
           {conversations.length === 0 ? (
             <p className="text-gray-500 text-center">暂无对话</p>
           ) : (
-            conversations.map((conversation, index) => (
-              <button
-                key={index} // 这里使用 index 作为 key
-                className="block w-full text-left px-4 py-2 my-1 text-gray-700 hover:bg-gray-200 rounded-lg"
-                onClick={() => {
-                  console.log(`跳转到对话 ${conversation.conversation_id}`); // 跳转到指定对话页面
-                  navigate(`/c/${conversation.conversation_id}`);
-                }}
+            conversations.map((conversation,index) => (
+              <div
+                key={index}
+                className="flex flex-row items-center justify-between hover:bg-gray-200 rounded-lg"
+                onMouseEnter={() => setHoveredIndex(index)}
+                onMouseLeave={() => setHoveredIndex(null)}
               >
-                {conversation.title || "未命名对话"}
-              </button>
+                {/* 对话按钮 */}
+                <button
+                  className="block w-full text-left px-4 py-2 my-1 text-gray-700"
+                  onClick={() => {
+                    console.log(`跳转到对话 ${conversation.conversation_id}`);
+                    navigate(`/c/${conversation.conversation_id}`);
+                  }}
+                >
+                  {conversation.title || "未命名对话"}
+                </button>
+
+                {/* 右侧菜单按钮，只有 hoveredIndex === index 时显示 */}
+                {hoveredIndex === index && (
+                  <button
+                    className="flex flex-row items-center"
+                    onClick={() =>
+                      setSelectedConversationId(
+                        selectedConversationId === conversation.conversation_id
+                          ? null
+                          : conversation.conversation_id
+                      )
+                    }
+                  >
+                    <OneConversationIcon />
+                  </button>
+                )}
+                <div className="relative flex flex-row items-center justify-between">
+                  {/* 选项面板（仅当前选中的对话项显示） */}
+                  {selectedConversationId === conversation.conversation_id && (
+                    <div
+                      ref={optionsRef}
+                      className="absolute right-0 top-10 w-32 bg-white shadow-lg rounded-lg border border-gray-200 " 
+                    >
+                      <button
+                        className="w-full px-4 py-2 text-left hover:bg-gray-100"
+                        onClick={() => {
+                          console.log(`重命名对话 ${conversation.conversation_id}`);
+                          setSelectedConversationId(null);
+                        }}
+                      >
+                        重命名
+                      </button>
+                      <button
+                        className="w-full px-4 py-2 text-left text-red-600 hover:bg-red-100"
+                        onClick={() => {
+                          console.log(`删除对话 ${conversation.conversation_id}`);
+                          setSelectedConversationId(null);
+                        }}
+                      >
+                        删除
+                      </button>
+                    </div>
+                  )}
+                </div>
+              </div>
             ))
           )}
         </div>
