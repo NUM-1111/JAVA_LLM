@@ -348,7 +348,7 @@ function ChatPage() {
                   <button
                     onClick={() => {
                       handleSendMessage();
-                      textareaRef.current.target.height = "auto";
+                      
                       setShouldAutoScroll(true);
                     }}
                     className="size-9 mb-1 bg-indigo-600 text-white rounded-full hover:bg-indigo-500"

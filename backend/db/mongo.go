@@ -66,7 +66,11 @@ func FindOneConversation(ctx context.Context, query bson.M) (models.Conversation
 // 从数据库中查询所有的conversation
 func FindConversations(ctx context.Context, query bson.M, sort bson.D) ([]models.Conversation, error) {
 	//使用Find查询所有符合条件的conversation
-	cursor, err := Conversation.Find(ctx, query, options.Find().SetSort(sort))
+	findOptions := options.Find()
+	if sort != nil {
+		findOptions.SetSort(sort) // 仅当 sort 不为 nil 时才设置排序
+	}
+	cursor, err := Conversation.Find(ctx, query, findOptions)
 	if err != nil {
 		return nil, err
 	}
@@ -113,7 +117,7 @@ func DeleteOneConversation(ctx context.Context, query bson.M) error {
 // 根据query(user_id)查找所有conversation,取出conversion_id后,删除所有的message,然后删除conversation
 func DeleteConversations(ctx context.Context, query bson.M) error {
 	// 先查找所有符合条件的conversation
-	conversations, err := FindConversations(ctx, query, bson.D{})
+	conversations, err := FindConversations(ctx, query, nil)
 	if err != nil {
 		return fmt.Errorf("查找会话失败: %v", err)
 	}
