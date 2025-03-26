@@ -5,16 +5,16 @@ import {
   AddIcon,
   NewChatIcon,
   OneConversationIcon,
-  //TrashIcon,
-  //RenameIcon,
+  TrashIcon,
+  RenameIcon,
 } from "./svg-icons";
 
 export default function SideBar({ isOpen, setIsOpen }) {
   const [conversations, setConversations] = useState([]); // 存储对话列表
   const navigate = useNavigate(); // 获取导航函数
   const [hoveredIndex, setHoveredIndex] = useState(null);// 鼠标悬停
-  const [editingId, setEditingId] = useState(null);
-  const [newTitle, setNewTitle] = useState("");
+  const [editingId, setEditingId] = useState(null);// 正在编辑的对话id
+  const [newTitle, setNewTitle] = useState("");// 新对话标题
 
 
   //从后端API获取会话内容
@@ -198,7 +198,7 @@ export default function SideBar({ isOpen, setIsOpen }) {
                       }
                     }}
                     autoFocus
-                    className="border rounded px-2 py-1 w-48"
+                    className=" border-[0.5px] border-opacity-50 border-gray-50 rounded-lg px-2 py-1 min-w-52"
                   />
                 ) : (
                     <button
@@ -235,7 +235,7 @@ export default function SideBar({ isOpen, setIsOpen }) {
                       className="absolute right-0 top-7 w-32 bg-white shadow-lg rounded-lg border border-gray-200 " 
                     >
                       <button
-                        className="w-full px-4 py-2 text-left hover:bg-gray-100"
+                        className="flex flex-row items-center w-full px-4 py-2 text-left hover:bg-gray-100"
                         onClick={() => {
                           console.log(`重命名对话 ${conversation.conversation_id}`);
                           setSelectedConversationId(null);
@@ -243,16 +243,18 @@ export default function SideBar({ isOpen, setIsOpen }) {
                           setNewTitle(conversation.title || "");
                         }}
                       >
+                        <RenameIcon />
                         重命名
                       </button>
                       <button
-                        className="w-full px-4 py-2 text-left text-red-600 hover:bg-red-100"
+                        className="flex flex-row items-center w-full px-4 py-2 text-left text-red-600 hover:bg-red-100"
                         onClick={() => {
                           console.log(`删除对话 ${conversation.conversation_id}`);
                           setSelectedConversationId(null);
                           deleteConversation({ conversation_id: conversation.conversation_id });
                         }}
                       >
+                        <TrashIcon />
                         删除
                       </button>
                     </div>
