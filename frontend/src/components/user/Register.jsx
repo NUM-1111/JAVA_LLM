@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { globalData } from "@/constants";
-import { RedStarIcon, SpinCircle, MessageIcon, CloseEyeIcon, OpenEyeIcon } from "./svg-icons";
+import { RedStarIcon, SpinCircle, MessageIcon, CloseEyeIcon, OpenEyeIcon } from "../svg-icons";
 
 function RegisterPage() {
   const navigate = useNavigate();

@@ -51,7 +51,7 @@ function NewChatPage() {
       <div
         className={`${
           isOpen ? "w-full lg:w-4/5" : "w-full"
-        } flex flex-col h-full max-h-screen bg-gray-100`}
+        } flex flex-col h-full max-h-screen bg-gray-100 relative`}
       >
         {/* 头部导航栏 - 固定在主内容顶部 */}
         <HeadBar

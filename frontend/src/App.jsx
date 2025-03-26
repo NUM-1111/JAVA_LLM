@@ -6,12 +6,12 @@ import {
 import { ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 import "./index.css";
-import LoginPage from "./components/Login";
-import RegisterPage from "./components/Register";
+import LoginPage from "./components/user/Login";
+import RegisterPage from "./components/user/Register";
 import NewChatPage from "./components/NewChat";
 import ChatPage from "./components/Conversation";
-import SettingsPage from "./components/Setting";
-import ForgotPasswordPage from "./components/ForgotPassword";
+import SettingsPage from "./components/user/Setting";
+import ForgotPasswordPage from "./components/user/ForgotPassword";
 function Layout() {
   return (
     <>

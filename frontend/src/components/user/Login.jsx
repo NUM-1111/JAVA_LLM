@@ -7,7 +7,7 @@ import {
   MessageIcon,
   CloseEyeIcon,
   OpenEyeIcon,
-} from "./svg-icons";
+} from "../svg-icons";
 
 function LoginPage() {
   const navigate = useNavigate();

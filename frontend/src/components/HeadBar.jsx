@@ -93,7 +93,7 @@ function HeadBar({ isOpen, setIsOpen, selectedCode, setSelectedCode }) {
   };
 
   return (
-    <header className="sticky top-0 flex flex-row px-5 py-3 justify-between z-auto select-none">
+    <header className="sticky xl:absolute w-full z-20 top-0 flex flex-row px-5 py-3 justify-between select-none xl:bg-transparent">
       {/* 左侧按钮 */}
       <div className="flex flex-row text-gray-700">
         {/*显示侧边栏按钮 */}
@@ -134,8 +134,8 @@ function HeadBar({ isOpen, setIsOpen, selectedCode, setSelectedCode }) {
         <div ref={modelRef} className="relative group">
           <button
             onClick={() => setShowModels(!showModels)}
-            className={`relative flex flex-row items-center ml-1 px-2 py-2 rounded-lg justify-center min-w-40 min-h-11 hover:bg-gray-50 border ${
-              showModels ? "bg-gray-50 border-gray-200" : "border-gray-100"
+            className={`relative flex flex-row items-center ml-1 px-2 py-2 rounded-lg justify-center min-w-40 min-h-11 hover:bg-gray-100 border ${
+              showModels ? "bg-gray-100 border-gray-200" : "border-white"
             }  transition`}
           >
             <span className="text-lg font-semibold text-gray-700 mr-5">
@@ -146,7 +146,7 @@ function HeadBar({ isOpen, setIsOpen, selectedCode, setSelectedCode }) {
           {/* 下拉菜单 */}
           {showModels && (
             <div
-              className="absolute -inset-x-10 lg:left-0 flex flex-col top-[3.3rem] min-h-20 min-w-[260px] w-max z-50 px-2 py-2 justify-center rounded-xl border border-gray-200 bg-white shadow-md"
+              className="absolute -inset-x-10 lg:left-0 flex flex-col top-[3.3rem] min-h-20 min-w-[260px] w-max z-50 px-2 py-2 justify-center rounded-xl bg-white shadow-md border border-gray-200"
               id="selectModel"
             >
               <button

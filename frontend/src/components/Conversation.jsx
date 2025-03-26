@@ -1,11 +1,17 @@
 import { useLocation, useParams, useNavigate } from "react-router-dom";
 import { useState, useEffect, useCallback, useRef } from "react";
 import { EventSourceParserStream } from "eventsource-parser/stream";
-import SideBar from "./Sidebar";
+import { MarkdownRenderer } from "./chat/Markdown"; // markdown渲染组件
+import { createUserMessage, createAIMessage, processSSE } from "./chat/utils";
 import { globalData, models } from "@/constants";
-import { DeepThinkIcon, ArrowUpIcon } from "./svg-icons";
+import {
+  BreadcrumbIcon,
+  DeepThinkIcon,
+  ArrowUpIcon,
+  StopIcon,
+} from "./svg-icons";
 import HeadBar from "./HeadBar";
-import { MarkdownRenderer } from "./Markdown"; // markdown渲染组件
+import SideBar from "./Sidebar";
 
 function ChatPage() {
   const location = useLocation();
@@ -13,14 +19,15 @@ function ChatPage() {
   const { conversation_id } = useParams();
   const [selectedCode, setSelectedCode] = useState(2);
   const [deepThink, setDeepThink] = useState(true);
-  const [text, setText] = useState("");
+  const [inputText, setInputText] = useState("");
   const [isOpen, setIsOpen] = useState(false);
   const [messages, setMessages] = useState([]);
   const messagesRef = useRef(messages);
   const textareaRef = useRef(null);
   // ai消息处理
-  const finishText = useRef(false); // ai消息是否完成
+  const abortController = useRef(new AbortController()); // 中断ai消息生成
   const finishThink = useRef(false); // 是否结束思考
+  const [finishText, setFinishText] = useState(true); // 是否正文输出完毕
   const [showThinkText, setShowThinkText] = useState({});
   const [conversationId, setConversationId] = useState(conversation_id || "");
   // 处理自动滚动页面事件
@@ -105,146 +112,103 @@ function ChatPage() {
     return () => chatContainer.removeEventListener("scroll", handleScroll);
   }, []);
 
+  useEffect(() => {
+    if (textareaRef.current) {
+      const e = textareaRef.current;
+      e.style.height = "auto";
+      const lineHeight = parseInt(window.getComputedStyle(e).lineHeight);
+      const isSmallScreen = window.innerWidth < 768;
+      let maxHeight = isSmallScreen ? lineHeight * 5.5 : lineHeight * 7;
+      e.style.height = `${Math.min(e.scrollHeight, maxHeight)}px`;
+    }
+  }, [inputText]);
+
   // 当消息更新时，如果 shouldAutoScroll 为 true，则滚动到底部
   useEffect(() => {
     if (shouldAutoScroll && bottomRef.current) {
       bottomRef.current.scrollIntoView({ behavior: "smooth" });
     }
   }, [messages, shouldAutoScroll]);
+
+  // 发送消息到服务器
+  const sendMessageToServer = async (
+    userMessage,
+    aiMessage,
+    deepThink,
+    abortController
+  ) => {
+    abortController.current?.abort();
+    abortController.current = new AbortController();
+
+    try {
+      const response = await fetch(globalData.domain + "/api/new/message", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: localStorage.auth,
+        },
+        body: JSON.stringify({
+          action: "next",
+          message: userMessage.message,
+          message_id: userMessage.message_id,
+          conversation_id: userMessage.conversation_id,
+          parent: userMessage.parent,
+          model: aiMessage.message.model,
+          use_deep_think: deepThink,
+          created_at: userMessage.created_at,
+        }),
+        signal: abortController.current.signal,
+      });
+
+      const contentType = response.headers.get("Content-Type") || "";
+      if (contentType.includes("application/json")) {
+        const data = await response.json();
+        console.log("错误:", data);
+        return;
+      }
+
+      if (contentType.includes("text/event-stream") && response.body) {
+        const reader = response.body
+          .pipeThrough(new TextDecoderStream()) // 解码 UTF-8 文本
+          .pipeThrough(new EventSourceParserStream()) // 解析 SSE
+          .getReader();
+
+        await processSSE(reader, setMessages, finishThink, abortController);
+      }
+    } catch (error) {
+      if (error.name !== "AbortError") {
+        console.error("请求失败:", error);
+      }
+    }
+  };
+
   // 发送消息
   const handleSendMessage = useCallback(
     async (initialMessage = null) => {
-      // 使用 ref 获取最新消息或传入的初始消息
-      const currentMessages = messagesRef.current;
       const userMessage =
         initialMessage ||
-        (() => {
-          if (currentMessages.length > 0 && text.trim() !== "") {
-            return {
-              message: {
-                author: { role: "user" },
-                content: { content_type: "text", text: text.trim() },
-                status: "finished_successfully",
-              },
-              message_id: crypto.randomUUID(),
-              conversation_id: conversationId,
-              parent:
-                currentMessages[currentMessages.length - 1]?.message_id || null,
-              children: [],
-              created_at: new Date().toISOString(),
-            };
-          }
-          return null;
-        })();
-
+        createUserMessage(inputText, messagesRef, conversationId);
       if (!userMessage) return;
 
-      // 如果是文本输入的消息，更新状态
       if (!initialMessage) {
-        setText("");
+        setInputText("");
         setMessages((prev) => [...prev, userMessage]);
       }
 
-      // 创建 AI 消息
-      const aiMessage = {
-        message: {
-          author: { role: "assistant" },
-          content: { content_type: "text", text: "", thinkText: "" },
-          status: "processing",
-          model: models[selectedCode],
-        },
-        message_id: crypto.randomUUID(),
-        conversation_id: conversationId,
-        parent: userMessage.message_id,
-        children: [],
-        created_at: new Date().toISOString(),
-      };
-
+      const aiMessage = createAIMessage(userMessage, selectedCode, models);
+      setFinishText(false);
       setMessages((prev) => [...prev, aiMessage]);
       setShowThinkText((prev) => ({ ...prev, [aiMessage.message_id]: true }));
-      try {
-        const response = await fetch(globalData.domain + "/api/new/message", {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-            Authorization: localStorage.auth,
-          },
-          body: JSON.stringify({
-            action: "next",
-            message: userMessage.message,
-            message_id: userMessage.message_id,
-            conversation_id: userMessage.conversation_id,
-            parent: userMessage.parent,
-            model: aiMessage.message.model,
-            use_deep_think: deepThink,
-            created_at: userMessage.created_at,
-          }),
-        });
 
-        const contentType = response.headers.get("Content-Type") || "";
-        if (contentType.includes("application/json")) {
-          const data = await response.json();
-          console.log("错误:", data);
-          return;
-        }
-
-        if (contentType.includes("text/event-stream") && response.body) {
-          finishText.current = false;
-          const reader = response.body
-            .pipeThrough(new TextDecoderStream()) // 解码 UTF-8 文本
-            .pipeThrough(new EventSourceParserStream()) // 解析 SSE
-            .getReader();
-
-          while (!finishText.current) {
-            const { done, value } = await reader.read();
-            if (done) {
-              console.log("SSE完毕");
-              break;
-            }
-            try {
-              const jsonData = JSON.parse(value.data);
-              if (jsonData.type === "answer_chunk") {
-                if (jsonData.content === "</think>") {
-                  finishThink.current = true;
-                } else {
-                  setMessages((prev) => {
-                    const newMessages = [...prev];
-                    const aiMsg = newMessages[newMessages.length - 1];
-                    if (aiMsg.message.author.role === "assistant") {
-                      if (finishThink.current) {
-                        aiMsg.message.content.text += jsonData.content;
-                      } else {
-                        aiMsg.message.content.thinkText += jsonData.content;
-                      }
-                    }
-                    return newMessages;
-                  });
-                }
-              } else if (
-                jsonData.type === "status" &&
-                jsonData.message === "ANSWER_DONE"
-              ) {
-                console.log("SSE 响应接受完成.");
-                finishText.current = true;
-                return;
-              } else {
-                console.log("未知SSE格式:", jsonData);
-              }
-              //console.log("SSE 响应:", jsonData);
-            } catch (e) {
-              console.error("JSON 解析错误:", e, "内容:", value.data);
-              finishText.current = true;
-              return;
-            }
-          }
-        }
-      } catch (error) {
-        console.error("请求失败:", error);
-        finishText.current = true;
-        return;
-      }
+      await sendMessageToServer(
+        userMessage,
+        aiMessage,
+        deepThink,
+        abortController
+      );
+      setFinishText(true);
     },
-    [selectedCode, conversationId, text, deepThink, finishText, finishThink]
+    [selectedCode, conversationId, inputText, deepThink]
   );
 
   // 切换显示思考文本
@@ -256,7 +220,7 @@ function ChatPage() {
   };
 
   return (
-    <div className="flex flex-row h-screen bg-gray-100 ">
+    <div className="flex flex-row h-screen bg-white">
       {/*侧边栏部分 */}
       <SideBar isOpen={isOpen} setIsOpen={setIsOpen} />
 
@@ -264,7 +228,7 @@ function ChatPage() {
       <div
         className={`${
           isOpen ? "w-full lg:w-4/5" : "w-full"
-        } flex flex-col h-full max-h-screen bg-white`}
+        } flex flex-col h-full max-h-screen bg-white relative`}
       >
         {/* 头部导航栏 - 固定在主内容顶部 */}
         {/*进入具体内容页可加上: border-b border-gray-300 */}
@@ -289,7 +253,7 @@ function ChatPage() {
                 msg?.message.author.role == "user" ? (
                   <div
                     key={index}
-                    className="md:max-w-[60%] max-w-[70%] ml-auto p-5 h-30 bg-gray-50 border-gray-200 border shadow-sm rounded-3xl"
+                    className="md:max-w-[60%] max-w-[70%] ml-auto mt-14 p-5 h-30 bg-gray-50 border-gray-200 border shadow-sm rounded-3xl"
                   >
                     {msg.message?.content.text}
                   </div>
@@ -300,12 +264,19 @@ function ChatPage() {
                   >
                     <button
                       onClick={() => toggleThinkText(msg.message_id)}
-                      className={`flex flex-row justify-center items-center min-h-2/5 gap-2 pl-3 pr-6 py-2 rounded-xl border-gray-200 border bg-gray-200  text-black hover:bg-gray-50 transition`}
+                      className={`z relative flex flex-row justify-center items-center min-h-2/5 gap-2 pl-3 pr-6 py-2 rounded-xl border-gray-200 border bg-gray-200  text-black hover:bg-gray-50 transition`}
                     >
                       <DeepThinkIcon className={"size-4"} />
-                      <span className="text-sm select-none">
-                        {finishThink.current ? "已深度思考" : "正在深度思考"}
+                      <span className="text-sm select-none pr-2">
+                        {finishThink.current
+                          ? "已完成深度思考"
+                          : "正在深度思考"}
                       </span>
+                      <BreadcrumbIcon
+                        className={`${
+                          showThinkText[msg.message_id] && "transform scale-y-[-1]"
+                        } absolute right-2 size-5 `}
+                      />
                     </button>
                     {showThinkText[msg.message_id] && (
                       <MarkdownRenderer
@@ -336,22 +307,8 @@ function ChatPage() {
                 rows={1}
                 className="w-full rounded-lg p-3 pe-12 pb-6 text-base bg-inherit outline-none resize-none overflow-y-auto"
                 placeholder="问你所想 畅所欲言"
-                value={text}
-                onChange={(e) => setText(e.target.value)}
-                onInput={(e) => {
-                  e.target.style.height = "auto";
-                  const lineHeight = parseInt(
-                    window.getComputedStyle(e.target).lineHeight
-                  );
-                  const isSmallScreen = window.innerWidth < 768;
-                  let maxHeight = isSmallScreen
-                    ? lineHeight * 5.5
-                    : lineHeight * 7;
-                  e.target.style.height = `${Math.min(
-                    e.target.scrollHeight,
-                    maxHeight
-                  )}px`;
-                }}
+                value={inputText}
+                onChange={(e) => setInputText(e.target.value)}
                 onKeyDown={(e) => {
                   // 如果按下 Enter 键
                   if (e.key === "Enter") {
@@ -380,16 +337,29 @@ function ChatPage() {
                   <DeepThinkIcon className={"size-4"} />
                   <span className="text-sm select-none">深度思考</span>
                 </button>
-                <button
-                  onClick={() => {
-                    handleSendMessage();
-                    textareaRef.current.target.height = "auto";
-                    setShouldAutoScroll(true);
-                  }}
-                  className="size-9 mb-1 bg-indigo-600 text-white rounded-full hover:bg-indigo-500"
-                >
-                  <ArrowUpIcon className={"size-9"} />
-                </button>
+                {finishText ? (
+                  <button
+                    onClick={() => {
+                      handleSendMessage();
+                      textareaRef.current.target.height = "auto";
+                      setShouldAutoScroll(true);
+                    }}
+                    className="size-9 mb-1 bg-indigo-600 text-white rounded-full hover:bg-indigo-500"
+                  >
+                    <ArrowUpIcon className={"size-9"} />
+                  </button>
+                ) : (
+                  <button
+                    onClick={() => {
+                      setFinishText(true);
+                      abortController.current?.abort();
+                      console.log("用户中断SSE.");
+                    }}
+                    className="size-9 mb-1 bg-indigo-600 text-white rounded-full hover:bg-indigo-500 items-center justify-center"
+                  >
+                    <StopIcon className={"size-9"} />
+                  </button>
+                )}
               </div>
             </div>
           </div>

@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { globalData } from "@/constants";
-import { MessageIcon, RedStarIcon } from "./svg-icons";
+import { MessageIcon, RedStarIcon } from "../svg-icons";
 
 function ForgotPasswordPage() {
     const navigate = useNavigate();
