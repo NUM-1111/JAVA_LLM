@@ -359,7 +359,7 @@ const OneConversationIcon = ({ className }) => {
 const TrashIcon = ({ className }) => {
   return (
     <svg
-      className={className ? className : "mt-1 size-6"}
+      className={className ? className : "mt-0 mr-2 size-4"}
       t="1742967023911"
       viewBox="0 0 1088 1024"
       version="1.1"
@@ -387,7 +387,7 @@ const TrashIcon = ({ className }) => {
 const RenameIcon = ({ className }) => {
   return (
     <svg
-      className={className ? className : "mt-1 size-6"}
+      className={className ? className : "mt-0 mr-2 size-4"}
       t="1742967229971"
       viewBox="0 0 1024 1024"
       version="1.1"
