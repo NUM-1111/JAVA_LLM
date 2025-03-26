@@ -36,9 +36,9 @@ function HeadBar({ isOpen, setIsOpen, selectedCode, setSelectedCode }) {
       !localStorage.getItem("auth") ||
       localStorage.getItem("loginStatus") !== "login"
     ) {
-      toastIfLogin(navigate);
+      toastIfLogin();
     }
-  }, [navigate]);
+  }, []);
 
   // 监听点击外部区域来关闭下拉菜单
   useEffect(() => {
@@ -93,7 +93,7 @@ function HeadBar({ isOpen, setIsOpen, selectedCode, setSelectedCode }) {
   const handleLogout = () => {
     localStorage.removeItem("auth");
     setIsLoggedIn(false);
-    localStorage.loginStatus = "logout";
+    localStorage.removeItem("loginStatus");
     toast.success("退出登录成功", {
       position: "top-center", // 提示显示在页面顶部
       autoClose: 1000, // 1秒后自动关闭
@@ -104,6 +104,7 @@ function HeadBar({ isOpen, setIsOpen, selectedCode, setSelectedCode }) {
     });
     setTimeout(() => {
       navigate("/");
+      window.location.reload();
     }, 1200);
   };
 

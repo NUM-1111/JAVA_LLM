@@ -31,7 +31,7 @@ function NewChatPage() {
     if (!inputText.trim()) return; // 防止发送空消息
     // 检测是否登录
     if (!localStorage.getItem("auth") || localStorage.getItem("loginStatus")!=="login"){
-      toastIfLogin(navigate,0,500);
+      toastIfLogin(500,500);
       return
     }
     

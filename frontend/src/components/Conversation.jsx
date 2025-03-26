@@ -3,6 +3,7 @@ import { useState, useEffect, useCallback, useRef } from "react";
 import { EventSourceParserStream } from "eventsource-parser/stream";
 import { MarkdownRenderer } from "./chat/Markdown"; // markdown渲染组件
 import { createUserMessage, createAIMessage, processSSE } from "./chat/utils";
+import {toastIfLogin} from "./user/utils"
 import { globalData, models } from "@/constants";
 import {
   BreadcrumbIcon,
@@ -186,6 +187,11 @@ function ChatPage() {
   // 发送消息
   const handleSendMessage = useCallback(
     async (initialMessage = null) => {
+      // 检测是否登录
+    if (!localStorage.getItem("auth") || localStorage.getItem("loginStatus")!=="login"){
+      toastIfLogin(0,500);
+      return
+    }
       const userMessage =
         initialMessage ||
         createUserMessage(inputText, messagesRef, conversationId);
