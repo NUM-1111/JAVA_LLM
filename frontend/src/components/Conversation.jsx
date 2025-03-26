@@ -5,25 +5,29 @@ import SideBar from "./Sidebar";
 import { globalData, models } from "@/constants";
 import { DeepThinkIcon, ArrowUpIcon } from "./svg-icons";
 import HeadBar from "./HeadBar";
-import {MarkdownRenderer} from "./Markdown" // markdown渲染组件
+import { MarkdownRenderer } from "./Markdown"; // markdown渲染组件
 
 function ChatPage() {
   const location = useLocation();
   const navigate = useNavigate();
   const { conversation_id } = useParams();
   const [selectedCode, setSelectedCode] = useState(2);
-  const [deepThink, setDeepThink] = useState(false);
+  const [deepThink, setDeepThink] = useState(true);
   const [text, setText] = useState("");
   const [isOpen, setIsOpen] = useState(false);
   const [messages, setMessages] = useState([]);
   const messagesRef = useRef(messages);
-  const [generated,setGenerated] = useState(false) // ai消息是否完成
+  const textareaRef = useRef(null);
+  // ai消息处理
+  const finishText = useRef(false); // ai消息是否完成
+  const finishThink = useRef(false); // 是否结束思考
+  const [showThinkText, setShowThinkText] = useState({});
   const [conversationId, setConversationId] = useState(conversation_id || "");
   // 处理自动滚动页面事件
   const bottomRef = useRef(null);
   const chatContainerRef = useRef(null);
   const [shouldAutoScroll, setShouldAutoScroll] = useState(true);
-  
+
   // 同步最新消息到 ref
   useEffect(() => {
     messagesRef.current = messages;
@@ -83,6 +87,7 @@ function ChatPage() {
       };
       fetchMessages();
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [conversationId]); // 只需要conversationId
 
   // 监听用户滚动，判断是否应该停止自动滚动
@@ -92,7 +97,7 @@ function ChatPage() {
 
     const handleScroll = () => {
       const { scrollTop, scrollHeight, clientHeight } = chatContainer;
-      const isUserScrollingUp = scrollTop + clientHeight < scrollHeight - 100; // 离底部100px
+      const isUserScrollingUp = scrollTop + clientHeight < scrollHeight - 3; // 离底部的距离
       setShouldAutoScroll(!isUserScrollingUp);
     };
 
@@ -114,7 +119,7 @@ function ChatPage() {
       const userMessage =
         initialMessage ||
         (() => {
-          if (currentMessages.length>0 && text.trim() !== "") {
+          if (currentMessages.length > 0 && text.trim() !== "") {
             return {
               message: {
                 author: { role: "user" },
@@ -144,7 +149,7 @@ function ChatPage() {
       const aiMessage = {
         message: {
           author: { role: "assistant" },
-          content: { content_type: "text", text: "" },
+          content: { content_type: "text", text: "", thinkText: "" },
           status: "processing",
           model: models[selectedCode],
         },
@@ -156,6 +161,7 @@ function ChatPage() {
       };
 
       setMessages((prev) => [...prev, aiMessage]);
+      setShowThinkText((prev) => ({ ...prev, [aiMessage.message_id]: true }));
       try {
         const response = await fetch(globalData.domain + "/api/new/message", {
           method: "POST",
@@ -183,59 +189,74 @@ function ChatPage() {
         }
 
         if (contentType.includes("text/event-stream") && response.body) {
-          setGenerated(false)
+          finishText.current = false;
           const reader = response.body
             .pipeThrough(new TextDecoderStream()) // 解码 UTF-8 文本
             .pipeThrough(new EventSourceParserStream()) // 解析 SSE
             .getReader();
-          
-          while (!generated) {
+
+          while (!finishText.current) {
             const { done, value } = await reader.read();
             if (done) {
               console.log("SSE完毕");
               break;
             }
-            console.log(JSON.stringify(value));
             try {
               const jsonData = JSON.parse(value.data);
-              if (jsonData.type === "answer_chunk" && jsonData.content) {
-                setMessages((prev) => {
-                  const newMessages = [...prev];
-                  const aiMsg = newMessages[newMessages.length - 1];
-                  if (aiMsg.message.author.role != "assistant") {
-                    console.log("最新消息为用户消息,ai消息更新失败!");
-                    setGenerated(true)
-                  }
-                  aiMsg.message.content.text += jsonData.content;
-                  return newMessages;
-                });
+              if (jsonData.type === "answer_chunk") {
+                if (jsonData.content === "</think>") {
+                  finishThink.current = true;
+                } else {
+                  setMessages((prev) => {
+                    const newMessages = [...prev];
+                    const aiMsg = newMessages[newMessages.length - 1];
+                    if (aiMsg.message.author.role === "assistant") {
+                      if (finishThink.current) {
+                        aiMsg.message.content.text += jsonData.content;
+                      } else {
+                        aiMsg.message.content.thinkText += jsonData.content;
+                      }
+                    }
+                    return newMessages;
+                  });
+                }
               } else if (
                 jsonData.type === "status" &&
                 jsonData.message === "ANSWER_DONE"
               ) {
                 console.log("SSE 响应接受完成.");
-                setGenerated(true)
+                finishText.current = true;
                 return;
+              } else {
+                console.log("未知SSE格式:", jsonData);
               }
-              console.log("SSE 响应:", jsonData);
+              //console.log("SSE 响应:", jsonData);
             } catch (e) {
               console.error("JSON 解析错误:", e, "内容:", value.data);
-              setGenerated(true)
-              return
+              finishText.current = true;
+              return;
             }
           }
         }
       } catch (error) {
         console.error("请求失败:", error);
-        setGenerated(true)
-        return
+        finishText.current = true;
+        return;
       }
     },
-    [selectedCode, conversationId, text, deepThink, generated]
+    [selectedCode, conversationId, text, deepThink, finishText, finishThink]
   );
 
+  // 切换显示思考文本
+  const toggleThinkText = (message_id) => {
+    setShowThinkText((prev) => ({
+      ...prev,
+      [message_id]: !(prev[message_id] ?? true), // 使用对象的键值对
+    }));
+  };
+
   return (
-    <div className="flex flex-row h-screen bg-gray-100 gap-2">
+    <div className="flex flex-row h-screen bg-gray-100 ">
       {/*侧边栏部分 */}
       <SideBar isOpen={isOpen} setIsOpen={setIsOpen} />
 
@@ -243,7 +264,7 @@ function ChatPage() {
       <div
         className={`${
           isOpen ? "w-full lg:w-4/5" : "w-full"
-        } flex flex-col h-full max-h-screen bg-gray-100`}
+        } flex flex-col h-full max-h-screen bg-white`}
       >
         {/* 头部导航栏 - 固定在主内容顶部 */}
         {/*进入具体内容页可加上: border-b border-gray-300 */}
@@ -265,7 +286,7 @@ function ChatPage() {
               className={`w-[90%] md:w-9/12 xl:w-7/12 flex flex-col text-base h-auto items-center gap-5 flex-grow overflow-hidden`}
             >
               {messages.map((msg, index) =>
-                msg?.message.author.role=="user"? (
+                msg?.message.author.role == "user" ? (
                   <div
                     key={index}
                     className="md:max-w-[60%] max-w-[70%] ml-auto p-5 h-30 bg-gray-50 border-gray-200 border shadow-sm rounded-3xl"
@@ -277,7 +298,25 @@ function ChatPage() {
                     key={index}
                     className="w-[95%] py-5 h-30 leading-relaxed"
                   >
-                    <MarkdownRenderer content={msg.message?.content.text}/>
+                    <button
+                      onClick={() => toggleThinkText(msg.message_id)}
+                      className={`flex flex-row justify-center items-center min-h-2/5 gap-2 pl-3 pr-6 py-2 rounded-xl border-gray-200 border bg-gray-200  text-black hover:bg-gray-50 transition`}
+                    >
+                      <DeepThinkIcon className={"size-4"} />
+                      <span className="text-sm select-none">
+                        {finishThink.current ? "已深度思考" : "正在深度思考"}
+                      </span>
+                    </button>
+                    {showThinkText[msg.message_id] && (
+                      <MarkdownRenderer
+                        className={"text-sm text-gray-500"}
+                        content={msg.message?.content.thinkText}
+                      />
+                    )}
+                    <MarkdownRenderer
+                      className={"text-base text-black"}
+                      content={msg.message?.content.text}
+                    />
                   </div>
                 )
               )}
@@ -293,6 +332,7 @@ function ChatPage() {
           >
             <div className="mx-3 mt-1 flex flex-col bg-inherit">
               <textarea
+                ref={textareaRef}
                 rows={1}
                 className="w-full rounded-lg p-3 pe-12 pb-6 text-base bg-inherit outline-none resize-none overflow-y-auto"
                 placeholder="问你所想 畅所欲言"
@@ -312,6 +352,21 @@ function ChatPage() {
                     maxHeight
                   )}px`;
                 }}
+                onKeyDown={(e) => {
+                  // 如果按下 Enter 键
+                  if (e.key === "Enter") {
+                    if (!e.shiftKey) {
+                      // 如果没有按下 Shift 键，触发发送
+                      e.preventDefault(); // 防止换行
+                      handleSendMessage(); // 调用发送消息的函数
+                      e.target.style.height = "auto";
+                      bottomRef.current.scrollIntoView({ behavior: "smooth" });
+                    } else {
+                      // 如果按下了 Shift 键，允许换行
+                      e.stopPropagation(); // 防止事件传播，确保换行
+                    }
+                  }
+                }}
               ></textarea>
               <div className="w-full flex justify-between md:mt-2">
                 <button
@@ -326,8 +381,9 @@ function ChatPage() {
                   <span className="text-sm select-none">深度思考</span>
                 </button>
                 <button
-                  onClick={async () => {
-                    await handleSendMessage();
+                  onClick={() => {
+                    handleSendMessage();
+                    textareaRef.current.target.height = "auto";
                     setShouldAutoScroll(true);
                   }}
                   className="size-9 mb-1 bg-indigo-600 text-white rounded-full hover:bg-indigo-500"

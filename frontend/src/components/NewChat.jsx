@@ -9,7 +9,7 @@ function NewChatPage() {
 
   // 控制模型选择
   const [selectedCode, setSelectedCode] = useState(2);
-  const [deepThink, setDeepThink] = useState(false);
+  const [deepThink, setDeepThink] = useState(true);
   const [text, setText] = useState(""); // 存储 textarea 内容
 
   const [isOpen, setIsOpen] = useState(false); // 控制侧边栏展开/折叠
@@ -75,29 +75,41 @@ function NewChatPage() {
                  absolute bottom-5 px-4 py-1 md:py-2"
             >
               <div className="mx-3 mt-1 flex flex-col bg-inherit mb-2">
-                <textarea
-                  rows={1}
-                  className="w-full rounded-lg p-3 pe-12 pb-6 text-base bg-inherit outline-none resize-none overflow-y-auto"
-                  placeholder="问你所想 畅所欲言"
-                  value={text}
-                  onChange={(e) => {
-                    setText(e.target.value);
-                  }}
-                  onInput={(e) => {
-                    e.target.style.height = "auto"; // 先重置高度，防止高度收缩不生效
-                    const lineHeight = parseInt(
-                      window.getComputedStyle(e.target).lineHeight
-                    );
-                    const isSmallScreen = window.innerWidth < 768; // 判断是否为 md 以下
-                    let maxHeight = isSmallScreen
-                      ? lineHeight * 5.5
-                      : lineHeight * 7;
-                    e.target.style.height = `${Math.min(
-                      e.target.scrollHeight,
-                      maxHeight
-                    )}px`; // 根据内容调整高度
-                  }}
-                ></textarea>
+              <textarea
+                rows={1}
+                className="w-full rounded-lg p-3 pe-12 pb-6 text-base bg-inherit outline-none resize-none overflow-y-auto"
+                placeholder="问你所想 畅所欲言"
+                value={text}
+                onChange={(e) => setText(e.target.value)}
+                onInput={(e) => {
+                  e.target.style.height = "auto";
+                  const lineHeight = parseInt(
+                    window.getComputedStyle(e.target).lineHeight
+                  );
+                  const isSmallScreen = window.innerWidth < 768;
+                  let maxHeight = isSmallScreen
+                    ? lineHeight * 5.5
+                    : lineHeight * 7;
+                  e.target.style.height = `${Math.min(
+                    e.target.scrollHeight,
+                    maxHeight
+                  )}px`;
+                }}
+                onKeyDown={(e) => {
+                  // 如果按下 Enter 键
+                  if (e.key === "Enter") {
+                    if (!e.shiftKey) {
+                      // 如果没有按下 Shift 键，触发发送
+                      e.preventDefault(); // 防止换行
+                      handleSendMessage(); // 调用发送消息的函数
+                      e.target.style.height = "auto";
+                    } else {
+                      // 如果按下了 Shift 键，允许换行
+                      e.stopPropagation(); // 防止事件传播，确保换行
+                    }
+                  }
+                }}
+              ></textarea>
                 <div className="w-full flex justify-between  md:mt-2">
                   <button
                     onClick={() => setDeepThink(!deepThink)}
