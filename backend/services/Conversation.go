@@ -5,6 +5,7 @@ import (
 	"Go_LLM_Web/db"
 	"Go_LLM_Web/models"
 	"fmt"
+	"time"
 
 	"net/http"
 
@@ -34,7 +35,7 @@ func QueryConversation(c *gin.Context) {
 	query := bson.M{"user_id": s.UserID}
 
 	// 调用数据库查询函数
-	conversations, err := db.FindConversations(c.Request.Context(), query)
+	conversations, err := db.FindConversations(c.Request.Context(), query, bson.D{{Key: "updated_at", Value: -1}})
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"msg": "数据库查询失败!", "err": err.Error()})
 		return
@@ -80,7 +81,7 @@ func DeleteConversation(c *gin.Context) {
 		c.JSON(http.StatusBadRequest, gin.H{"msg": "参数格式异常,未获取到conversation_id."})
 		return
 	}
-	// 构造查询条件，按照conversion_id删除该会话 
+	// 构造查询条件，按照conversion_id删除该会话
 	query := bson.M{"conversation_id": reqData.ConversationID}
 
 	// 调用数据库删除函数
@@ -93,6 +94,7 @@ func DeleteConversation(c *gin.Context) {
 	// 返回数据给前端
 	c.JSON(http.StatusOK, gin.H{"msg": "删除聊天记录成功"})
 }
+
 /*
 删除所有会话(先删除Conversion中的message_id，再删除Conversation)
 */
@@ -138,9 +140,9 @@ func RenameConversation(c *gin.Context) {
 		c.JSON(http.StatusBadRequest, gin.H{"msg": "参数格式异常,未获取到conversation_id."})
 		return
 	}
-	// 构造查询条件，按照conversion_id修改该会话的title 
+	// 构造查询条件，按照conversion_id修改该会话的title
 	query := bson.M{"conversation_id": reqData.ConversationID}
-	update := bson.M{"$set": bson.M{"title": reqData.Title}}
+	update := bson.M{"$set": bson.M{"title": reqData.Title, "updated_at": time.Now()}}
 
 	// 调用数据库更新函数
 	err := db.UpdateOneConversation(c.Request.Context(), query, update)
