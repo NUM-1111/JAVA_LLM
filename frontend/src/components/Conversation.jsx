@@ -1,10 +1,11 @@
 import { useLocation, useParams, useNavigate } from "react-router-dom";
 import { useState, useEffect, useCallback, useRef } from "react";
 import { EventSourceParserStream } from "eventsource-parser/stream";
-import SideBar from "./sidebar";
+import SideBar from "./Sidebar";
 import { globalData, models } from "@/constants";
 import { DeepThinkIcon, ArrowUpIcon } from "./svg-icons";
 import HeadBar from "./HeadBar";
+import {MarkdownRenderer} from "./Markdown" // markdown渲染组件
 
 function ChatPage() {
   const location = useLocation();
@@ -16,12 +17,13 @@ function ChatPage() {
   const [isOpen, setIsOpen] = useState(false);
   const [messages, setMessages] = useState([]);
   const messagesRef = useRef(messages);
+  const [generated,setGenerated] = useState(false) // ai消息是否完成
   const [conversationId, setConversationId] = useState(conversation_id || "");
   // 处理自动滚动页面事件
   const bottomRef = useRef(null);
   const chatContainerRef = useRef(null);
   const [shouldAutoScroll, setShouldAutoScroll] = useState(true);
-
+  
   // 同步最新消息到 ref
   useEffect(() => {
     messagesRef.current = messages;
@@ -112,7 +114,7 @@ function ChatPage() {
       const userMessage =
         initialMessage ||
         (() => {
-          if (currentMessages.length >= 2 && text.trim() !== "") {
+          if (currentMessages.length>0 && text.trim() !== "") {
             return {
               message: {
                 author: { role: "user" },
@@ -181,12 +183,13 @@ function ChatPage() {
         }
 
         if (contentType.includes("text/event-stream") && response.body) {
+          setGenerated(false)
           const reader = response.body
             .pipeThrough(new TextDecoderStream()) // 解码 UTF-8 文本
             .pipeThrough(new EventSourceParserStream()) // 解析 SSE
             .getReader();
-
-          while (true) {
+          
+          while (!generated) {
             const { done, value } = await reader.read();
             if (done) {
               console.log("SSE完毕");
@@ -201,7 +204,7 @@ function ChatPage() {
                   const aiMsg = newMessages[newMessages.length - 1];
                   if (aiMsg.message.author.role != "assistant") {
                     console.log("最新消息为用户消息,ai消息更新失败!");
-                    return;
+                    setGenerated(true)
                   }
                   aiMsg.message.content.text += jsonData.content;
                   return newMessages;
@@ -211,19 +214,24 @@ function ChatPage() {
                 jsonData.message === "ANSWER_DONE"
               ) {
                 console.log("SSE 响应接受完成.");
+                setGenerated(true)
                 return;
               }
               console.log("SSE 响应:", jsonData);
             } catch (e) {
               console.error("JSON 解析错误:", e, "内容:", value.data);
+              setGenerated(true)
+              return
             }
           }
         }
       } catch (error) {
         console.error("请求失败:", error);
+        setGenerated(true)
+        return
       }
     },
-    [selectedCode, conversationId, text, deepThink]
+    [selectedCode, conversationId, text, deepThink, generated]
   );
 
   return (
@@ -257,7 +265,7 @@ function ChatPage() {
               className={`w-[90%] md:w-9/12 xl:w-7/12 flex flex-col text-base h-auto items-center gap-5 flex-grow overflow-hidden`}
             >
               {messages.map((msg, index) =>
-                index % 2 === 0 ? (
+                msg?.message.author.role=="user"? (
                   <div
                     key={index}
                     className="md:max-w-[60%] max-w-[70%] ml-auto p-5 h-30 bg-gray-50 border-gray-200 border shadow-sm rounded-3xl"
@@ -269,7 +277,7 @@ function ChatPage() {
                     key={index}
                     className="w-[95%] py-5 h-30 leading-relaxed"
                   >
-                    {msg.message?.content.text}
+                    <MarkdownRenderer content={msg.message?.content.text}/>
                   </div>
                 )
               )}

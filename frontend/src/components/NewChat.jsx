@@ -1,6 +1,6 @@
 import { useNavigate } from "react-router-dom";
 import { useState } from "react";
-import SideBar from "./sidebar";
+import SideBar from "./Sidebar";
 import { DeepThinkIcon, ArrowUpIcon } from "./svg-icons";
 import HeadBar from "./HeadBar";
 
@@ -46,7 +46,7 @@ function NewChatPage() {
     <div className="flex flex-row  max-h-screen bg-gray-100 gap-2">
       {/*侧边栏部分 */}
       <SideBar isOpen={isOpen} setIsOpen={setIsOpen} />
-      {isOpen && <div className="absolute left-0 z-20 bg-black opacity-20 w-full lg:w-0 h-full transition-all duration-200"> </div>}
+      {isOpen && <div className="absolute left-0 z-20 bg-black opacity-20 w-full lg:w-0 h-full"> </div>}
       {/*对话部分*/}
       <div
         className={`${

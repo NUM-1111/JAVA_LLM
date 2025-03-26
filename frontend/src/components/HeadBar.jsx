@@ -2,7 +2,12 @@ import { models } from "@/constants";
 import { useNavigate } from "react-router-dom";
 import { toast } from "react-toastify";
 import { useState, useEffect, useRef } from "react";
-import { SiderBarIcon, NewChatIcon, BreadcrumbIcon,SelectedIcon } from "./svg-icons";
+import {
+  SiderBarIcon,
+  NewChatIcon,
+  BreadcrumbIcon,
+  SelectedIcon,
+} from "./svg-icons";
 import "react-toastify/dist/ReactToastify.css";
 
 // 获取用户名
@@ -30,7 +35,7 @@ async function fetchUsername() {
 
 function HeadBar({ isOpen, setIsOpen, selectedCode, setSelectedCode }) {
   const modelRef = useRef(null);
-  const settingRef = useRef(null)
+  const settingRef = useRef(null);
   const navigate = useNavigate(); // 获取导航函数
   const onLoginClick = () => navigate("/login"); // 直接跳转
   const onRegisterClick = () => navigate("/register"); // 直接跳转
@@ -92,34 +97,35 @@ function HeadBar({ isOpen, setIsOpen, selectedCode, setSelectedCode }) {
       {/* 左侧按钮 */}
       <div className="flex flex-row text-gray-700">
         {/*显示侧边栏按钮 */}
-        <div className="relative group">
+        <div className="relative">
           <button
             onClick={() => setIsOpen(true)}
             className={`${
               isOpen ? "lg:hidden" : "block"
-            } flex justify-center items-center size-10 transition rounded-lg hover:shadow-md hover:bg-blue-300`}
+            } flex justify-center items-center size-10 transition rounded-lg hover:shadow-md hover:bg-blue-300 group`}
           >
             <SiderBarIcon />
+            {/* 说明框：底部显示 */}
+            <div className="absolute top-full left-1/2 transform -translate-x-1/2 hidden group-hover:block transition-all duration-300 bg-gray-700 text-white text-sm rounded py-1 px-2 whitespace-nowrap mt-1 ml-2">
+              显示侧边栏
+            </div>
           </button>
-          {/* 说明框：底部显示 */}
-          <div className="absolute top-full left-1/2 transform -translate-x-1/2 opacity-0 group-hover:opacity-100 transition-opacity duration-300 bg-gray-700 text-white text-sm rounded py-1 px-2 whitespace-nowrap mt-2">
-            显示侧边栏
-          </div>
         </div>
 
         {/*开启新对话按钮*/}
-        <div className="relative group">
+        <div className="relative">
           <button
+            onClick={() => navigate("/")}
             className={`${
               isOpen ? "lg:hidden" : "block"
-            } flex justify-center items-center size-10 transition rounded-lg hover:shadow-md hover:bg-blue-300`}
+            } flex justify-center items-center size-10 transition rounded-lg hover:shadow-md hover:bg-blue-300 group`}
           >
             <NewChatIcon />
+            {/* 说明框：底部显示 */}
+            <div className="absolute top-full left-1/2 transform -translate-x-1/2 hidden group-hover:block transition-all duration-300 bg-gray-700 text-white text-sm rounded py-1 px-2 whitespace-nowrap mt-1">
+              创建新对话
+            </div>
           </button>
-          {/* 说明框：底部显示 */}
-          <div className="absolute top-full left-1/2 transform -translate-x-1/2 opacity-0 group-hover:opacity-100 transition-opacity duration-300 bg-gray-700 text-white text-sm rounded py-1 px-2 whitespace-nowrap mt-2">
-            创造新对话
-          </div>
         </div>
       </div>
 
@@ -183,7 +189,10 @@ function HeadBar({ isOpen, setIsOpen, selectedCode, setSelectedCode }) {
 
             {/* 下拉菜单：用 menuOpen 控制显示/隐藏 */}
             {menuOpen && (
-              <div ref={settingRef} className="absolute right-0 mt-2 w-32 bg-white border rounded-lg shadow-lg">
+              <div
+                ref={settingRef}
+                className="absolute right-0 mt-2 w-32 bg-white border rounded-lg shadow-lg"
+              >
                 <ul>
                   <li
                     className="px-4 py-2 hover:bg-gray-100 cursor-pointer"
