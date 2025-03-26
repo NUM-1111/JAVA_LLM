@@ -2,37 +2,14 @@ import { models } from "@/constants";
 import { useNavigate } from "react-router-dom";
 import { toast } from "react-toastify";
 import { useState, useEffect, useRef } from "react";
+import { toastIfLogin } from "./user/utils";
+import "react-toastify/dist/ReactToastify.css";
 import {
   SiderBarIcon,
   NewChatIcon,
   BreadcrumbIcon,
   SelectedIcon,
 } from "./svg-icons";
-import "react-toastify/dist/ReactToastify.css";
-
-// 获取用户名
-async function fetchUsername() {
-  try {
-    const response = await fetch("http://localhost:8080/api/user/info", {
-      method: "GET",
-      headers: {
-        Authorization: localStorage.auth,
-        "Content-Type": "application/json",
-      },
-    });
-
-    if (!response.ok) {
-      throw new Error(`HTTP error! Status: ${response.status}`);
-    }
-
-    const data = await response.json();
-    return typeof data.username === "string" ? data.username : "";
-  } catch (error) {
-    console.error("Failed to fetch username:", error);
-    return "";
-  }
-}
-
 function HeadBar({ isOpen, setIsOpen, selectedCode, setSelectedCode }) {
   const modelRef = useRef(null);
   const settingRef = useRef(null);
@@ -44,6 +21,7 @@ function HeadBar({ isOpen, setIsOpen, selectedCode, setSelectedCode }) {
   const [username, setUsername] = useState("");
   const [showModels, setShowModels] = useState(false);
 
+  // 获取用户名
   useEffect(() => {
     async function getUsername() {
       const name = await fetchUsername();
@@ -51,6 +29,16 @@ function HeadBar({ isOpen, setIsOpen, selectedCode, setSelectedCode }) {
     }
     getUsername();
   }, []);
+
+  // 检查身份凭证是否存在
+  useEffect(() => {
+    if (
+      !localStorage.getItem("auth") ||
+      localStorage.getItem("loginStatus") !== "login"
+    ) {
+      toastIfLogin(navigate);
+    }
+  }, [navigate]);
 
   // 监听点击外部区域来关闭下拉菜单
   useEffect(() => {
@@ -73,12 +61,40 @@ function HeadBar({ isOpen, setIsOpen, selectedCode, setSelectedCode }) {
     setIsLoggedIn(!!sessionId); //!!sessionId 是一种 JavaScript 逻辑转换技巧，用于将变量 sessionId 转换为布尔值
   }, []);
 
+  // 获取用户名
+  async function fetchUsername() {
+    try {
+      const response = await fetch("http://localhost:8080/api/user/info", {
+        method: "GET",
+        headers: {
+          Authorization: localStorage.auth,
+          "Content-Type": "application/json",
+        },
+      });
+
+      if (!response.ok) {
+        if (response.status === 401) {
+          localStorage.removeItem("auth");
+          setIsLoggedIn(false);
+          return "";
+        }
+        throw new Error(`HTTP error! Status: ${response.status}`);
+      }
+
+      const data = await response.json();
+      return typeof data.username === "string" ? data.username : "";
+    } catch (error) {
+      console.error("Failed to fetch username:", error);
+      return "";
+    }
+  }
+
   // 退出登录
   const handleLogout = () => {
     localStorage.removeItem("auth");
     setIsLoggedIn(false);
-
-    toast.success("退出成功, 即将跳转到登录页面", {
+    localStorage.loginStatus = "logout";
+    toast.success("退出登录成功", {
       position: "top-center", // 提示显示在页面顶部
       autoClose: 1000, // 1秒后自动关闭
       hideProgressBar: true, // 隐藏进度条
@@ -86,10 +102,9 @@ function HeadBar({ isOpen, setIsOpen, selectedCode, setSelectedCode }) {
       pauseOnHover: false, // 鼠标悬停时不会暂停
       draggable: false, // 不能拖动
     });
-
     setTimeout(() => {
-      navigate("/login");
-    }, 1200); // 确保提示弹出后再跳转
+      navigate("/");
+    }, 1200);
   };
 
   return (
@@ -184,7 +199,7 @@ function HeadBar({ isOpen, setIsOpen, selectedCode, setSelectedCode }) {
               className="px-4 py-[0.40rem] rounded-full bg-blue-500 text-white border border-blue-500 hover:bg-gray-50 hover:text-blue-500 hover:border-blue-500  transition duration-200"
               onClick={() => setMenuOpen(!menuOpen)}
             >
-              {username || "Guest"}
+              {username.slice(0, 8) || "Guest"}
             </button>
 
             {/* 下拉菜单：用 menuOpen 控制显示/隐藏 */}

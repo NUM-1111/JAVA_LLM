@@ -285,6 +285,9 @@ async function fetchConversations() {
 
     // 判断是否请求成功（HTTP 状态码 200-299）
     if (!response.ok) {
+      if (response.status === 401) {
+        return [];
+      }
       const data = await response.text();
       console.log(data);
       throw new Error(`HTTP 错误！状态码: ${response.status}`);
