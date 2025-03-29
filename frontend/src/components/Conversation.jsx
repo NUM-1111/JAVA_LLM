@@ -263,20 +263,18 @@ function ChatPage() {
   };
 
   return (
-    <div className="flex flex-row h-screen bg-white">
+    <div className="flex flex-row h-[100dvh] sm:h-screen bg-white">
       {/*侧边栏部分 */}
       <SideBar isOpen={isOpen} setIsOpen={setIsOpen} />
       {/*右侧覆盖阴影 */}
       {isOpen && (
-        <div className="absolute left-0 z-30 bg-black opacity-20 w-full lg:w-0 h-screen">
-          {" "}
-        </div>
+        <div onClick={() => setIsOpen(false)}  className="absolute left-0 z-30 bg-black opacity-20 w-full lg:w-0 h-[100dvh] sm:h-screen"></div>
       )}
       {/*对话部分*/}
       <div
         className={`${
           isOpen ? "w-full lg:w-4/5" : "w-full"
-        } flex flex-col h-full max-h-screen bg-white relative`}
+        } flex flex-col max-h-screen bg-white relative`}
       >
         {/* 头部导航栏 - 固定在主内容顶部 */}
         {/*进入具体内容页可加上: border-b border-gray-300 */}
@@ -325,7 +323,7 @@ function ChatPage() {
                           showThinkText[msg.message_id] &&
                           "transform scale-y-[-1]"
                         } absolute right-2 size-5 `}
-                      />  
+                      />
                     </button>
                     {showThinkText[msg.message_id] && (
                       <MarkdownRenderer
@@ -432,9 +430,9 @@ function ChatPage() {
               </div>
             </div>
           </div>
-          <div className="w-[70%] md:pt-0 bg-gray-50 flex">
-            <div className="text-gray-800 mt-auto flex min-h-8 w-full items-center justify-center text-center text-xs">
-              <div>AI助手也可能会犯错, 请核查重要信息。</div>
+          <div className="w-full md:pt-0 bg-gray-50 flex">
+            <div className="text-gray-800 mt-auto flex min-h-6 sm:min-h-8 w-full items-center justify-center text-center text-xs">
+              <div>AI助手可能会犯错, 请核查重要信息。</div>
             </div>
           </div>
         </footer>

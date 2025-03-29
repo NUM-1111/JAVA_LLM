@@ -66,7 +66,7 @@ function HeadBar({ isOpen, setIsOpen, selectedCode, setSelectedCode }) {
   // 获取用户名
   async function fetchUsername() {
     try {
-      const response = await fetch(globalData.domain+"/api/user/info", {
+      const response = await fetch(globalData.domain + "/api/user/info", {
         method: "GET",
         headers: {
           Authorization: localStorage.auth,
@@ -117,7 +117,10 @@ function HeadBar({ isOpen, setIsOpen, selectedCode, setSelectedCode }) {
         {/*显示侧边栏按钮 */}
         <div className="relative">
           <button
-            onClick={() => setIsOpen(true)}
+            onClick={(e) => {
+              e.stopPropagation();
+              setIsOpen(true);
+            }}
             className={`${
               isOpen ? "lg:hidden" : "block"
             } flex justify-center items-center size-10 transition rounded-lg hover:shadow-md hover:bg-blue-300 group`}

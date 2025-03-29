@@ -1,10 +1,10 @@
 import { useNavigate } from "react-router-dom";
-import { useState,useEffect,useRef } from "react";
+import { useState, useEffect, useRef } from "react";
 import SideBar from "./Sidebar";
 import { DeepThinkIcon, ArrowUpIcon } from "./svg-icons";
 import HeadBar from "./HeadBar";
-import {toastIfLogin} from "./user/utils"
-import { v4 as uuid } from 'uuid';
+import { toastIfLogin } from "./user/utils";
+import { v4 as uuid } from "uuid";
 
 function NewChatPage() {
   const navigate = useNavigate(); // 获取导航函数
@@ -17,25 +17,28 @@ function NewChatPage() {
   const textareaRef = useRef(null);
 
   // 自适应输入框
-    useEffect(() => {
-      if (textareaRef.current) {
-        const e = textareaRef.current;
-        e.style.height = "auto";
-        const lineHeight = parseInt(window.getComputedStyle(e).lineHeight);
-        const isSmallScreen = window.innerWidth < 768;
-        let maxHeight = isSmallScreen ? lineHeight * 5.5 : lineHeight * 7;
-        e.style.height = `${Math.min(e.scrollHeight, maxHeight)}px`;
-      }
-    }, [inputText]);
+  useEffect(() => {
+    if (textareaRef.current) {
+      const e = textareaRef.current;
+      e.style.height = "auto";
+      const lineHeight = parseInt(window.getComputedStyle(e).lineHeight);
+      const isSmallScreen = window.innerWidth < 768;
+      let maxHeight = isSmallScreen ? lineHeight * 5.5 : lineHeight * 7;
+      e.style.height = `${Math.min(e.scrollHeight, maxHeight)}px`;
+    }
+  }, [inputText]);
 
   const handleSendMessage = () => {
     if (!inputText.trim()) return; // 防止发送空消息
     // 检测是否登录
-    if (!localStorage.getItem("auth") || localStorage.getItem("loginStatus")!=="login"){
-      toastIfLogin(500,500);
-      return
+    if (
+      !localStorage.getItem("auth") ||
+      localStorage.getItem("loginStatus") !== "login"
+    ) {
+      toastIfLogin(500, 500);
+      return;
     }
-    
+
     const message = {
       author: { role: "user" },
       content: {
@@ -63,20 +66,18 @@ function NewChatPage() {
   };
 
   return (
-    <div className="flex flex-row  max-h-screen bg-white gap-2">
+    <div className="flex flex-row h-[100dvh] bg-white gap-2">
       {/*侧边栏部分 */}
       <SideBar isOpen={isOpen} setIsOpen={setIsOpen} />
       {/*右侧覆盖阴影 */}
       {isOpen && (
-        <div className="absolute left-0 z-30 bg-black opacity-20 w-full lg:w-0 h-screen">
-          {" "}
-        </div>
+        <div onClick={() => setIsOpen(false)}  className="absolute left-0 z-30 bg-black opacity-20 w-full lg:w-0 h-[100dvh] sm:h-screen"></div>
       )}
       {/*对话部分*/}
       <div
         className={`${
           isOpen ? "w-full lg:w-4/5" : "w-full"
-        } flex flex-col h-full max-h-screen bg-white relative`}
+        } flex flex-col max-h-screen bg-white relative`}
       >
         {/* 头部导航栏 - 固定在主内容顶部 */}
         <HeadBar
