@@ -115,7 +115,7 @@ export default function SideBar({ isOpen, setIsOpen }) {
         isOpen ? "translate-x-0 lg:relative lg:z-auto" : "-translate-x-full"
       } 
           flex absolute xl:w-1/5 lg:w-1/4 md:w-1/3 sm:w-2/5 w-7/12 z-50 inset-y-0 left-0  flex-col h-[100dvh] sm:h-screen justify-between border-e 
-          border-gray-100 bg-gray-100 shadow-sm transition-all duration-300 overflow-hidden overflow-y-auto`}
+          border-gray-100 bg-[#F5F5F5] shadow-sm transition-all duration-300 overflow-hidden overflow-y-auto`}
     >
       <div className="px-4 py-3 transform">
         {/* 侧边栏顶部 */}

@@ -104,10 +104,6 @@ function HeadBar({ isOpen, setIsOpen, selectedCode, setSelectedCode }) {
       pauseOnHover: false, // 鼠标悬停时不会暂停
       draggable: false, // 不能拖动
     });
-    setTimeout(() => {
-      navigate("/");
-      window.location.reload();
-    }, 1200);
   };
 
   return (

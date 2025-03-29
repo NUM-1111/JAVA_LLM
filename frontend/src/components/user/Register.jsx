@@ -1,7 +1,13 @@
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { globalData } from "@/constants";
-import { RedStarIcon, SpinCircle, MessageIcon, CloseEyeIcon, OpenEyeIcon } from "../svg-icons";
+import {
+  RedStarIcon,
+  SpinCircle,
+  MessageIcon,
+  CloseEyeIcon,
+  OpenEyeIcon,
+} from "../svg-icons";
 
 function RegisterPage() {
   const navigate = useNavigate();
@@ -14,7 +20,6 @@ function RegisterPage() {
   });
   const [errors, setErrors] = useState({});
   const [pwdType, setPwdType] = useState("password");
-  const [loading, setLoading] = useState(true);
   const [btnWaiting, setBtnWaiting] = useState(false);
   const [waitText, setWaitText] = useState("发送");
 
@@ -50,9 +55,9 @@ function RegisterPage() {
     });
     const data = await req.json();
     if (req.status != 200) {
-      setTimeout(()=>{
+      setTimeout(() => {
         setSendState(false);
-      },300);
+      }, 300);
       setMsgStruct({
         title: "发送失败",
         description: data.msg,
@@ -153,20 +158,6 @@ function RegisterPage() {
     }
   };
 
-  // 页面加载完成
-  useEffect(() => {
-    const handleLoad = () => {
-      console.log("所有文档内容加载完成");
-      setTimeout(() => {
-        setLoading(false);
-      }, globalData.spinningTime);
-    };
-    window.addEventListener("load", handleLoad);
-    return () => {
-      window.removeEventListener("load", handleLoad);
-    };
-  }, []);
-
   return (
     <>
       <MessageIcon
@@ -176,18 +167,20 @@ function RegisterPage() {
         onClose={() => setShowMsg(false)}
         ifShow={showMsg}
       />
-      <div className="relative flex flex-wrap h-screen  w-full border rounded-sm items-center bg-white">
-        <div className="w-full px-4 sm:px-6 md:px-8 scale-110 sm:scale-100">
+      <div className="relative flex flex-wrap h-[100dvh] w-full border rounded-sm items-center bg-white">
+        <div className="w-full px-4 sm:px-6 md:px-8">
           <div className="mx-auto max-w-lg text-center">
             <h1 className="text-3xl font-bold text-indigo-600 ">
               欢迎加入 HeuChat
             </h1>
-            <p className="mt-4 text-lg sm:text-lg text-gray-500">使用邮箱注册</p>
+            <p className="mt-4 text-lg sm:text-lg text-gray-500">
+              使用邮箱注册
+            </p>
           </div>
 
           <form
             onSubmit={handleRegister}
-            className="mx-auto px-6 my-auto max-w-md space-y-3 scale-90 sm:scale-100"
+            className="mx-auto px-6 my-auto max-w-md space-y-3 scale-100 sm:scale-100"
           >
             <div className="w-full">
               <div className="text-lg py-2 flex flex-row">
@@ -201,7 +194,7 @@ function RegisterPage() {
                   type="text"
                   value={formData.email}
                   onChange={handleFormChange}
-                  className="w-full rounded-lg hover:scale-105  border hover:border-indigo-500 p-3 pe-12 focus:outline-none focus:ring-2 focus:ring-indigo-300 duration-200"
+                  className="w-full rounded-lg hover:scale-105  border border-indigo-300 hover:border-indigo-500 p-3 pe-12 focus:outline-none focus:ring-2 focus:ring-indigo-300 duration-200"
                   placeholder="请输入邮箱"
                 />
                 {errors.email && (
@@ -224,7 +217,7 @@ function RegisterPage() {
                     type="text"
                     value={formData.code}
                     onChange={handleFormChange}
-                    className="w-full rounded-lg hover:scale-105  border hover:border-indigo-500 p-3 pe-12 focus:outline-none focus:ring-2 focus:ring-indigo-300 duration-200"
+                    className="w-full rounded-lg hover:scale-105  border border-indigo-300 hover:border-indigo-500 p-3 pe-12 focus:outline-none focus:ring-2 focus:ring-indigo-300 duration-200"
                     placeholder="请输入邮箱验证码"
                   />
                   {errors.code && (
@@ -272,7 +265,7 @@ function RegisterPage() {
                   type="text"
                   value={formData.username}
                   onChange={handleFormChange}
-                  className="w-full rounded-lg hover:scale-105  border hover:border-indigo-500 p-3 pe-12 focus:outline-none focus:ring-2 focus:ring-indigo-300 duration-200"
+                  className="w-full rounded-lg hover:scale-105  border border-indigo-300 hover:border-indigo-500 p-3 pe-12 focus:outline-none focus:ring-2 focus:ring-indigo-300 duration-200"
                   placeholder="请输入用户名"
                 />
                 {errors.username && (
@@ -293,7 +286,7 @@ function RegisterPage() {
                   value={formData.password}
                   onChange={handleFormChange}
                   type={pwdType}
-                  className="w-full rounded-lg hover:scale-105  border hover:border-indigo-500 p-3 pe-12 focus:outline-none focus:ring-2 focus:ring-indigo-300 duration-200"
+                  className="w-full rounded-lg hover:scale-105  border border-indigo-300 hover:border-indigo-500 p-3 pe-12 focus:outline-none focus:ring-2 focus:ring-indigo-300 duration-200"
                   placeholder="请设置密码"
                 />
 
@@ -301,7 +294,7 @@ function RegisterPage() {
                   onClick={switchPwdType}
                   className="absolute inset-y-0 end-0 grid place-content-center px-4"
                 >
-                  {pwdType === "password" ? <CloseEyeIcon/> : <OpenEyeIcon />}
+                  {pwdType === "password" ? <CloseEyeIcon /> : <OpenEyeIcon />}
                 </span>
                 {errors.password && (
                   <div className="absolute right-0 mt-1 text-right text-sm text-red-500 ">
@@ -318,7 +311,7 @@ function RegisterPage() {
                   href=""
                   className="text-indigo-500 hover:text-indigo-400"
                   onClick={() => {
-                    !loading && navigate("/login");
+                    navigate("/login");
                   }}
                 >
                   立即登录

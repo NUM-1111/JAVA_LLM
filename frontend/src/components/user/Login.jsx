@@ -1,4 +1,3 @@
-import { useEffect } from "react";
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { globalData } from "@/constants";
@@ -17,7 +16,6 @@ function LoginPage() {
   });
   const [errors, setErrors] = useState({});
   const [pwdType, setPwdType] = useState("password");
-  const [loading, setLoading] = useState(true);
   // 切换密码可见性
   const switchPwdType = () => {
     setPwdType(pwdType === "password" ? "text" : "password");
@@ -89,10 +87,6 @@ function LoginPage() {
     }
   };
 
-  useEffect(() => {
-    setLoading(false);
-  }, [loading]);
-
   return (
     <>
       <MessageIcon
@@ -102,10 +96,10 @@ function LoginPage() {
         onClose={() => setShowMsg(false)}
         ifShow={showMsg}
       />
-      <div className="fixed z-10 flex flex-wrap h-screen w-full border rounded-lg items-center">
-        <div className="w-full px-10 mt-2 py-20 md:px-8 scale-110 sm:scale-100">
+      <div className="fixed z-10 flex flex-wrap h-[100dvh] w-full border rounded-lg items-center">
+        <div className="w-full px-10 sm:mt-2 py-12 sm:py-20 md:px-8 scale-110 sm:scale-100">
           <div className="mx-auto max-w-lg text-center">
-            <h1 className="text-3xl font-bold text-indigo-600">
+            <h1 className="text-3xl font-bold sm:text-3xl text-indigo-600">
               登录到 HeuChat
             </h1>
           </div>
@@ -167,14 +161,14 @@ function LoginPage() {
             </div>
 
             <div className="flex items-start justify-between pt-2">
-              <div className="flex flex-col space-y-2 ">
-                <p className="text-sm text-gray-500 select-none">
+              <div className="flex flex-col space-y-2 mt-2">
+                <p className="text-sm text-gray-500 select-none ">
                   还没有账号？
                   <a
                     href=""
                     className="text-indigo-500 hover:text-indigo-400"
                     onClick={() => {
-                      !loading && navigate("/register");
+                      navigate("/register");
                     }}
                   >
                     立即注册
@@ -185,7 +179,7 @@ function LoginPage() {
                     href=""
                     className="text-indigo-500 hover:text-indigo-400"
                     onClick={() => {
-                      !loading && navigate("/forgot-password");
+                      navigate("/forgot-password");
                     }}
                   >
                     忘记密码
@@ -195,12 +189,12 @@ function LoginPage() {
 
               <button
                 type="submit"
-                className="inline-block tracking-wider rounded-lg border border-indigo-600 bg-indigo-600 mt-2 px-12 py-3 text-md font-medium text-white hover:bg-indigo-50 hover:text-indigo-600 focus:outline-none focus:ring active:text-indigo-500"
+                className="inline-block tracking-wider rounded-lg border border-indigo-600 bg-indigo-600 mt-2 px-10 sm:px-12 py-3 text-md font-medium text-white hover:bg-indigo-50 hover:text-indigo-600 focus:outline-none focus:ring active:text-indigo-500"
               >
                 登 录
               </button>
             </div>
-            <div className="flex flex-col pt-5 sm:pt-8">
+            <div className="flex flex-col pt-4 sm:pt-8">
               <div className="flex items-center justify-center py-4 text-gray-500 text-sm">
                 <div className="flex-grow border-t  border-gray-300"></div>
                 <span className="px-4">其他登录方式</span>
@@ -212,7 +206,7 @@ function LoginPage() {
                   href=""
                   className=" text-indigo-500 hover:text-indigo-400 select-none"
                   onClick={() => {
-                    !loading && navigate("/login");
+                    navigate("/login");
                   }}
                 >
                   统一身份认证登录
