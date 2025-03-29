@@ -66,8 +66,9 @@ function NewChatPage() {
     <div className="flex flex-row  max-h-screen bg-white gap-2">
       {/*侧边栏部分 */}
       <SideBar isOpen={isOpen} setIsOpen={setIsOpen} />
+      {/*右侧覆盖阴影 */}
       {isOpen && (
-        <div className="absolute left-0 z-20 bg-black opacity-20 w-full lg:w-0 h-full">
+        <div className="absolute left-0 z-30 bg-black opacity-20 w-full lg:w-0 h-full">
           {" "}
         </div>
       )}
