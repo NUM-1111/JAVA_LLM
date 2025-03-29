@@ -63,7 +63,7 @@ function NewChatPage() {
   };
 
   return (
-    <div className="flex flex-row  max-h-screen bg-gray-100 gap-2">
+    <div className="flex flex-row  max-h-screen bg-white gap-2">
       {/*侧边栏部分 */}
       <SideBar isOpen={isOpen} setIsOpen={setIsOpen} />
       {isOpen && (
@@ -75,7 +75,7 @@ function NewChatPage() {
       <div
         className={`${
           isOpen ? "w-full lg:w-4/5" : "w-full"
-        } flex flex-col h-full max-h-screen bg-gray-100 relative`}
+        } flex flex-col h-full max-h-screen bg-white relative`}
       >
         {/* 头部导航栏 - 固定在主内容顶部 */}
         <HeadBar
@@ -87,15 +87,15 @@ function NewChatPage() {
 
         {/* 可滚动的主内容区域 */}
         <main className="flex-grow h-screen overflow-auto flex flex-col">
-          <div className="flex flex-col text-base mx-5 items-center mt-44 gap-5 flex-grow">
+          <div className="flex flex-col text-base mx-5 items-center mt-44 gap-10 flex-grow">
             <h1 className="text-3xl font-bold bg-clip-text text-transparent bg-gradient-to-br from-indigo-600 to-indigo-500 leading-[34px] tracking-[0.38px] select-none">
               有什么可以帮忙的?
             </h1>
 
             <div
               id="InputContainer"
-              className="flex flex-col h-auto w-[90%] rounded-3xl border shadow-md border-gray-200 bg-gray-50 
-                 md:static md:w-7/12 
+              className="flex flex-col h-auto w-[85%] rounded-3xl border shadow-md border-gray-200 bg-gray-50 
+                 md:static md:w-1/2
                  absolute bottom-5 px-4 py-1 md:py-2"
             >
               <div className="mx-3 mt-1 flex flex-col bg-inherit mb-2">

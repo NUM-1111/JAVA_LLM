@@ -203,7 +203,7 @@ const MessageIcon = ({ title, description, onClose, ifShow, type }) => {
   return (
     <div
       role="alert"
-      className={`fixed left-1/2 -translate-x-1/2 z-50 flex justify-center items-center rounded-xl border border-gray-100 bg-white p-4 shadow-lg transition-all duration-300 ${
+      className={`w-[60%] sm:w-auto fixed left-1/2 -translate-x-1/2 z-50 flex justify-center items-center rounded-xl border border-gray-100 bg-white p-4 shadow-lg transition-all duration-300 ${
         ifShow ? "translate-y-0 top-2" : "-translate-y-12 -top-14"
       }`}
     >

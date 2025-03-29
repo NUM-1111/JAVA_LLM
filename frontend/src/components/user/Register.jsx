@@ -176,13 +176,13 @@ function RegisterPage() {
         onClose={() => setShowMsg(false)}
         ifShow={showMsg}
       />
-      <div className="relative flex flex-wrap h-[101vh] w-full border rounded-sm items-center bg-white">
-        <div className="w-full px-4 sm:px-6 md:px-8">
+      <div className="relative flex flex-wrap h-screen  w-full border rounded-sm items-center bg-white">
+        <div className="w-full px-4 sm:px-6 md:px-8 scale-110 sm:scale-100">
           <div className="mx-auto max-w-lg text-center">
-            <h1 className="text-2xl font-bold sm:text-3xl text-indigo-600 ">
+            <h1 className="text-3xl font-bold text-indigo-600 ">
               欢迎加入 HeuChat
             </h1>
-            <p className="mt-4 text-lg text-gray-500">使用邮箱注册</p>
+            <p className="mt-4 text-lg sm:text-lg text-gray-500">使用邮箱注册</p>
           </div>
 
           <form

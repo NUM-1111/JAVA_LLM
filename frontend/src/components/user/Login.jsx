@@ -102,10 +102,10 @@ function LoginPage() {
         onClose={() => setShowMsg(false)}
         ifShow={showMsg}
       />
-      <div className="fixed z-10 flex flex-wrap h-fit w-full border rounded-lg items-center">
-        <div className="w-full px-10 mt-2 py-20 md:px-8">
+      <div className="fixed z-10 flex flex-wrap h-screen w-full border rounded-lg items-center">
+        <div className="w-full px-10 mt-2 py-20 md:px-8 scale-110 sm:scale-100">
           <div className="mx-auto max-w-lg text-center">
-            <h1 className="text-2xl font-bold sm:text-3xl text-indigo-600">
+            <h1 className="text-3xl font-bold text-indigo-600">
               登录到 HeuChat
             </h1>
           </div>
@@ -200,7 +200,7 @@ function LoginPage() {
                 登 录
               </button>
             </div>
-            <div className="flex flex-col pt-8">
+            <div className="flex flex-col pt-5 sm:pt-8">
               <div className="flex items-center justify-center py-4 text-gray-500 text-sm">
                 <div className="flex-grow border-t  border-gray-300"></div>
                 <span className="px-4">其他登录方式</span>

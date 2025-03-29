@@ -27,7 +27,6 @@ function ChatPage() {
   const textareaRef = useRef(null);
   // ai消息处理
   const abortController = useRef(new AbortController()); // 中断ai消息生成
-  const finishThink = useRef(false); // 是否结束思考
   const [finishText, setFinishText] = useState(true); // 是否正文输出完毕
   const [showThinkText, setShowThinkText] = useState({});
   const [conversationId, setConversationId] = useState(conversation_id || "");
@@ -103,9 +102,23 @@ function ChatPage() {
               body: JSON.stringify({ conversation_id: conversationId }),
             }
           );
-
           if (!response.ok) throw new Error("服务器返回错误");
+          // 切分解析ai文本
           const data = await response.json();
+          data.messages.map((message) => {
+            if (message.message.author.role === "assistant") {
+              message.message.thinking = false;
+              const textArray = message.message.content.text.split("</think>");
+              if (textArray.length === 1) {
+                message.message.content.thinkText = textArray[0];
+                message.message.content.text = "";
+              } else if (textArray.length === 2) {
+                message.message.content.thinkText = textArray[0];
+                message.message.content.text = textArray[1];
+              }
+            }
+            return message;
+          });
           setMessages(data.messages || []);
         } catch (error) {
           console.error("请求失败:", error);
@@ -193,11 +206,13 @@ function ChatPage() {
           .pipeThrough(new EventSourceParserStream()) // 解析 SSE
           .getReader();
 
-        await processSSE(reader, setMessages, finishThink, abortController);
+        await processSSE(reader, aiMessage, setMessages, abortController);
+        aiMessage.message.thinking = false;
       }
     } catch (error) {
       if (error.name !== "AbortError") {
         console.error("请求失败:", error);
+        aiMessage.message.thinking = false;
       }
     }
   };
@@ -296,16 +311,16 @@ function ChatPage() {
                     >
                       <DeepThinkIcon className={"size-4"} />
                       <span className="text-sm select-none pr-2">
-                        {finishThink.current
-                          ? "已完成深度思考"
-                          : "正在深度思考"}
+                        {msg.message.thinking
+                          ? "正在深度思考"
+                          : "已完成深度思考"}
                       </span>
                       <BreadcrumbIcon
                         className={`${
                           showThinkText[msg.message_id] &&
                           "transform scale-y-[-1]"
                         } absolute right-2 size-5 `}
-                      />
+                      />  
                     </button>
                     {showThinkText[msg.message_id] && (
                       <MarkdownRenderer

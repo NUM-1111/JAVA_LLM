@@ -111,7 +111,7 @@ function HeadBar({ isOpen, setIsOpen, selectedCode, setSelectedCode }) {
   };
 
   return (
-    <header className="sticky xl:absolute w-full z-20 top-0 flex flex-row px-5 py-3 justify-between select-none xl:bg-transparent">
+    <header className="sticky xl:absolute w-full z-20 top-0 flex flex-row px-5 py-3 bg-white justify-between select-none xl:bg-transparent">
       {/* 左侧按钮 */}
       <div className="flex flex-row text-gray-700">
         {/*显示侧边栏按钮 */}
