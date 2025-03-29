@@ -6,8 +6,6 @@ const toastIfLogin = (delay=300,duration=1000) => {
   const now = Date.now();
   if (now - lastToastTime < duration+100) return; // 如果没过冷却时间，则直接返回
   lastToastTime = now; // 更新上次执行时间
-
-  if (!localStorage.getItem("loginStatus")) return;
   let message;
   if (!localStorage.getItem("auth")) {
     message = "登录身份已过期,请重新登录";

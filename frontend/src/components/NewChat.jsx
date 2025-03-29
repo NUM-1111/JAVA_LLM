@@ -4,6 +4,7 @@ import SideBar from "./Sidebar";
 import { DeepThinkIcon, ArrowUpIcon } from "./svg-icons";
 import HeadBar from "./HeadBar";
 import {toastIfLogin} from "./user/utils"
+import { v4 as uuid } from 'uuid';
 
 function NewChatPage() {
   const navigate = useNavigate(); // 获取导航函数
@@ -43,10 +44,10 @@ function NewChatPage() {
       },
       status: "finished_successfully",
     };
-    const conversationId = crypto.randomUUID();
+    const conversationId = uuid();
     const userMessage = {
       message: message,
-      message_id: crypto.randomUUID(),
+      message_id: uuid(),
       conversation_id: conversationId,
       parent: "client-created-root",
       children: [],

@@ -3,6 +3,8 @@ import { useNavigate } from "react-router-dom";
 import { toast } from "react-toastify";
 import { useState, useEffect, useRef } from "react";
 import { toastIfLogin } from "./user/utils";
+import { globalData } from "@/constants";
+
 import "react-toastify/dist/ReactToastify.css";
 import {
   SiderBarIcon,
@@ -64,7 +66,7 @@ function HeadBar({ isOpen, setIsOpen, selectedCode, setSelectedCode }) {
   // 获取用户名
   async function fetchUsername() {
     try {
-      const response = await fetch("http://localhost:8080/api/user/info", {
+      const response = await fetch(globalData.domain+"/api/user/info", {
         method: "GET",
         headers: {
           Authorization: localStorage.auth,
@@ -147,17 +149,21 @@ function HeadBar({ isOpen, setIsOpen, selectedCode, setSelectedCode }) {
 
       {/* 模型选择按钮 */}
       <div className="flex flex-1 justify-center lg:justify-start">
-        <div ref={modelRef} className="relative group">
+        <div ref={modelRef} className="relative group hover:bg-gray-100">
           <button
             onClick={() => setShowModels(!showModels)}
-            className={`relative flex flex-row items-center ml-1 px-2 py-2 rounded-lg justify-center min-w-40 min-h-11 hover:bg-gray-100 border ${
-              showModels ? "bg-gray-100 border-gray-200" : "border-white"
+            className={`relative flex flex-row items-center ml-1 px-2 py-2 rounded-lg justify-center min-w-40 min-h-11  ${
+              showModels ? "bg-gray-200" : ""
             }  transition`}
           >
             <span className="text-lg font-semibold text-gray-700 mr-5">
               {models[selectedCode]}
             </span>
-            <BreadcrumbIcon className={"absolute right-2 size-5"} />
+            <BreadcrumbIcon
+              className={`${
+                showModels && "transform scale-y-[-1]"
+              } absolute right-2 size-5 `}
+            />
           </button>
           {/* 下拉菜单 */}
           {showModels && (

@@ -1,10 +1,8 @@
+import { v4 as uuid } from 'uuid';
 
 // 创建用户消息
-const createUserMessage = (inputText, messagesRef, conversationId) => {
-    const currentMessages = messagesRef.current;
-  
-    if (currentMessages.length === 0 || inputText.trim() === "") return null;
-  
+const createUserMessage = (inputText, messages, conversationId) => {
+    if (messages.length === 0 || inputText.trim() === "") return null;
     return {
       message: {
         author: { role: "user" },
@@ -13,7 +11,7 @@ const createUserMessage = (inputText, messagesRef, conversationId) => {
       },
       message_id: crypto.randomUUID(),
       conversation_id: conversationId,
-      parent: currentMessages[currentMessages.length - 1]?.message_id || null,
+      parent: messages[messages.length - 1]?.message_id || null,
       children: [],
       created_at: new Date().toISOString(),
     };
@@ -27,7 +25,7 @@ const createUserMessage = (inputText, messagesRef, conversationId) => {
       status: "processing",
       model: models[selectedCode],
     },
-    message_id: crypto.randomUUID(),
+    message_id: uuid(),
     conversation_id: userMessage.conversation_id,
     parent: userMessage.message_id,
     children: [],
@@ -40,6 +38,7 @@ const createUserMessage = (inputText, messagesRef, conversationId) => {
       const { done, value } = await reader.read();
       if (done) {
         console.log("SSE 完毕");
+        finishThink.current = true;
         break;
       }
       try {
@@ -64,6 +63,7 @@ const createUserMessage = (inputText, messagesRef, conversationId) => {
         } else if (jsonData.type === "status" && jsonData.message === "ANSWER_DONE") {
           console.log("SSE 响应接受完成.");
           abortController.current?.abort();
+          finishThink.current = true;
           return;
         } else {
           console.log("未知 SSE 格式:", jsonData);
@@ -71,6 +71,7 @@ const createUserMessage = (inputText, messagesRef, conversationId) => {
       } catch (e) {
         console.error("JSON 解析错误:", e, "内容:", value.data);
         abortController.current?.abort();
+        finishThink.current = true;
         return;
       }
     }

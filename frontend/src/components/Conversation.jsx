@@ -24,7 +24,6 @@ function ChatPage() {
   const [inputText, setInputText] = useState("");
   const [isOpen, setIsOpen] = useState(false);
   const [messages, setMessages] = useState([]);
-  const messagesRef = useRef(messages);
   const textareaRef = useRef(null);
   // ai消息处理
   const abortController = useRef(new AbortController()); // 中断ai消息生成
@@ -216,7 +215,7 @@ function ChatPage() {
       }
       const userMessage =
         initialMessage ||
-        createUserMessage(inputText, messagesRef, conversationId);
+        createUserMessage(inputText, messages, conversationId);
       if (!userMessage) return;
 
       if (!initialMessage) {
@@ -237,7 +236,7 @@ function ChatPage() {
       );
       setFinishText(true);
     },
-    [selectedCode, conversationId, inputText, deepThink]
+    [inputText, messages, conversationId, selectedCode, deepThink]
   );
 
   // 切换显示思考文本
@@ -282,7 +281,7 @@ function ChatPage() {
                 msg?.message.author.role == "user" ? (
                   <div
                     key={index}
-                    className="md:max-w-[60%] max-w-[70%] ml-auto mt-14 p-5 h-30 bg-gray-50 border-gray-200 border shadow-sm rounded-3xl"
+                    className="md:max-w-[60%] max-w-[70%] ml-auto mt-14 px-5 py-4 bg-gray-50 border-gray-200 border shadow-sm rounded-3xl"
                   >
                     {msg.message?.content.text}
                   </div>
