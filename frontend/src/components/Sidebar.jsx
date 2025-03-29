@@ -138,7 +138,10 @@ export default function SideBar({ isOpen, setIsOpen }) {
           <div className="relative">
             <button
               className={` flex justify-center items-center size-10 rounded-lg hover:shadow-md hover:bg-blue-300 group`}
-              onClick={() => navigate("/")} // 跳转到新建对话页面
+              onClick={() => {
+                navigate("/");
+                setIsOpen(false);
+              }} // 跳转到新建对话页面
             >
               <NewChatIcon />
               {/* 说明框：右侧显示 */}
@@ -160,7 +163,10 @@ export default function SideBar({ isOpen, setIsOpen }) {
           <div>
             <button
               className="py-2"
-              onClick={() => navigate("/")} // 跳转到新建对话页面
+              onClick={() => {
+                navigate("/");
+                setIsOpen(false);
+              }} // 跳转到新建对话页面
             >
               开启新对话
             </button>
