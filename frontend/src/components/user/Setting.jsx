@@ -85,12 +85,20 @@ export default function SettingsPage() {
         }
       );
       console.log(res.data.msg);
-      navigate("/chat"); // 跳转到新对话页
     } catch (err) {
       console.log(err);
       setMessage(err.response?.data?.msg || "请求失败");
     }
   };
+
+  const handleLogout = () => {
+    localStorage.removeItem("auth");
+    // 延时跳转到登录页
+    setTimeout(() => {
+      navigate("/login");
+    }, 1000); // 延时 1 秒（1000 毫秒）
+  };
+
   // 定时清除消息提示
   useEffect(() => {
     if (message) {
@@ -148,7 +156,11 @@ export default function SettingsPage() {
       <div className="bg-white shadow-lg rounded-2xl p-4">
         <h2 className="text-xl font-bold mb-2">账户管理</h2>
         <button
-          onClick={handleDeleteAccount}
+          onClick={() => {
+            handleClearChat();
+            handleDeleteAccount();
+            handleLogout();
+          }}
           className="w-full bg-red-700 text-white py-2 rounded"
         >
           注销账号
