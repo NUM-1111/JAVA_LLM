@@ -60,7 +60,7 @@ func QueryMessages(c *gin.Context) {
 	query := bson.M{"conversation_id": reqData.ConversationID}
 
 	// 调用数据库查询函数
-	messages, err := db.FindMessages(c.Request.Context(), query)
+	messages, err := db.FindMessages(c.Request.Context(), query, bson.D{{Key: "updated_at", Value: 1}})
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"msg": "数据库查询失败!", "err": err.Error()})
 		return

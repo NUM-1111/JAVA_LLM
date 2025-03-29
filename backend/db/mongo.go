@@ -153,9 +153,14 @@ func FindOneMessage(ctx context.Context, query bson.M) (models.ChatMessage, erro
 }
 
 // 查找所有符合的消息
-func FindMessages(ctx context.Context, query bson.M) ([]models.ChatMessage, error) {
+func FindMessages(ctx context.Context, query bson.M, sort bson.D) ([]models.ChatMessage, error) {
+	// 排序条件
+	findOptions := options.Find()
+	if sort != nil {
+		findOptions.SetSort(sort) // 仅当 sort 不为 nil 时才设置排序
+	}
 	// 获取游标
-	cursor, err := ChatMessage.Find(ctx, query)
+	cursor, err := ChatMessage.Find(ctx, query, findOptions)
 	if err != nil {
 		return nil, fmt.Errorf("查询失败: %v", err)
 	}

@@ -13,12 +13,12 @@ import (
 func SetupRoutes(r *gin.Engine) {
 	// 配置 CORS（跨域资源共享），允许前端访问后端
 	r.Use(cors.New(cors.Config{
-		AllowOrigins:     []string{"http://localhost:5173"},                             // 允许的前端地址（开发环境）
-		AllowMethods:     []string{"GET", "POST", "PUT", "DELETE", "OPTIONS"},           // 允许的 HTTP 方法
-		AllowHeaders:     []string{"Origin", "Content-Type", "Authorization", "Cookie"}, // 允许的请求头
-		ExposeHeaders:    []string{"Content-Length"},                                    // 允许前端获取的响应头
-		AllowCredentials: true,                                                          // 允许跨域请求时携带 Cookie
-		MaxAge:           12 * time.Hour,                                                // 预检请求的缓存时间
+		AllowOrigins:     []string{"http://localhost:5173", "http://222.27.240.75:5173"}, // 允许的前端地址（开发环境）
+		AllowMethods:     []string{"GET", "POST", "PUT", "DELETE", "OPTIONS"},            // 允许的 HTTP 方法
+		AllowHeaders:     []string{"Origin", "Content-Type", "Authorization", "Cookie"},  // 允许的请求头
+		ExposeHeaders:    []string{"Content-Length"},                                     // 允许前端获取的响应头
+		AllowCredentials: true,                                                           // 允许跨域请求时携带 Cookie
+		MaxAge:           12 * time.Hour,                                                 // 预检请求的缓存时间
 	}))
 
 	// 公开的 API 路由（不需要身份认证）
@@ -32,14 +32,14 @@ func SetupRoutes(r *gin.Engine) {
 	api := r.Group("/api")
 	api.Use(middleware.AuthSession) // 使用会话认证中间件，确保用户已登录
 
-	api.POST("/change/username", services.ChangeUserName)      // 允许用户修改用户名
-	api.POST("/change/email", services.ChangeUserEmail)        // 允许用户修改邮箱
-	api.POST("/delete/account", services.UserDelete)           // 允许用户注销账户
-	api.POST("/delete/chat", services.DeleteAllConversations)  // 允许用户删除所有聊天记录
+	api.POST("/change/username", services.ChangeUserName)         // 允许用户修改用户名
+	api.POST("/change/email", services.ChangeUserEmail)           // 允许用户修改邮箱
+	api.POST("/delete/account", services.DeleteUser)              // 允许用户注销账户
+	api.POST("/delete/chat", services.DeleteAllConversations)     // 允许用户删除所有聊天记录
 	api.POST("/delete/conversation", services.DeleteConversation) // 允许用户删除单条聊天记录
-	api.POST("/new/message", services.HandleNewMessage)        // 处理新的聊天消息
-	api.PUT("/rename/conversation", services.RenameConversation) // 允许用户重命名对话
-	api.GET("/query/conversation", services.QueryConversation) //侧边栏查询历史记录
-	api.POST("/query/messages", services.QueryMessages)        // 对话页查询历史消息
-	api.GET("/user/info", services.GetUserNameBySession)       //返回用户名信息
+	api.POST("/new/message", services.HandleNewMessage)           // 处理新的聊天消息
+	api.PUT("/rename/conversation", services.RenameConversation)  // 允许用户重命名对话
+	api.GET("/query/conversation", services.QueryConversation)    //侧边栏查询历史记录
+	api.POST("/query/messages", services.QueryMessages)           // 对话页查询历史消息
+	api.GET("/user/info", services.GetUserNameBySession)          //返回用户名信息
 }

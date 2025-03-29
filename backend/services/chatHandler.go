@@ -49,11 +49,11 @@ func SetStreamHeaders(c *gin.Context) {
 // 向python服务请求生成回答
 func GenerateMessage(ctx context.Context, chunkChan chan string, conversation_id string, stream grpc.ServerStreamingClient[pb.Response]) {
 	// 发送请求
-	log.Println("开始接收流式响应:")
+	log.Println("正在接收流式响应...")
 	for {
 		select {
 		case <-ctx.Done():
-			log.Println("完成前客户端断开连接")
+			log.Println("客户端断开连接")
 			return
 		default:
 			resp, err := stream.Recv()
@@ -180,7 +180,7 @@ func HandleNewMessage(c *gin.Context) {
 				"$set":      bson.M{"updated_at": time.Now()},
 			})
 		if err != nil {
-			log.Println("err:", err)
+			log.Println("父节点更新失败,err:", err)
 			c.JSON(http.StatusInternalServerError, gin.H{"msg": "消息更新失败", "err": err.Error()})
 			return
 		}

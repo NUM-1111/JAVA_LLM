@@ -15,7 +15,6 @@ import (
 	"github.com/google/uuid"
 	"github.com/redis/go-redis/v9"
 	"gorm.io/gorm"
-	"gorm.io/gorm/clause"
 )
 
 /*
@@ -43,6 +42,7 @@ func EmailHandler(c *gin.Context) {
 		c.JSON(http.StatusInternalServerError, gin.H{"msg": "邮箱验证码生成失败."})
 		return
 	}
+	fmt.Println(code)
 	// 将邮箱和验证码键值对存入redis
 	err = db.Redis.Set(db.CTX, "email_code:"+req.Email, code, time.Duration(config.EmailExpire)*time.Minute).Err()
 	if err != nil {
@@ -95,75 +95,74 @@ func VerifyEmailCode(c *gin.Context) {
 	}
 
 	// 生成 Token
-    resetToken := uuid.New().String()
-    err = db.Redis.Set(db.CTX, "reset:"+resetToken, request.Email, 10*time.Minute).Err()
-    if err != nil {
-        c.JSON(http.StatusInternalServerError, gin.H{"msg": "生成密码重置 Token 失败."})
-        return
-    }
+	resetToken := uuid.New().String()
+	err = db.Redis.Set(db.CTX, "reset:"+resetToken, request.Email, 10*time.Minute).Err()
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"msg": "生成密码重置 Token 失败."})
+		return
+	}
 
-    c.JSON(http.StatusOK, gin.H{
-        "msg":   "邮箱验证码验证成功.",
-        "token": resetToken, // 让前端获取这个 token
-    })
+	c.JSON(http.StatusOK, gin.H{
+		"msg":   "邮箱验证码验证成功.",
+		"token": resetToken, // 让前端获取这个 token
+	})
 }
 
 /*
 重置密码函数
 */
 func ResetPassword(c *gin.Context) {
-    var request struct {
-        Token    string `json:"token"`
-        NewPwd   string `json:"newPassword"`
-    }
+	var request struct {
+		Token  string `json:"token"`
+		NewPwd string `json:"newPassword"`
+	}
 
-    if err := c.ShouldBindJSON(&request); err != nil {
-        c.JSON(http.StatusBadRequest, gin.H{"msg": "参数类型异常, 重置失败."})
-        return
-    }
+	if err := c.ShouldBindJSON(&request); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"msg": "参数类型异常, 重置失败."})
+		return
+	}
 
 	//测试密码长度
 	fmt.Println(request.NewPwd)
 	fmt.Println(len(request.NewPwd))
 	fmt.Println(request.Token)
 
-    if len(request.NewPwd) < 6 {
-			
-        c.JSON(http.StatusBadRequest, gin.H{"msg": "密码长度需大于6位."})
-        return
-    }
+	if len(request.NewPwd) < 6 {
 
-    // 从 Redis 获取 Email
-    email, err := db.Redis.Get(db.CTX, "reset:"+request.Token).Result()
-    if err == redis.Nil {
-        c.JSON(http.StatusUnauthorized, gin.H{"msg": "无效或已过期的 Token."})
-        return
-    } else if err != nil {
-        c.JSON(http.StatusInternalServerError, gin.H{"msg": "Token 读取失败."})
-        return
-    }
+		c.JSON(http.StatusBadRequest, gin.H{"msg": "密码长度需大于6位."})
+		return
+	}
 
-    // 加密新密码
-    hashedPwd, err := HashPassword(request.NewPwd)
-    if err != nil {
-        c.JSON(http.StatusInternalServerError, gin.H{"msg": "密码加密失败."})
-        return
-    }
+	// 从 Redis 获取 Email
+	email, err := db.Redis.Get(db.CTX, "reset:"+request.Token).Result()
+	if err == redis.Nil {
+		c.JSON(http.StatusUnauthorized, gin.H{"msg": "无效或已过期的 Token."})
+		return
+	} else if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"msg": "Token 读取失败."})
+		return
+	}
 
-    // 更新数据库密码
-    result := db.DB.Model(&models.User{}).Where("email = ?", email).Update("password", hashedPwd)
-    if result.Error != nil {
-        c.JSON(http.StatusInternalServerError, gin.H{"msg": "密码更新失败."})
-        return
-    }
+	// 加密新密码
+	hashedPwd, err := HashPassword(request.NewPwd)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"msg": "密码加密失败."})
+		return
+	}
 
-    // 删除 Redis 中的 Token
+	// 更新数据库密码
+	result := db.DB.Model(&models.User{}).Where("email = ?", email).Update("password", hashedPwd)
+	if result.Error != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"msg": "密码更新失败."})
+		return
+	}
+
+	// 删除 Redis 中的 Token
 	log.Println("删除前 Token 是否存在:", db.Redis.Exists(db.CTX, "reset:"+request.Token).Val())
-    db.Redis.Del(db.CTX, "reset:"+request.Token)
+	db.Redis.Del(db.CTX, "reset:"+request.Token)
 
-    c.JSON(http.StatusOK, gin.H{"msg": "密码重置成功!"})
+	c.JSON(http.StatusOK, gin.H{"msg": "密码重置成功!"})
 }
-
 
 /*
 用户注册处理函数
@@ -221,7 +220,7 @@ func UserRegister(c *gin.Context) {
 	}
 
 	//插入用户数据
-	result := db.DB.Clauses(clause.OnConflict{DoNothing: true}).Create(&user)
+	result := db.DB.Create(&user)
 	if result.Error != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"msg": "数据库插入出错.", "err": result.Error})
 		return
@@ -240,8 +239,9 @@ func UserRegister(c *gin.Context) {
 		CreatedAt: time.Now(),
 		UpdatedAt: time.Now(),
 		ExpiresAt: time.Now().Add(config.SessionExpire),
+		IsValid:   true,
 	}
-	result = db.DB.Clauses(clause.OnConflict{DoNothing: true}).Create(&session)
+	result = db.DB.Create(&session)
 	if result.Error != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"msg": "数据库插入出错.", "err": result.Error})
 		return
@@ -312,13 +312,13 @@ func UserLogin(c *gin.Context) {
 	var session = models.Session{
 		SessionID: uuid.New().String(), // 生成唯一的 36 位 UUID 作为 Session ID
 		UserID:    user.UserID,
-		CreatedAt: time.Now(),         // 记录会话创建时间
-		UpdatedAt: time.Now(),         // 记录会话更新时间
+		CreatedAt: time.Now(),                           // 记录会话创建时间
+		UpdatedAt: time.Now(),                           // 记录会话更新时间
 		ExpiresAt: time.Now().Add(config.SessionExpire), // 设置会话过期时间
-		IsValid:   true,               // 标记新会话为有效
+		IsValid:   true,                                 // 标记新会话为有效
 	}
 	// 插入新会话记录到数据库，若冲突则不做任何操作
-	result = db.DB.Clauses(clause.OnConflict{DoNothing: true}).Create(&session)
+	result = db.DB.Create(&session)
 	if result.Error != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"msg": "数据库插入出错.", "err": result.Error})
 		return
@@ -330,7 +330,6 @@ func UserLogin(c *gin.Context) {
 		"session_id": session.SessionID,
 	})
 }
-
 
 /*
 ChangeUserName用户更改用户名处理函数
@@ -433,7 +432,7 @@ func ChangeUserEmail(c *gin.Context) {
 /*
 注销账号处理函数
 */
-func UserDelete(c *gin.Context) {
+func DeleteUser(c *gin.Context) {
 	// 从请求上下文中获取 session 信息
 	session, exist := c.Get("session")
 	if !exist {
@@ -459,8 +458,23 @@ func UserDelete(c *gin.Context) {
 		return
 	}
 
+	// 删除用户的所有session鉴权记录
+	result = db.DB.Where("user_id=?", user_id).Delete(&models.Session{})
+
+	// 检测数据库删除是否发生错误
+	if result.Error != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"msg": "鉴权数据库删除出错", "err": result.Error})
+		return
+	}
+
+	// 检测是否真的删除了数据
+	if result.RowsAffected == 0 {
+		c.JSON(http.StatusNotFound, gin.H{"msg": "用户鉴权不存在."})
+		return
+	}
+
 	// 返回成功的响应
-	c.JSON(http.StatusOK, gin.H{"msg": "用户删除成功."})
+	c.JSON(http.StatusOK, gin.H{"msg": "用户及鉴权删除成功."})
 }
 
 /*

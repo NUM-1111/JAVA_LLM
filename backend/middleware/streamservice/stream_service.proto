@@ -2,7 +2,7 @@ syntax = "proto3";
 
 package streamservice;
 
-option go_package = "godemo/streamservice";
+option go_package = "Go_LLM_web/middleware/streamservice;streamservice";
 
 // 流服务定义
 service StreamService {
