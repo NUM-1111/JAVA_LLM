@@ -268,7 +268,7 @@ function ChatPage() {
       <SideBar isOpen={isOpen} setIsOpen={setIsOpen} />
       {/*右侧覆盖阴影 */}
       {isOpen && (
-        <div className="absolute left-0 z-30 bg-black opacity-20 w-full lg:w-0 h-full">
+        <div className="absolute left-0 z-30 bg-black opacity-20 w-full lg:w-0 h-screen">
           {" "}
         </div>
       )}
