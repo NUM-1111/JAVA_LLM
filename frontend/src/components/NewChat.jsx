@@ -1,7 +1,7 @@
 import { useNavigate } from "react-router-dom";
 import { useState, useEffect, useRef } from "react";
 import SideBar from "./Sidebar";
-import { DeepThinkIcon, ArrowUpIcon } from "./svg-icons";
+import { DeepThinkIcon, ArrowUpIcon, ImageUpLoadIcon } from "./svg-icons";
 import HeadBar from "./HeadBar";
 import { toastIfLogin } from "./user/utils";
 import { v4 as uuid } from "uuid";
@@ -15,6 +15,28 @@ function NewChatPage() {
   const [inputText, setInputText] = useState(""); // 存储 textarea 内容
   const [isOpen, setIsOpen] = useState(false); // 控制侧边栏展开/折叠
   const textareaRef = useRef(null);
+  //处理上传图片
+  const fileInputRef = useRef(null);
+
+  // 触发文件选择窗口
+  const handleButtonClick = () => {
+    if (fileInputRef.current) {
+      fileInputRef.current.click();
+    }
+  };
+
+  // 处理文件选择变化
+  const handleFileChange = (event) => {
+    const files = event.target.files;
+    if (files && files.length > 0) {
+      const file = files[0];
+      if (file && file.type.startsWith("image/")) {
+        console.log("选择的图片文件:", file);
+      } else {
+        alert("请选择一个图片文件");
+      }
+    }
+  };
 
   // 自适应输入框
   useEffect(() => {
@@ -71,7 +93,10 @@ function NewChatPage() {
       <SideBar isOpen={isOpen} setIsOpen={setIsOpen} />
       {/*右侧覆盖阴影 */}
       {isOpen && (
-        <div onClick={() => setIsOpen(false)}  className="absolute left-0 z-30 bg-black opacity-20 w-full lg:w-0 h-[100dvh] sm:h-screen"></div>
+        <div
+          onClick={() => setIsOpen(false)}
+          className="absolute left-0 z-30 bg-black opacity-20 w-full lg:w-0 h-[100dvh] sm:h-screen"
+        ></div>
       )}
       {/*对话部分*/}
       <div
@@ -123,17 +148,34 @@ function NewChatPage() {
                   }}
                 ></textarea>
                 <div className="w-full flex justify-between  md:mt-2">
-                  <button
-                    onClick={() => setDeepThink(!deepThink)}
-                    className={`flex flex-row justify-center items-center gap-1 px-2 my-[0.2rem] rounded-full border ${
-                      deepThink
-                        ? "bg-blue-200 text-blue-600 border-blue-500"
-                        : "bg-white border-gray-300  text-black  hover:bg-gray-100"
-                    } transition`}
-                  >
-                    <DeepThinkIcon className={"size-4"} />
-                    <span className="text-sm select-none">深度思考</span>
-                  </button>
+                  <div className="flex flex-row justify-start gap-2">
+                    <button
+                      onClick={() => setDeepThink(!deepThink)}
+                      className={`flex flex-row justify-center items-center gap-1 px-2 my-[0.2rem] rounded-full border ${
+                        deepThink
+                          ? "bg-blue-200 text-blue-600 border-blue-500"
+                          : "bg-white border-gray-300  text-black  hover:bg-gray-100"
+                      } transition`}
+                    >
+                      <DeepThinkIcon className={"size-4"} />
+                      <span className="text-sm select-none">深度思考</span>
+                    </button>
+                    {/* 图片上传icon */}
+                    <button
+                      className=" flex flex-row justify-start items-center gap-1 px-2 my-[0.2rem] rounded-full border bg-white border-gray-300 text-black hover:bg-gray-100 transition"
+                      onClick={handleButtonClick}
+                    >
+                      <ImageUpLoadIcon className={"size-5"} />
+                    </button>
+                    <input
+                      type="file"
+                      ref={fileInputRef}
+                      onChange={handleFileChange}
+                      style={{ display: "none" }}
+                      accept="image/*" // 限制只能选择图片
+                    />
+                  </div>
+
                   <button
                     onClick={() => handleSendMessage()}
                     className="size-9 bg-indigo-600 text-white rounded-full hover:bg-indigo-500"
