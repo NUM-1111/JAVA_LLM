@@ -5,6 +5,7 @@ import (
 	"Go_LLM_Web/db"
 	"Go_LLM_Web/models"
 	"fmt"
+	"log"
 	"time"
 
 	"net/http"
@@ -60,14 +61,17 @@ func QueryMessages(c *gin.Context) {
 	query := bson.M{"conversation_id": reqData.ConversationID}
 
 	// 调用数据库查询函数
-	messages, err := db.FindMessages(c.Request.Context(), query, bson.D{{Key: "updated_at", Value: 1}})
+	messages, err := db.FindMessages(c.Request.Context(), query, bson.D{{Key: "created_at", Value: -1}})
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"msg": "数据库查询失败!", "err": err.Error()})
 		return
 	}
-
+	var currentId string
+	if len(messages) >= 1 {
+		currentId = messages[0].MessageID
+	}
 	// 返回数据给前端
-	c.JSON(http.StatusOK, gin.H{"messages": messages})
+	c.JSON(http.StatusOK, gin.H{"current_id": currentId, "messages": messages})
 }
 
 /*
@@ -153,4 +157,23 @@ func RenameConversation(c *gin.Context) {
 
 	// 返回数据给前端
 	c.JSON(http.StatusOK, gin.H{"msg": "修改聊天记录成功"})
+}
+
+// 查询最新的message_id
+func QueryMessageId(c *gin.Context) {
+	var reqData struct {
+		ConversationID string `json:"conversation_id"` // 关联会话
+	}
+	if err := c.ShouldBindJSON(&reqData); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"code": "-1", "msg": "参数格式异常!"})
+		return
+	}
+	var ctx = c.Request.Context()
+	result, err := db.FindOneConversation(ctx, bson.M{"conversation_id": reqData.ConversationID})
+	if err != nil {
+		log.Println("conversation查询出错! err:", err)
+		c.JSON(http.StatusInternalServerError, gin.H{"code": "-1", "msg": "最新节点id查询时出错!"})
+		return
+	}
+	c.JSON(http.StatusOK, gin.H{"code": "0", "current_id": result.CurrentNode})
 }

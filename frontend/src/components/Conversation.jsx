@@ -11,6 +11,8 @@ import {
   ArrowUpIcon,
   StopIcon,
   ImageUpLoadIcon,
+  CycleIcon,
+  CopyIcon,
 } from "./svg-icons";
 import HeadBar from "./HeadBar";
 import SideBar from "./Sidebar";
@@ -65,6 +67,32 @@ function ChatPage() {
     }
   }, [conversation_id]);
 
+  const processMessages = (currentId, messages) => {
+    const messageMap = {};
+    messages.map((message) => {
+      messageMap[message.message_id] = message; // 存入消息map
+      if (message.message.author.role === "assistant") {
+        message.message.thinking = false;
+        const textArray = message.message.content.text.split("</think>");
+        if (textArray.length === 1) {
+          message.message.content.thinkText = textArray[0];
+          message.message.content.text = "";
+        } else if (textArray.length === 2) {
+          message.message.content.thinkText = textArray[0];
+          message.message.content.text = textArray[1];
+        }
+      }
+      return message;
+    });
+    const messageChain = [];
+    while (currentId && messageMap[currentId]) {
+      const currentMessage = messageMap[currentId];
+      messageChain.unshift(currentMessage); // 添加到数组开头
+      currentId = currentMessage.parent;
+    }
+    return messageChain;
+  };
+
   // 处理初始消息（独立 effect）
   useEffect(() => {
     const initialMessage = location.state?.initialMessage;
@@ -105,21 +133,9 @@ function ChatPage() {
           if (!response.ok) throw new Error("服务器返回错误");
           // 切分解析ai文本
           const data = await response.json();
-          data.messages.map((message) => {
-            if (message.message.author.role === "assistant") {
-              message.message.thinking = false;
-              const textArray = message.message.content.text.split("</think>");
-              if (textArray.length === 1) {
-                message.message.content.thinkText = textArray[0];
-                message.message.content.text = "";
-              } else if (textArray.length === 2) {
-                message.message.content.thinkText = textArray[0];
-                message.message.content.text = textArray[1];
-              }
-            }
-            return message;
-          });
-          setMessages(data.messages || []);
+
+          const messages = processMessages(data.current_id, data.messages);
+          setMessages(messages || []);
         } catch (error) {
           console.error("请求失败:", error);
         }
@@ -250,6 +266,38 @@ function ChatPage() {
         abortController
       );
       setFinishText(true);
+      // 流式结束后获取最新消息ID
+      try {
+        const response = await fetch(globalData.domain + "/api/get/latest/id", {
+          method: "POST",
+          headers: {
+            Authorization: localStorage.auth,
+          },
+          body: JSON.stringify({
+            conversation_id: conversationId,
+          }),
+        });
+
+        if (response.ok) {
+          const { current_id } = await response.json();
+
+          // 更新占位消息的ID
+          setMessages((prev) => {
+            const newMessages = [...prev];
+            const lastMessage = newMessages[newMessages.length - 1];
+            if (lastMessage.message.author.role === "assistant") {
+              lastMessage.message_id = current_id;
+              lastMessage.message.thinking = false;
+              lastMessage.message.status = "finished_successfully";
+            }
+            return newMessages;
+          });
+        }
+      } catch (error) {
+        console.error("获取最新消息ID失败:", error);
+      } finally {
+        setFinishText(true);
+      }
     },
     [inputText, messages, conversationId, selectedCode, deepThink]
   );
@@ -258,7 +306,7 @@ function ChatPage() {
   const toggleThinkText = (message_id) => {
     setShowThinkText((prev) => ({
       ...prev,
-      [message_id]: !(prev[message_id] ?? true), // 使用对象的键值对
+      [message_id]: !(prev[message_id] ?? false), // 使用对象的键值对
     }));
   };
 
@@ -268,7 +316,10 @@ function ChatPage() {
       <SideBar isOpen={isOpen} setIsOpen={setIsOpen} />
       {/*右侧覆盖阴影 */}
       {isOpen && (
-        <div onClick={() => setIsOpen(false)}  className="absolute left-0 z-30 bg-black opacity-20 w-full lg:w-0 h-[100dvh] sm:h-screen"></div>
+        <div
+          onClick={() => setIsOpen(false)}
+          className="absolute left-0 z-30 bg-black opacity-20 w-full lg:w-0 h-[100dvh] sm:h-screen"
+        ></div>
       )}
       {/*对话部分*/}
       <div
@@ -310,7 +361,7 @@ function ChatPage() {
                   >
                     <button
                       onClick={() => toggleThinkText(msg.message_id)}
-                      className={`z relative flex flex-row justify-center items-center min-h-2/5 gap-2 pl-3 pr-6 py-2 rounded-xl border-gray-200 border bg-gray-200  text-black hover:bg-gray-50 transition`}
+                      className={`relative flex flex-row justify-center items-center min-h-2/5 gap-2 pl-3 pr-6 py-2 rounded-xl border-gray-200 border bg-gray-200  text-black hover:bg-gray-50 transition`}
                     >
                       <DeepThinkIcon className={"size-4"} />
                       <span className="text-sm select-none pr-2">
@@ -326,15 +377,19 @@ function ChatPage() {
                       />
                     </button>
                     {showThinkText[msg.message_id] && (
-                      <MarkdownRenderer
-                        className={"text-sm text-gray-500"}
-                        content={msg.message?.content.thinkText}
-                      />
+                      <div className="border-l-2 border-gray-300 ml-1 pl-4 text-gray-500 my-2">
+                        <MarkdownRenderer
+                          className={"text-sm"}
+                          content={msg.message?.content.thinkText}
+                        />
+                      </div>
                     )}
-                    <MarkdownRenderer
-                      className={"text-base text-black"}
-                      content={msg.message?.content.text}
-                    />
+                    <div className="flex flex-col">
+                      <MarkdownRenderer
+                        className={"text-base text-black"}
+                        content={msg.message?.content.text}
+                      />
+                    </div>
                   </div>
                 )
               )}
@@ -408,7 +463,6 @@ function ChatPage() {
                   <button
                     onClick={() => {
                       handleSendMessage();
-
                       setShouldAutoScroll(true);
                     }}
                     className="size-9 mb-1 bg-indigo-600 text-white rounded-full hover:bg-indigo-500"

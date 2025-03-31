@@ -31,7 +31,7 @@ func SetupRoutes(r *gin.Engine) {
 	// 受保护的 API 路由（需要用户身份认证）
 	api := r.Group("/api")
 	api.Use(middleware.AuthSession) // 使用会话认证中间件，确保用户已登录
-
+	api.POST("/get/latest/id", services.QueryMessageId)
 	api.POST("/change/username", services.ChangeUserName)         // 允许用户修改用户名
 	api.POST("/change/email", services.ChangeUserEmail)           // 允许用户修改邮箱
 	api.POST("/delete/account", services.DeleteUser)              // 允许用户注销账户

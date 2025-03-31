@@ -9,7 +9,7 @@ const createUserMessage = (inputText, messages, conversationId) => {
       content: { content_type: "text", text: inputText.trim() },
       status: "finished_successfully",
     },
-    message_id: crypto.randomUUID(),
+    message_id: uuid(),
     conversation_id: conversationId,
     parent: messages[messages.length - 1]?.message_id || null,
     children: [],

@@ -146,14 +146,14 @@ function RegisterPage() {
       localStorage.loginStatus = "login";
       localStorage.auth = data.session_id;
       setMsgStruct({
-        title: "登录成功",
-        description: "即将跳转登录页面...",
+        title: "注册成功",
+        description: "即将跳转对话页面...",
         type: "success",
       });
       setShowMsg(true);
       setTimeout(() => {
         setShowMsg(false);
-        navigate("/login");
+        navigate("/");
       }, 500);
     }
   };

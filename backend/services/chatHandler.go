@@ -133,7 +133,7 @@ func HandleNewMessage(c *gin.Context) {
 		UpdatedAt:      time.Now(),
 		Children:       make([]string, 0),
 	}
-
+	fmt.Println(user_chatMessage.Parent)
 	// 处理会话
 	conversation, err := db.FindOneConversation(ctx, bson.M{"user_id": user_id, "conversation_id": user_chatMessage.ConversationID})
 	if err == mongo.ErrNoDocuments {
