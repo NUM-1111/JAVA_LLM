@@ -12,6 +12,7 @@ import NewChatPage from "./components/NewChat";
 import ChatPage from "./components/Conversation";
 import SettingsPage from "./components/user/Setting";
 import ForgotPasswordPage from "./components/user/ForgotPassword";
+import IntroducePage from "./components/IntroducePage";
 function Layout() {
   return (
     <>
@@ -22,6 +23,7 @@ function Layout() {
         <Route path="/c/:conversation_id" element={<ChatPage />} />
         <Route path="/settings" element={<SettingsPage />} />
         <Route path="/forgot-password" element={<ForgotPasswordPage />} />
+        <Route path="/introduce" element={<IntroducePage/>} />
       </Routes>
       <ToastContainer />
     </>

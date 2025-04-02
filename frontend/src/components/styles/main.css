@@ -1,0 +1,77 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+html {
+    scroll-behavior: smooth;
+}
+
+body {
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    overflow-x: hidden;
+}
+
+.scroll-container {
+    position: relative;
+    height: 100%;
+    width: 100%;
+    overflow-y: visible;
+}
+
+.page {
+    min-height: 100vh;
+    position: relative;
+    width: 100%;
+}
+
+.transition-all {
+    @apply transition duration-300 ease-in-out;
+}
+
+.nav-icon {
+    @apply transition-all duration-300 ease-in-out;
+}
+
+.nav-icon:hover {
+    @apply transform scale-110;
+}
+
+.nav-active {
+    @apply bg-blue-500 text-white;
+}
+
+.page-transition {
+    @apply transition-all duration-500 ease-in-out;
+}
+
+.rounded-custom {
+    border-radius: 1.5rem;
+}
+
+.hover-float {
+    transition: transform 0.3s ease;
+}
+
+.hover-float:hover {
+    transform: translateY(-5px);
+}
+
+.tech-card {
+    @apply rounded-lg shadow-lg p-6 transition-all duration-300;
+}
+
+.tech-card:hover {
+    @apply transform scale-105 shadow-xl;
+}
+
+.scroll-indicator {
+    @apply w-3 h-3 rounded-full bg-gray-400 transition-all duration-300;
+}
+
+.scroll-indicator.active {
+    @apply bg-blue-500 transform scale-125;
+}
+
+.scroll-indicator:hover {
+    @apply bg-blue-300;
+}
