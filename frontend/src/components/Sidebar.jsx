@@ -11,7 +11,7 @@ import {
   RenameIcon,
 } from "./svg-icons";
 
-export default function SideBar({ isOpen, setIsOpen }) {
+export default function SideBar({ isOpen, setIsOpen ,finishText}) {
   const [conversations, setConversations] = useState([]); // 存储对话列表
   const navigate = useNavigate(); // 获取导航函数
   const [hoveredIndex, setHoveredIndex] = useState(null);// 鼠标悬停
@@ -27,7 +27,8 @@ export default function SideBar({ isOpen, setIsOpen }) {
     }
 
     loadConversations();
-  }, []); // 组件挂载时请求数据
+  }, [finishText]); // 组件挂载时请求数据
+
 
   const [selectedConversationId, setSelectedConversationId] = useState(null);
   const optionsRef = useRef(null);
@@ -140,7 +141,6 @@ export default function SideBar({ isOpen, setIsOpen }) {
               className={` flex justify-center items-center size-10 rounded-lg hover:shadow-md hover:bg-blue-300 group`}
               onClick={() => {
                 navigate("/");
-                setIsOpen(false);
               }} // 跳转到新建对话页面
             >
               <NewChatIcon />
@@ -153,25 +153,21 @@ export default function SideBar({ isOpen, setIsOpen }) {
         </header>
 
         {/* 新对话模块 */}
-        <div className="flex flex-row mt-8 font-bold text-sm rounded-lg border border-blue-200 text-blue-600 bg-blue-500/15 hover:bg-blue-500/20">
+        <button
+          className="flex flex-row min-w-full mt-8 font-bold text-sm rounded-lg border border-blue-200 text-blue-600 bg-blue-500/15 hover:bg-blue-500/20"
+          onClick={() => {
+            navigate("/");
+          }} // 跳转到新建对话页面
+        >
           {/* AddIcon 图标 */}
           <div className="flex px-2 py-2.5">
             <AddIcon />
           </div>
-
-          {/* 新对话按钮 */}
-          <div>
-            <button
-              className="py-2"
-              onClick={() => {
-                navigate("/");
-                setIsOpen(false);
-              }} // 跳转到新建对话页面
-            >
-              开启新对话
-            </button>
+          {/* 新建对话按钮文字 */}
+          <div className="flex flex-col justify-center ml-2">
+            开启新对话
           </div>
-        </div>
+        </button>
 
         {/* 侧边栏对话列表 */}
         <div className="mt-6">

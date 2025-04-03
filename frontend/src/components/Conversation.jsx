@@ -313,7 +313,7 @@ function ChatPage() {
   return (
     <div className="flex flex-row h-[100dvh] sm:h-screen bg-white">
       {/*侧边栏部分 */}
-      <SideBar isOpen={isOpen} setIsOpen={setIsOpen} />
+      <SideBar isOpen={isOpen} setIsOpen={setIsOpen} finishText={finishText}/>
       {/*右侧覆盖阴影 */}
       {isOpen && (
         <div
