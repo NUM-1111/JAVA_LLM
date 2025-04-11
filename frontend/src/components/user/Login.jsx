@@ -194,7 +194,7 @@ function LoginPage() {
                 登 录
               </button>
             </div>
-            <div className="flex flex-col pt-4 sm:pt-8">
+            {/* <div className="flex flex-col pt-4 sm:pt-8">
               <div className="flex items-center justify-center py-4 text-gray-500 text-sm">
                 <div className="flex-grow border-t  border-gray-300"></div>
                 <span className="px-4">其他登录方式</span>
@@ -212,7 +212,7 @@ function LoginPage() {
                   统一身份认证登录
                 </a>
               </div>
-            </div>
+            </div> */}
           </form>
         </div>
       </div>
