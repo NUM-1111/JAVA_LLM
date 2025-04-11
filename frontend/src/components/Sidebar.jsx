@@ -22,12 +22,12 @@ export default function SideBar({ isOpen, setIsOpen ,finishText}) {
   //从后端API获取会话内容
   useEffect(() => {
     async function loadConversations() {
-      const data = await fetchConversations();
+      let data = await fetchConversations();
       setConversations(data); // 更新状态
     }
 
     loadConversations();
-  }, [finishText]); // 组件挂载时请求数据
+  }, [finishText, setIsOpen]); // 组件挂载时请求数据
 
 
   const [selectedConversationId, setSelectedConversationId] = useState(null);
