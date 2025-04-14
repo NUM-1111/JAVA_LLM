@@ -209,7 +209,29 @@ func UserRegister(c *gin.Context) {
 		c.JSON(http.StatusInternalServerError, gin.H{"msg": "密码hash加密失败."})
 		return
 	}
-
+	// 检查邮箱是否已经存在
+	var emailCount, usernameCount int64
+	err = db.DB.Model(&models.User{}).Where("email = ?", userData.Email).Count(&emailCount).Error
+	if err != nil {
+		log.Println("数据库查询出错:", err)
+		c.JSON(http.StatusInternalServerError, gin.H{"msg": "数据库查询出错."})
+		return
+	} else if emailCount > 0 {
+		// 检测是否是用户名重复导致的失败
+		c.JSON(http.StatusBadRequest, gin.H{"msg": "邮箱已存在,注册失败"})
+		return
+	}
+	// 检查用户名是否存在
+	err = db.DB.Model(&models.User{}).Where("username = ?", userData.Username).Count(&usernameCount).Error
+	if err != nil {
+		log.Println("数据库查询出错:", err)
+		c.JSON(http.StatusInternalServerError, gin.H{"msg": "数据库查询出错."})
+		return
+	} else if usernameCount > 0 {
+		// 检测是否是用户名重复导致的失败
+		c.JSON(http.StatusBadRequest, gin.H{"msg": "用户名已存在,注册失败"})
+		return
+	}
 	// 创造新用户对象
 	var user = models.User{
 		Username:  userData.Username,
@@ -317,7 +339,7 @@ func UserLogin(c *gin.Context) {
 		ExpiresAt: time.Now().Add(config.SessionExpire), // 设置会话过期时间
 		IsValid:   true,                                 // 标记新会话为有效
 	}
-	// 插入新会话记录到数据库，若冲突则不做任何操作
+	// 插入新会话记录到数据库
 	result = db.DB.Create(&session)
 	if result.Error != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"msg": "数据库插入出错.", "err": result.Error})

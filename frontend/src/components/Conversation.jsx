@@ -4,7 +4,7 @@ import { EventSourceParserStream } from "eventsource-parser/stream";
 import { MarkdownRenderer } from "./chat/Markdown"; // markdown渲染组件
 import { createUserMessage, createAIMessage, processSSE } from "./chat/utils";
 import { toastIfLogin } from "./user/utils";
-import { globalData, models } from "@/constants";
+import { models } from "@/constants";
 import {
   BreadcrumbIcon,
   DeepThinkIcon,
@@ -120,7 +120,7 @@ function ChatPage() {
       const fetchMessages = async () => {
         try {
           const response = await fetch(
-            globalData.domain + "/api/query/messages",
+            "/api/query/messages",
             {
               method: "POST",
               headers: {
@@ -190,7 +190,7 @@ function ChatPage() {
     abortController.current = new AbortController();
 
     try {
-      const response = await fetch(globalData.domain + "/api/new/message", {
+      const response = await fetch("/api/new/message", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -268,7 +268,7 @@ function ChatPage() {
       setFinishText(true);
       // 流式结束后获取最新消息ID
       try {
-        const response = await fetch(globalData.domain + "/api/get/latest/id", {
+        const response = await fetch("/api/get/latest/id", {
           method: "POST",
           headers: {
             Authorization: localStorage.auth,

@@ -35,10 +35,10 @@ func SendEmail(toEmail string, code string) error {
 	</head>
 	<body style="font-family: Arial, sans-serif; background-color: #eee; margin: 0; padding: 0;">
 	<div class="container" style="width: 100%%; max-width: 700px; margin: 0 auto; background-color: #fff; padding: 20px;">
-		<div class="header" style="background-color: #415A94; color: #fff; padding: 5px 20px; text-align: left; font-size: 28px;">HEU WEB</div>
+		<div class="header" style="background-color: #415A94; color: #fff; padding: 5px 20px; text-align: left; font-size: 28px;">HeuChat</div>
 		<div class="main" style="margin-top: 30px; margin-left: 10px; font-size: 20px; line-height: 1.5; color: #000;">
 		<h2 style="color:#000;">邮箱验证码</h2>
-		<p style="margin-bottom: 10px; color: #000;">欢迎注册HEU WEB~</p>
+		<p style="margin-bottom: 10px; color: #000;">欢迎注册HeuChat~</p>
 		<p style="margin-bottom: 10px; color: #000;">您的验证码是：<strong style="color: #000;">%s</strong>，请在 %d 分钟内进行验证。</p>
 		<p style="margin-bottom: 10px; color: #000;">如果该验证码不是您本人申请，请忽略此消息。</p>
 		</div>

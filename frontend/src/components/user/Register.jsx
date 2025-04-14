@@ -1,6 +1,5 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { globalData } from "@/constants";
 import {
   RedStarIcon,
   SpinCircle,
@@ -8,6 +7,7 @@ import {
   CloseEyeIcon,
   OpenEyeIcon,
 } from "../svg-icons";
+import {isValidHrbeuEmail} from "./utils";
 
 function RegisterPage() {
   const navigate = useNavigate();
@@ -44,8 +44,20 @@ function RegisterPage() {
 
   // 发送邮件请求
   const handleSendEmail = async (email, setSendState) => {
+   if (!email || !isValidHrbeuEmail(email)){
+      setMsgStruct({
+        title: "邮箱格式错误",
+        description: "邮箱必须为@hrbeu.edu.cn",
+        type: "error",
+      });
+      setShowMsg(true);
+      setTimeout(() => {
+        setShowMsg(false);
+      }, 2000);
+      return
+    }
     setSendState(true);
-    const url = globalData.domain + "/send/email";
+    const url = "/api/send/email";
     const req = await fetch(url, {
       method: "POST",
       headers: {
@@ -95,6 +107,9 @@ function RegisterPage() {
     if (!formData.email) {
       newErrors.email = "* 邮箱为必填项";
       formIsValid = false;
+    }else if (!isValidHrbeuEmail(formData.email)){
+      newErrors.email = "* 邮箱必须为@hrbeu.edu.cn";
+      formIsValid = false;
     }
     if (!formData.code) {
       newErrors.code = "* 验证码为必填项";
@@ -123,7 +138,7 @@ function RegisterPage() {
     if (!validateForm()) {
       return;
     }
-    const url = globalData.domain + "/register";
+    const url = "/api/register";
     const req = await fetch(url, {
       method: "POST",
       headers: {

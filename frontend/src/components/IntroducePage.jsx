@@ -1,40 +1,27 @@
-import React, { useState } from "react";
+import React from "react";
 import "./styles/main.css";
-import Header from "./introduce/AboutHeader";
-import Navigation from "./introduce/Navigation";
-import Sidebar from "./introduce/AboutSidebar";
 import AboutSection from "./introduce/AboutSection";
 import TechnologySection from "./introduce/TechnologySection";
 import JoinSection from "./introduce/JoinSection";
-import ScrollManager from "./introduce/ScrollManager";
-import ProduceToHPCRC from "./introduce/ProduceToHPCRC";
+import IntroduceToHPCRC from "./introduce/IntroduceToHPCRC";
+import MainFunction from "./introduce/MainFunction";
+import Model from "./introduce/Model";
+import TechAdvan from "./introduce/TechAdvan";
 
 function IntroducePage() {
-  const [darkMode, setDarkMode] = useState(false);
-  const [sidebarOpen, setSidebarOpen] = useState(false);
-
-  const toggleDarkMode = () => {
-    setDarkMode(!darkMode);
-  };
-
-  const toggleSidebar = () => {
-    setSidebarOpen(!sidebarOpen);
-  };
-
   return (
-    <div className={`${darkMode ? "dark bg-gray-900" : "bg-white"}`}>
-      <Header darkMode={darkMode} toggleDarkMode={toggleDarkMode} />
-      <Navigation toggleSidebar={toggleSidebar} />
-      <Sidebar sidebarOpen={sidebarOpen} toggleSidebar={toggleSidebar} />
-
-      <main className="relative scroll-container">
-        <AboutSection darkMode={darkMode} />
-        <ProduceToHPCRC darkMode={darkMode} />
-        <TechnologySection darkMode={darkMode} />
-        <JoinSection darkMode={darkMode} />
+    <div>
+      <main className="scroll-container ">
+        <AboutSection />
+        <IntroduceToHPCRC />
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-5 mt-0 mb-5 px-[3vh]">
+          <MainFunction />
+          <TechAdvan />
+        </div>
+        <TechnologySection />
+        <Model />
+        <JoinSection />
       </main>
-
-      <ScrollManager />
     </div>
   );
 }

@@ -3,7 +3,6 @@ import { useNavigate } from "react-router-dom";
 import { toast } from "react-toastify";
 import { useState, useEffect, useRef } from "react";
 import { toastIfLogin } from "./user/utils";
-import { globalData } from "@/constants";
 
 import "react-toastify/dist/ReactToastify.css";
 import {
@@ -11,6 +10,7 @@ import {
   NewChatIcon,
   BreadcrumbIcon,
   SelectedIcon,
+  ShareIcon,
 } from "./svg-icons";
 function HeadBar({ isOpen, setIsOpen, selectedCode, setSelectedCode }) {
   const modelRef = useRef(null);
@@ -66,7 +66,7 @@ function HeadBar({ isOpen, setIsOpen, selectedCode, setSelectedCode }) {
   // 获取用户名
   async function fetchUsername() {
     try {
-      const response = await fetch(globalData.domain + "/api/user/info", {
+      const response = await fetch("/api/user/info", {
         method: "GET",
         headers: {
           Authorization: localStorage.auth,
@@ -104,7 +104,7 @@ function HeadBar({ isOpen, setIsOpen, selectedCode, setSelectedCode }) {
       pauseOnHover: false, // 鼠标悬停时不会暂停
       draggable: false, // 不能拖动
     });
-    navigate("/login")
+    navigate("/login");
   };
 
   return (
@@ -240,7 +240,14 @@ function HeadBar({ isOpen, setIsOpen, selectedCode, setSelectedCode }) {
           </div>
         ) : (
           // 未登录，显示登录/注册按钮
-          <>
+          <div className="flex flex-row gap-1">
+            <button
+              className="flex flex-row items-center gap-1 mr-4 hover:opacity-75"
+              onClick={() => navigate("/introduce")}
+            >
+              <ShareIcon className={"size-4"}/>
+              <span className="text-base text-blue-500 ">关于我们</span>
+            </button>
             <button
               className="px-4 py-[0.40rem] rounded-full bg-blue-500 border-blue-500 border text-white hover:text-blue-600 hover:bg-blue-200 transition"
               onClick={onLoginClick}
@@ -254,7 +261,7 @@ function HeadBar({ isOpen, setIsOpen, selectedCode, setSelectedCode }) {
             >
               <span className="text-sm">注册</span>
             </button>
-          </>
+          </div>
         )}
       </div>
     </header>

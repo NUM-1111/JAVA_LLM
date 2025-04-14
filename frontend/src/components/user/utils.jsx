@@ -25,4 +25,10 @@ const toastIfLogin = (delay=300,duration=1000) => {
   }, delay);
 };
 
-export {toastIfLogin};
+// 邮箱格式验证
+function isValidHrbeuEmail(email) {
+  const regex = /^[a-zA-Z0-9._%+-]+@hrbeu\.edu\.cn$/;
+  return regex.test(email);
+}
+
+export {toastIfLogin,isValidHrbeuEmail};

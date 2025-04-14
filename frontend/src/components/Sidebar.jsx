@@ -1,6 +1,5 @@
 import { useState, useRef, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import { globalData } from "@/constants";
 
 import {
   SiderBarIcon,
@@ -53,7 +52,7 @@ export default function SideBar({ isOpen, setIsOpen ,finishText}) {
   const deleteConversation = async ({conversation_id}) => {
     try {
       const response = await fetch(
-        globalData.domain+"/api/delete/conversation",
+        "/api/delete/conversation",
         {
           method: "POST",
           headers: {
@@ -85,7 +84,7 @@ export default function SideBar({ isOpen, setIsOpen ,finishText}) {
   const renameConversation = async ({ conversation_id, title }) => {
     try {
       const response = await fetch(
-        globalData.domain+"/api/rename/conversation",
+        "/api/rename/conversation",
         {
           method: "PUT",
           headers: {
@@ -277,7 +276,7 @@ async function fetchConversations() {
   try {
     // 发送请求，获取响应对象
     const response = await fetch(
-      globalData.domain+"/api/query/conversation",
+      "/api/query/conversation",
       {
         method: "GET",
         headers: {

@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { globalData } from "@/constants";
 import { MessageIcon, RedStarIcon } from "../svg-icons";
+import {isValidHrbeuEmail} from "./utils";
 
 function ForgotPasswordPage() {
   const navigate = useNavigate();
@@ -26,6 +26,10 @@ function ForgotPasswordPage() {
       setErrors({ email: "* 邮箱为必填项" });
       return false;
     }
+    else if (!isValidHrbeuEmail(formData.email)){
+      setErrors({ email: "* 邮箱必须为@hrbeu.edu.cn" });
+      return false;
+    }
     return true;
   };
 
@@ -45,7 +49,7 @@ function ForgotPasswordPage() {
   // 发送验证码
   const sendCode = async () => {
     if (!validateEmail()) return;
-    const url = globalData.domain + "/send/email";
+    const url = "/api/send/email";
     const req = await fetch(url, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
@@ -67,7 +71,7 @@ function ForgotPasswordPage() {
       setErrors({ code: "* 验证码不能为空" });
       return;
     }
-    const url = globalData.domain + "/checkcode";
+    const url = "/api/checkcode";
     const req = await fetch(url, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
@@ -102,7 +106,7 @@ function ForgotPasswordPage() {
       return;
     }
 
-    const url = globalData.domain + "/reset/password";
+    const url = "/api/reset/password";
     const req = await fetch(url, {
       method: "POST",
       headers: { "Content-Type": "application/json" },

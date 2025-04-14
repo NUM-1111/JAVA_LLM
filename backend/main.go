@@ -6,14 +6,12 @@ import (
 	"Go_LLM_Web/middleware"
 	"Go_LLM_Web/routes"
 	"Go_LLM_Web/services"
-	"fmt"
 
 	"github.com/gin-gonic/gin"
 )
 
 func main() {
 	// 启动Postgres
-	fmt.Println(config.PG_dsn)
 	db.InitPostgresDB(config.PG_dsn)
 	defer db.ClosePostgresDB()
 

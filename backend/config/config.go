@@ -38,18 +38,18 @@ var (
 
 	// 邮箱验证
 	//EmailPattern = `^[a-zA-Z0-9._%+-]+@hrbeu.edu.cn`
-	EmailPattern  = `^[a-zA-Z0-9._%+-]+@[a-z\.]+`
+	EmailPattern  = `^[a-zA-Z0-9._%+-]+@hrbeu.edu.cn`
 	NameMaxLength = 20
 	NameMinLength = 3
 
 	// SMTP 服务器
 	SMTPServer   = "smtp.hrbeu.edu.cn"           // SMTP 服务器地址
-	SMTPUser     = "cxrunfree@hrbeu.edu.cn"      // SMTP 用户名
+	SMTPUser     = "hpc@hrbeu.edu.cn"            // SMTP 用户名
 	SMTPPassword = os.Getenv("HEU_SMTPPassword") // SMTP 密码
 	SMTPPort     = 465                           //SMTP 端口
 	Dialer       *gomail.Dialer
 	// Email
-	FromEmail   = "cxrunfree@hrbeu.edu.cn"                 // 发件人
+	FromEmail   = "hpc@hrbeu.edu.cn"                       // 发件人
 	DomainUrl   = "https://github.com/NUM-1111/Go_LLM_Web" // 网站网址
 	EmailExpire = 5                                        // 验证码过期时间
 

@@ -1,12 +1,13 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { globalData } from "@/constants";
 import {
   RedStarIcon,
   MessageIcon,
   CloseEyeIcon,
   OpenEyeIcon,
 } from "../svg-icons";
+import {isValidHrbeuEmail} from "./utils";
+
 
 function LoginPage() {
   const navigate = useNavigate();
@@ -32,6 +33,9 @@ function LoginPage() {
     if (!formData.account) {
       newErrors.account = "* 邮箱/用户名为必填项";
       formIsValid = false;
+    }else if(formData.account.includes("@") && !isValidHrbeuEmail(formData.account)){
+      newErrors.account = "* 邮箱必须为@hrbeu.edu.cn";
+      formIsValid = false;
     }
     if (!formData.password) {
       newErrors.password = "* 密码为必填项";
@@ -52,7 +56,7 @@ function LoginPage() {
     if (!validateForm()) {
       return;
     }
-    const url = globalData.domain + "/login";
+    const url = "/api/login";
     const req = await fetch(url, {
       method: "POST",
       headers: {

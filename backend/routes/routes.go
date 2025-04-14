@@ -13,20 +13,20 @@ import (
 func SetupRoutes(r *gin.Engine) {
 	// 配置 CORS（跨域资源共享），允许前端访问后端
 	r.Use(cors.New(cors.Config{
-		AllowOrigins:     []string{"http://localhost:5173", "http://222.27.240.75:5173"}, // 允许的前端地址（开发环境）
-		AllowMethods:     []string{"GET", "POST", "PUT", "DELETE", "OPTIONS"},            // 允许的 HTTP 方法
-		AllowHeaders:     []string{"Origin", "Content-Type", "Authorization", "Cookie"},  // 允许的请求头
-		ExposeHeaders:    []string{"Content-Length"},                                     // 允许前端获取的响应头
-		AllowCredentials: true,                                                           // 允许跨域请求时携带 Cookie
-		MaxAge:           12 * time.Hour,                                                 // 预检请求的缓存时间
+		AllowOrigins:     []string{"http://202.118.184.207"},                            // 允许的前端地址（开发环境）
+		AllowMethods:     []string{"GET", "POST", "PUT", "DELETE", "OPTIONS"},           // 允许的 HTTP 方法
+		AllowHeaders:     []string{"Origin", "Content-Type", "Authorization", "Cookie"}, // 允许的请求头
+		ExposeHeaders:    []string{"Content-Length"},                                    // 允许前端获取的响应头
+		AllowCredentials: true,                                                          // 允许跨域请求时携带 Cookie
+		MaxAge:           12 * time.Hour,                                                // 预检请求的缓存时间
 	}))
 
 	// 公开的 API 路由（不需要身份认证）
-	r.POST("/login", services.UserLogin)              // 处理用户登录请求
-	r.POST("/register", services.UserRegister)        // 处理用户注册请求
-	r.POST("/send/email", services.EmailHandler)      // 发送邮件
-	r.POST("/checkcode", services.VerifyEmailCode)    // 验证邮箱验证码
-	r.POST("/reset/password", services.ResetPassword) // 重置密码
+	r.POST("/api/login", services.UserLogin)              // 处理用户登录请求
+	r.POST("/api/register", services.UserRegister)        // 处理用户注册请求
+	r.POST("/api/send/email", services.EmailHandler)      // 发送邮件
+	r.POST("/api/checkcode", services.VerifyEmailCode)    // 验证邮箱验证码
+	r.POST("/api/reset/password", services.ResetPassword) // 重置密码
 
 	// 受保护的 API 路由（需要用户身份认证）
 	api := r.Group("/api")

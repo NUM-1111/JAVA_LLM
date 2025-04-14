@@ -1,7 +1,6 @@
 import { useEffect, useState } from "react";
 import axios from "axios";
 import { useNavigate } from "react-router-dom";
-import { globalData } from "@/constants";
 
 export default function SettingsPage() {
   const [username, setUsername] = useState("");
@@ -12,7 +11,7 @@ export default function SettingsPage() {
   const handleUpdateUsername = async () => {
     try {
       const res = await axios.post(
-        globalData.domain+"/api/change/username",
+        "/api/change/username",
         { username },
         {
           headers: {
@@ -33,7 +32,7 @@ export default function SettingsPage() {
   const handleUpdateEmail = async () => {
     try {
       const res = await axios.post(
-        globalData.domain+"/api/change/email",
+        "/api/change/email",
         { email },
         {
           headers: {
@@ -53,7 +52,7 @@ export default function SettingsPage() {
   const handleClearChat = async () => {
     try {
       const res = await axios.post(
-        globalData.domain+"/api/delete/chat",
+        "/api/delete/chat",
         {},
         {
           headers: {
@@ -74,7 +73,7 @@ export default function SettingsPage() {
   const handleDeleteAccount = async () => {
     try {
       const res = await axios.post(
-        globalData.domain+"/api/delete/account",
+        "/api/delete/account",
         {},
         {
           headers: {
