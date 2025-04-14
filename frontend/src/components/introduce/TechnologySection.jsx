@@ -102,7 +102,7 @@ const TechnologySection = () => {
                   <span className="ml-1 text-blue-700 font-bold mt-1">Valkey</span>
                   </div>
                   </a>
-                  <p className="text-sm">Redis 分支的键值存储，性能高，支持多种数据结构，适合缓存、消息队列，由 Linux 基金会维护。。</p>
+                  <p className="text-sm">Redis 分支的键值存储，性能高，支持多种数据结构，适合缓存、消息队列，由 Linux 基金会维护。</p>
                 </div>
                 <div className="mx-0 mb-0 flex flex-col items-start py-5 px-4 sm:px-6 lg:px-8 m-[3vh] border border-gray-500 rounded-lg">
                 <a href="https://milvus.io/zh "  target="_blank" className="flex flex-col items-center">
