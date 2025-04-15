@@ -504,7 +504,7 @@ const CycleIcon = ({ className }) => {
 const ShareIcon = ({ className }) => {
   return (
     <svg
-      className={className ? className : "size-4"}
+      className={className ? className : "size-4 "}
       verticalAlign= "middle"
       viewBox="0 0 1024 1024"
       version="1.1"

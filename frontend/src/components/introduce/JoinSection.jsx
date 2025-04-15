@@ -74,7 +74,7 @@ const AboutSection = () => {
               <h3 className="text-xl font-bold mb-4">技术支持</h3>
               <div className="flex items-center mb-3">
                 <Mail size={20} className="mr-2 text-blue-400" />
-                <a href="mailto:madlongtom@hrbeu.edu.cn">Email: madlongtom@hrbeu.edu.cn</a>
+                <a href="mailto:cxrunfree@hrbeu.edu.cn">Email: cxrunfree@hrbeu.edu.cn</a>
               </div>
               <div className="flex items-center">
                 <svg
@@ -93,7 +93,7 @@ const AboutSection = () => {
                     fill="#479be2"
                   ></path>
                 </svg>
-                <span className="ml-1">QQ: 2758838888</span>
+                <span className="ml-1">QQ: 2654559534</span>
               </div>
             </div>
           </div>

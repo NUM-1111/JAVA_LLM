@@ -240,13 +240,13 @@ function HeadBar({ isOpen, setIsOpen, selectedCode, setSelectedCode }) {
           </div>
         ) : (
           // 未登录，显示登录/注册按钮
-          <div className="flex flex-row gap-1">
+          <div className="flex flex-row gap-2">
             <button
               className="flex flex-row items-center gap-1 mr-4 hover:opacity-75"
               onClick={() => navigate("/introduce")}
             >
               <ShareIcon className={"size-4"}/>
-              <span className="text-base text-blue-500 ">关于我们</span>
+              <span className="text-base text-[#666666] ">关于我们</span>
             </button>
             <button
               className="px-4 py-[0.40rem] rounded-full bg-blue-500 border-blue-500 border text-white hover:text-blue-600 hover:bg-blue-200 transition"
