@@ -124,9 +124,9 @@ export default function SideBar({ isOpen, setIsOpen ,finishText}) {
           <div className="relative">
             <button
               onClick={() => setIsOpen(false)}
-              className={`flex justify-center items-center size-10 rounded-lg hover:shadow-md hover:bg-blue-300 group`}
+              className={`flex justify-center items-center size-8 sm:size-10 rounded-lg hover:shadow-md hover:bg-blue-300 group`}
             >
-              <SiderBarIcon />
+              <SiderBarIcon className={"size-5 sm:size-6"}/>
               <span className="absolute top-full left-1/2 transform -translate-x-1/2 hidden group-hover:block transition-all duration-300 bg-gray-700 text-white text-sm rounded py-1 px-2 whitespace-nowrap mt-1 ml-2">
                 显示侧边栏
               </span>
@@ -137,12 +137,12 @@ export default function SideBar({ isOpen, setIsOpen ,finishText}) {
           {/* 开启新对话按钮 (icon) */}
           <div className="relative">
             <button
-              className={` flex justify-center items-center size-10 rounded-lg hover:shadow-md hover:bg-blue-300 group`}
+              className={` flex justify-center items-center size-8 sm:size-10 rounded-lg hover:shadow-md hover:bg-blue-300 group`}
               onClick={() => {
                 navigate("/");
               }} // 跳转到新建对话页面
             >
-              <NewChatIcon />
+              <NewChatIcon className={"size-5 sm:size-6"}/>
               {/* 说明框：右侧显示 */}
               <span className="absolute top-full left-1/2 transform -translate-x-1/2 hidden group-hover:block transition-all duration-300 bg-gray-700 text-white text-sm rounded py-1 px-2 whitespace-nowrap mt-1">
                 创建新对话
@@ -153,7 +153,7 @@ export default function SideBar({ isOpen, setIsOpen ,finishText}) {
 
         {/* 新对话模块 */}
         <button
-          className="flex flex-row min-w-full mt-8 font-bold text-sm rounded-lg border border-blue-200 text-blue-600 bg-blue-500/15 hover:bg-blue-500/20"
+          className="flex flex-row min-w-full mt-4 sm:mt-8 font-bold text-sm rounded-lg border border-blue-200 text-blue-600 bg-blue-500/15 hover:bg-blue-500/20"
           onClick={() => {
             navigate("/");
           }} // 跳转到新建对话页面

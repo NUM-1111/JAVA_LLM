@@ -100,7 +100,7 @@ function HeadBar({ isOpen, setIsOpen, selectedCode, setSelectedCode }) {
   return (
     <header className="sticky xl:absolute w-full z-20 top-0 flex flex-row px-5 py-3 bg-white justify-between items-center select-none xl:bg-transparent">
       {/* 左侧按钮 */}
-      <div className="absolute left-6 lg:left-0 lg:relative flex flex-row text-gray-700">
+      <div className="sm:absolute sm:left-6 lg:left-0 lg:relative flex flex-row mr-1 text-gray-700">
         {/*显示侧边栏按钮 */}
         <div className="relative">
           <button
@@ -138,7 +138,7 @@ function HeadBar({ isOpen, setIsOpen, selectedCode, setSelectedCode }) {
       </div>
 
       {/* 模型选择按钮 */}
-      <div className="flex flex-1 justify-center lg:justify-start mr-1">
+      <div className="flex flex-1 justify-start sm:justify-center lg:justify-start mr-1">
         <div ref={modelRef} className="relative group hover:bg-gray-100 rounded-lg w-fit">
           <button
             onClick={() => setShowModels(!showModels)}
