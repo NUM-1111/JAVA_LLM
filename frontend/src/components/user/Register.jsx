@@ -209,7 +209,7 @@ function RegisterPage() {
                   type="text"
                   value={formData.email}
                   onChange={handleFormChange}
-                  className="w-full rounded-lg hover:scale-105  border border-indigo-300 hover:border-indigo-500 p-3 pe-12 focus:outline-none focus:ring-2 focus:ring-indigo-300 duration-200"
+                  className="w-full rounded-lg sm:hover:scale-105  border border-indigo-300 hover:border-indigo-500 p-3 pe-12 focus:outline-none focus:ring-2 focus:ring-indigo-300 duration-200"
                   placeholder="请输入邮箱"
                 />
                 {errors.email && (
@@ -232,7 +232,7 @@ function RegisterPage() {
                     type="text"
                     value={formData.code}
                     onChange={handleFormChange}
-                    className="w-full rounded-lg hover:scale-105  border border-indigo-300 hover:border-indigo-500 p-3 pe-12 focus:outline-none focus:ring-2 focus:ring-indigo-300 duration-200"
+                    className="w-full rounded-lg sm:hover:scale-105  border border-indigo-300 hover:border-indigo-500 p-3 pe-12 focus:outline-none focus:ring-2 focus:ring-indigo-300 duration-200"
                     placeholder="请输入邮箱验证码"
                   />
                   {errors.code && (
@@ -280,7 +280,7 @@ function RegisterPage() {
                   type="text"
                   value={formData.username}
                   onChange={handleFormChange}
-                  className="w-full rounded-lg hover:scale-105  border border-indigo-300 hover:border-indigo-500 p-3 pe-12 focus:outline-none focus:ring-2 focus:ring-indigo-300 duration-200"
+                  className="w-full rounded-lg sm:hover:scale-105  border border-indigo-300 hover:border-indigo-500 p-3 pe-12 focus:outline-none focus:ring-2 focus:ring-indigo-300 duration-200"
                   placeholder="请输入用户名"
                 />
                 {errors.username && (
@@ -301,7 +301,7 @@ function RegisterPage() {
                   value={formData.password}
                   onChange={handleFormChange}
                   type={pwdType}
-                  className="w-full rounded-lg hover:scale-105  border border-indigo-300 hover:border-indigo-500 p-3 pe-12 focus:outline-none focus:ring-2 focus:ring-indigo-300 duration-200"
+                  className="w-full rounded-lg sm:hover:scale-105  border border-indigo-300 hover:border-indigo-500 p-3 pe-12 focus:outline-none focus:ring-2 focus:ring-indigo-300 duration-200"
                   placeholder="请设置密码"
                 />
 

@@ -2,8 +2,6 @@ import { models } from "@/constants";
 import { useNavigate } from "react-router-dom";
 import { toast } from "react-toastify";
 import { useState, useEffect, useRef } from "react";
-import { toastIfLogin } from "./user/utils";
-
 import "react-toastify/dist/ReactToastify.css";
 import {
   SiderBarIcon,
@@ -12,6 +10,7 @@ import {
   SelectedIcon,
   ShareIcon,
 } from "./svg-icons";
+
 function HeadBar({ isOpen, setIsOpen, selectedCode, setSelectedCode }) {
   const modelRef = useRef(null);
   const settingRef = useRef(null);
@@ -32,15 +31,6 @@ function HeadBar({ isOpen, setIsOpen, selectedCode, setSelectedCode }) {
     getUsername();
   }, []);
 
-  // 检查身份凭证是否存在
-  useEffect(() => {
-    if (
-      !localStorage.getItem("auth") ||
-      localStorage.getItem("loginStatus") !== "login"
-    ) {
-      toastIfLogin();
-    }
-  }, []);
 
   // 监听点击外部区域来关闭下拉菜单
   useEffect(() => {
@@ -108,9 +98,9 @@ function HeadBar({ isOpen, setIsOpen, selectedCode, setSelectedCode }) {
   };
 
   return (
-    <header className="sticky xl:absolute w-full z-20 top-0 flex flex-row px-5 py-3 bg-white justify-between select-none xl:bg-transparent">
+    <header className="sticky xl:absolute w-full z-20 top-0 flex flex-row px-5 py-3 bg-white justify-between items-center select-none xl:bg-transparent">
       {/* 左侧按钮 */}
-      <div className="flex flex-row text-gray-700">
+      <div className="absolute left-6 lg:left-0 lg:relative flex flex-row text-gray-700">
         {/*显示侧边栏按钮 */}
         <div className="relative">
           <button
@@ -120,9 +110,9 @@ function HeadBar({ isOpen, setIsOpen, selectedCode, setSelectedCode }) {
             }}
             className={`${
               isOpen ? "lg:hidden" : "block"
-            } flex justify-center items-center size-10 transition rounded-lg hover:shadow-md hover:bg-blue-300 group`}
+            } flex justify-center items-center size-8 sm:size-10 transition rounded-lg hover:shadow-md hover:bg-blue-300 group`}
           >
-            <SiderBarIcon />
+            <SiderBarIcon className={"size-5 sm:size-6"}/>
             {/* 说明框：底部显示 */}
             <div className="absolute top-full left-1/2 transform -translate-x-1/2 hidden group-hover:block transition-all duration-300 bg-gray-700 text-white text-sm rounded py-1 px-2 whitespace-nowrap mt-1 ml-2">
               显示侧边栏
@@ -136,9 +126,9 @@ function HeadBar({ isOpen, setIsOpen, selectedCode, setSelectedCode }) {
             onClick={() => navigate("/")}
             className={`${
               isOpen ? "lg:hidden" : "block"
-            } flex justify-center items-center size-10 transition rounded-lg hover:shadow-md hover:bg-blue-300 group`}
+            } flex justify-center items-center size-8 sm:size-10 transition rounded-lg hover:shadow-md hover:bg-blue-300 group`}
           >
-            <NewChatIcon />
+            <NewChatIcon className={"size-5 sm:size-6"}/>
             {/* 说明框：底部显示 */}
             <div className="absolute top-full left-1/2 transform -translate-x-1/2 hidden group-hover:block transition-all duration-300 bg-gray-700 text-white text-sm rounded py-1 px-2 whitespace-nowrap mt-1">
               创建新对话
@@ -148,15 +138,15 @@ function HeadBar({ isOpen, setIsOpen, selectedCode, setSelectedCode }) {
       </div>
 
       {/* 模型选择按钮 */}
-      <div className="flex flex-1 justify-center lg:justify-start">
-        <div ref={modelRef} className="relative group hover:bg-gray-100">
+      <div className="flex flex-1 justify-center lg:justify-start mr-1">
+        <div ref={modelRef} className="relative group hover:bg-gray-100 rounded-lg w-fit">
           <button
             onClick={() => setShowModels(!showModels)}
-            className={`relative flex flex-row items-center ml-1 px-2 py-2 rounded-lg justify-center min-w-40 min-h-11  ${
+            className={`relative flex flex-row items-center  px-2 py-2 rounded-lg justify-center min-w-24 sm:min-w-40 min-h-11  ${
               showModels ? "bg-gray-200" : ""
             }  transition`}
           >
-            <span className="text-lg font-semibold text-gray-700 mr-5">
+            <span className="text-base sm:text-lg font-semibold text-gray-700 mr-5">
               {models[selectedCode]}
             </span>
             <BreadcrumbIcon
@@ -240,16 +230,19 @@ function HeadBar({ isOpen, setIsOpen, selectedCode, setSelectedCode }) {
           </div>
         ) : (
           // 未登录，显示登录/注册按钮
-          <div className="flex flex-row gap-2">
+          <div className="absolute right-6 lg:relative lg:right-0 flex flex-row gap-1">
             <button
-              className="flex flex-row items-center gap-1 mr-4 hover:opacity-75"
+              className="flex flex-row items-center gap-1 mr-1 sm:mr-4 hover:opacity-75 text-gray-800"
               onClick={() => navigate("/introduce")}
             >
-              <ShareIcon className={"size-4"}/>
-              <span className="text-base text-[#666666] ">关于我们</span>
+              <ShareIcon className={"size-4 mt-[1px] scale-105"} />
+              <div className="inline-flex">
+                <span className="text-base">关于</span>
+                <span className="text-base hidden sm:block">我们</span>
+              </div>
             </button>
             <button
-              className="px-4 py-[0.40rem] rounded-full bg-blue-500 border-blue-500 border text-white hover:text-blue-600 hover:bg-blue-200 transition"
+              className="px-3 py-[0.25rem] justify-center items-center sm:px-4 sm:py-[0.40rem] rounded-full bg-blue-500 border-blue-500 border text-white hover:text-blue-600 hover:bg-blue-200 transition"
               onClick={onLoginClick}
             >
               <span className="text-sm">登录</span>

@@ -124,7 +124,7 @@ function LoginPage() {
                   type="text"
                   value={formData.account}
                   onChange={handleFormChange}
-                  className="w-full rounded-lg border border-indigo-300 p-3 pe-12 text-base focus:outline-none focus:ring-1 focus:ring-blue-500 hover:scale-105  hover:border-indigo-500 duration-200"
+                  className="w-full rounded-lg border border-indigo-300 p-3 pe-12 text-base focus:outline-none focus:ring-1 focus:ring-blue-500 sm:hover:scale-105  hover:border-indigo-500 duration-200"
                   placeholder="请输入邮箱/用户名"
                 />
                 {errors.account && (
@@ -146,7 +146,7 @@ function LoginPage() {
                   value={formData.password}
                   onChange={handleFormChange}
                   type={pwdType}
-                  className="w-full rounded-lg border border-indigo-300 p-3 pe-12 text-base focus:outline-none  focus:ring-1 focus:ring-blue-500 hover:scale-105  hover:border-indigo-500 duration-200"
+                  className="w-full rounded-lg border border-indigo-300 p-3 pe-12 text-base focus:outline-none  focus:ring-1 focus:ring-blue-500 sm:hover:scale-105  hover:border-indigo-500 duration-200"
                   placeholder="请输入密码"
                 />
 
