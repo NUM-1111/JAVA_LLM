@@ -79,6 +79,61 @@ func UploadFile(c *gin.Context) {
 	c.JSON(http.StatusOK, gin.H{"msg": "文件上传成功"})
 }
 
+// 获取文件列表
+func GetFileList(c *gin.Context) {
+	session, exists := c.Get("session")
+	if !exists {
+		c.JSON(http.StatusUnauthorized, gin.H{"err": "无效的登录凭证"})
+		return
+	}
+	s, ok := session.(*models.Session)
+	if !ok {
+		c.JSON(http.StatusUnauthorized, gin.H{"err": "身份认证失败"})
+		return
+	}
+	// 获取base id
+	idStr, offsetStr, limitStr := c.Param("id"), c.Query("offset"), c.Query("limit")
+	baseID, err := strconv.ParseInt(idStr, 10, 64)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"msg": "无效的知识库ID"})
+		return
+	}
+	// 获取查询参数
+	offset, err1 := strconv.Atoi(offsetStr)
+	limit, err2 := strconv.Atoi(limitStr)
+	if err1 != nil || err2 != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"msg": "无效的查询参数"})
+		return
+	}
+	// 验证知识库是否存在
+	var count int64
+	err = db.DB.Model(&models.KnowledgeBase{}).
+		Where("base_id = ? AND user_id = ?", baseID, s.UserID).
+		Limit(1).
+		Count(&count).Error
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"msg": "查找知识库失败"})
+		return
+	}
+	if count == 0 {
+		c.JSON(http.StatusNotFound, gin.H{"msg": "找不到对应的知识库"})
+		return
+	}
+	// 查询文件列表
+	var docs []models.Document
+	err = db.DB.Model(&models.Document{}).
+		Where("base_id = ?", baseID).
+		Offset(offset).
+		Limit(limit).
+		Find(&docs).Error
+	if err != nil && err != gorm.ErrRecordNotFound {
+		c.JSON(http.StatusInternalServerError, gin.H{"msg": "查找知识库文件失败"})
+		return
+	}
+	c.JSON(http.StatusOK, gin.H{"msg": "文件查找成功", "data": docs, "total": len(docs)})
+}
+
+// 删除文件
 func DeleteFile(c *gin.Context) {
 	session, exists := c.Get("session")
 	if !exists {
