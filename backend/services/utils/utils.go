@@ -1,4 +1,4 @@
-package services
+package utils
 
 import (
 	"Go_LLM_Web/config"
@@ -10,6 +10,7 @@ import (
 	"regexp"
 	"strings"
 
+	"github.com/google/uuid"
 	"golang.org/x/crypto/bcrypt"
 )
 
@@ -81,4 +82,14 @@ func ValidateCode(email string, code string) (bool, error) {
 		return false, nil
 	}
 	return true, nil
+}
+
+// 生成uuid
+func GenerateUUID(sep bool) string {
+	if sep {
+		return uuid.New().String()
+	} else {
+		return strings.ReplaceAll(uuid.New().String(), "-", "")
+	}
+
 }

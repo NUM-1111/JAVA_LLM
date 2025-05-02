@@ -38,7 +38,7 @@ func AuthSession(c *gin.Context) {
 	session, err := GetSession(authHeader)
 	if err != nil {
 		// Session 不存在或过期，返回 401 未授权
-		c.JSON(http.StatusUnauthorized, gin.H{"error": "Invalid session or session expired"})
+		c.JSON(http.StatusUnauthorized, gin.H{"error": "身份认证失败 or session expired"})
 		c.Abort()
 		return
 	}

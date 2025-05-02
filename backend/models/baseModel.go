@@ -18,19 +18,20 @@ const (
 
 // 知识库结构体(一个用户可以有多个知识库)
 type KnowledgeBase struct {
-	KnowID    int64      `gorm:"primaryKey" json:"know_id"`  //知识库ID,主键
+	BaseID    int64      `gorm:"primaryKey" json:"base_id"`  //知识库ID,主键
 	UserID    int64      `gorm:"not null" json:"-"`          // 用户ID，可作为外键关联到 users 表
-	KnowName  string     `gorm:"not null" json:"know_name"`  // 知识库名称
-	KnowDesc  string     `gorm:"not null" json:"know_desc"`  // 知识库描述
+	BaseName  string     `gorm:"not null" json:"base_name"`  // 知识库名称
+	BaseDesc  string     `gorm:"not null" json:"base_desc"`  // 知识库描述
+	BasePath  string     `gorm:"not null" json:"-"`          // 知识库存储路径
 	CreatedAt time.Time  `gorm:"not null" json:"created_at"` // 知识库创建时间
 	UpdatedAt time.Time  `gorm:"not null" json:"updated_at"` // 知识库更新时间
-	Documents []Document `gorm:"foreignKey:KnowID"`
+	Documents []Document `gorm:"foreignKey:BaseID"`
 }
 
 // 文档结构体(属于某一个知识库)
 type Document struct {
 	DocID      int64     `gorm:"primaryKey" json:"doc_id"`   //文档ID,主键
-	KnowID     int64     `gorm:"not null" json:"-"`          // 知识库ID，可作为外键关联到 know_base 表
+	BaseID     int64     `gorm:"not null" json:"-"`          // 知识库ID，可作为外键关联到 know_base 表
 	DocName    string    `gorm:"not null" json:"doc_name"`   // 文档名称
 	FileSuffix string    `gorm:"not null" json:"-"`          // 文档后缀名
 	FileType   FileType  `gorm:"not null" json:"file_type"`  // 文档类型

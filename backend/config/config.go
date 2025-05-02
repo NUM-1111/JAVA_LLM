@@ -37,7 +37,6 @@ var (
 	SFNode    *snowflake.Node
 
 	// 邮箱验证
-	//EmailPattern = `^[a-zA-Z0-9._%+-]+@hrbeu.edu.cn`
 	EmailPattern  = `^[a-zA-Z0-9._%+-]+@hrbeu.edu.cn`
 	NameMaxLength = 20
 	NameMinLength = 3
@@ -53,6 +52,8 @@ var (
 	DomainUrl   = "https://github.com/NUM-1111/Go_LLM_Web" // 网站网址
 	EmailExpire = 5                                        // 验证码过期时间
 
+	// 知识库存储根目录
+	KBRootPath = "./data/KnowledgeBase"
 )
 
 func init() {

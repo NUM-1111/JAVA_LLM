@@ -4,6 +4,7 @@ import (
 	"Go_LLM_Web/config"
 	"Go_LLM_Web/db"
 	"Go_LLM_Web/models"
+	"Go_LLM_Web/services/utils"
 	"errors"
 	"fmt"
 	"log"
@@ -32,12 +33,12 @@ func EmailHandler(c *gin.Context) {
 		return
 	}
 	// 校验邮箱格式
-	if !IsValidEmail(req.Email) {
+	if !utils.IsValidEmail(req.Email) {
 		c.JSON(http.StatusBadRequest, gin.H{"msg": "邮箱格式异常,注册失败."})
 		return
 	}
 	// 生成验证码
-	code, err := GenerateCode(3)
+	code, err := utils.GenerateCode(3)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"msg": "邮箱验证码生成失败."})
 		return
@@ -74,13 +75,13 @@ func VerifyEmailCode(c *gin.Context) {
 	}
 
 	// 校验邮箱格式
-	if !IsValidEmail(request.Email) {
+	if !utils.IsValidEmail(request.Email) {
 		c.JSON(http.StatusBadRequest, gin.H{"msg": "邮箱格式异常, 验证失败."})
 		return
 	}
 
 	// 校验邮箱验证码
-	isValidCode, err := ValidateCode(request.Email, request.Code)
+	isValidCode, err := utils.ValidateCode(request.Email, request.Code)
 	if err == redis.Nil {
 		c.JSON(http.StatusNotFound, gin.H{"msg": "验证码不存在或已过期."})
 		return
@@ -144,7 +145,7 @@ func ResetPassword(c *gin.Context) {
 	}
 
 	// 加密新密码
-	hashedPwd, err := HashPassword(request.NewPwd)
+	hashedPwd, err := utils.HashPassword(request.NewPwd)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"msg": "密码加密失败."})
 		return
@@ -175,22 +176,22 @@ func UserRegister(c *gin.Context) {
 		return
 	}
 	// 校验用户名格式
-	err := ValidName(userData.Username)
-	if err == ErrInvalidLength {
+	err := utils.ValidName(userData.Username)
+	if err == utils.ErrInvalidLength {
 		c.JSON(http.StatusBadRequest, gin.H{"msg": "用户名长度必须为3~20位!"})
 		return
-	} else if err == ErrInvalidPattern {
+	} else if err == utils.ErrInvalidPattern {
 		c.JSON(http.StatusBadRequest, gin.H{"msg": "用户名格式有误,或存在非法字符!"})
 		return
 	}
 
 	// 校验邮箱格式
-	if !IsValidEmail(userData.Email) {
+	if !utils.IsValidEmail(userData.Email) {
 		c.JSON(http.StatusBadRequest, gin.H{"msg": "邮箱格式异常,注册失败."})
 		return
 	}
 	// 校验邮箱验证码
-	isValidCode, err := ValidateCode(userData.Email, userData.Code)
+	isValidCode, err := utils.ValidateCode(userData.Email, userData.Code)
 	if err == redis.Nil {
 		c.JSON(http.StatusNotFound, gin.H{"msg": "注册邮箱与验证码邮箱不一致!"})
 		return
@@ -204,7 +205,7 @@ func UserRegister(c *gin.Context) {
 	}
 
 	// 密码哈希加密
-	hashedPwd, err := HashPassword(userData.Password)
+	hashedPwd, err := utils.HashPassword(userData.Password)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"msg": "密码hash加密失败."})
 		return
@@ -237,7 +238,7 @@ func UserRegister(c *gin.Context) {
 		Username:  userData.Username,
 		Email:     userData.Email,
 		Password:  hashedPwd,
-		UserID:    GenerateSnowflakeID(), // int64
+		UserID:    utils.GenerateSnowflakeID(), // int64
 		CreatedAt: time.Now(),
 	}
 
@@ -289,7 +290,7 @@ func UserLogin(c *gin.Context) {
 	var user models.User
 	if strings.Contains(userData.Account, "@") {
 		// 判断输入的是邮箱，先校验邮箱格式
-		if !IsValidEmail(userData.Account) {
+		if !utils.IsValidEmail(userData.Account) {
 			c.JSON(http.StatusBadRequest, gin.H{"msg": "邮箱格式异常,注册失败."})
 			return
 		}
@@ -301,11 +302,11 @@ func UserLogin(c *gin.Context) {
 		}
 	} else {
 		// 判断输入的是用户名，先进行格式校验
-		err := ValidName(userData.Account)
-		if err == ErrInvalidLength {
+		err := utils.ValidName(userData.Account)
+		if err == utils.ErrInvalidLength {
 			c.JSON(http.StatusBadRequest, gin.H{"msg": "用户名长度必须为3~20位!"})
 			return
-		} else if err == ErrInvalidPattern {
+		} else if err == utils.ErrInvalidPattern {
 			c.JSON(http.StatusBadRequest, gin.H{"msg": "用户名格式有误,或存在非法字符!"})
 			return
 		}

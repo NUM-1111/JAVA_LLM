@@ -6,6 +6,8 @@ import (
 	"Go_LLM_Web/middleware"
 	"Go_LLM_Web/routes"
 	"Go_LLM_Web/services"
+	"Go_LLM_Web/services/utils"
+	"log"
 
 	"github.com/gin-gonic/gin"
 )
@@ -29,6 +31,12 @@ func main() {
 
 	// 启动消费者
 	go services.CreateConsumers(db.Redis, config.ConsumerCount)
+
+	// 创建知识库目录
+	err := utils.Makedir(config.KBRootPath)
+	if err != nil {
+		log.Panicln("知识库路径创建失败!", err)
+	}
 
 	// 启动 Gin 服务器
 	r := gin.Default()
