@@ -34,8 +34,10 @@ func InitPostgresDB(dsn string) {
 	sqlDB.SetConnMaxLifetime(30) // 设置连接的最大生命周期（单位：秒）
 
 	//自动迁移
-	DB.AutoMigrate(&models.User{})
-	DB.AutoMigrate(&models.Session{})
+	err = DB.AutoMigrate(&models.User{}, &models.Session{}, &models.KnowledgeBase{}, &models.Document{})
+	if err != nil {
+		log.Panicln("[Postgres] failed:", err.Error())
+	}
 	log.Println("[Postgres] service is running.")
 }
 

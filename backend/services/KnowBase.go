@@ -10,7 +10,7 @@ import (
 )
 
 // 创建知识库
-func CreateKnowData(c *gin.Context) {
+func CreateKnowBase(c *gin.Context) {
 	session, exists := c.Get("session")
 	if !exists {
 		c.JSON(http.StatusUnauthorized, gin.H{"err": "Session not found"})
@@ -27,14 +27,14 @@ func CreateKnowData(c *gin.Context) {
 	userID := s.UserID
 
 	// 创建新知识库
-	knowData := models.KnowledgeBase{
+	knowBase := models.KnowledgeBase{
 		KnowID:   GenerateSnowflakeID(),
 		KnowName: "新建知识库",
 		KnowDesc: "新建知识库描述",
 		UserID:   userID,
 	}
 
-	result := db.DB.Create(&knowData)
+	result := db.DB.Create(&knowBase)
 	if result.Error != nil {
 		c.JSON(500, gin.H{"msg": "创建知识库失败"})
 		return
@@ -42,13 +42,12 @@ func CreateKnowData(c *gin.Context) {
 
 	c.JSON(200, gin.H{
 		"msg":  "创建知识库成功",
-		"data": knowData,
+		"data": knowBase,
 	})
 }
 
-
 // 获取知识库列表
-func GetKnowDataList(c *gin.Context) {
+func GetKnowBaseList(c *gin.Context) {
 	// 获取 session
 	session, exists := c.Get("session")
 	if !exists {
@@ -62,10 +61,10 @@ func GetKnowDataList(c *gin.Context) {
 		return
 	}
 
-	var knowDataList []models.KnowledgeBase
+	var knowBaseList []models.KnowledgeBase
 
 	// 按照 user_id 查询知识库列表
-	err := db.DB.Where("user_id = ?", s.UserID).Find(&knowDataList).Error
+	err := db.DB.Where("user_id = ?", s.UserID).Find(&knowBaseList).Error
 	if err != nil {
 		c.JSON(500, gin.H{"msg": "获取知识库列表失败"})
 		return
@@ -73,26 +72,23 @@ func GetKnowDataList(c *gin.Context) {
 
 	c.JSON(200, gin.H{
 		"msg":  "获取知识库列表成功",
-		"data": knowDataList,
+		"data": knowBaseList,
 	})
 }
 
-
-
-
 // 修改知识库(重命名,描述)
-func UpdateKnowData(c *gin.Context) {
-	var knowData models.KnowledgeBase
-	err := c.ShouldBindJSON(&knowData)
+func UpdateKnowBase(c *gin.Context) {
+	var knowBase models.KnowledgeBase
+	err := c.ShouldBindJSON(&knowBase)
 	if err != nil {
 		c.JSON(400, gin.H{
 			"msg": "参数错误,获取知识库信息失败",
 		})
 	}
 
-	result := db.DB.Model(&knowData).Updates(models.KnowledgeBase{
-		KnowName: knowData.KnowName,
-		KnowDesc: knowData.KnowDesc,
+	result := db.DB.Model(&knowBase).Updates(models.KnowledgeBase{
+		KnowName: knowBase.KnowName,
+		KnowDesc: knowBase.KnowDesc,
 	})
 	if result.Error != nil {
 		c.JSON(500, gin.H{
@@ -106,7 +102,7 @@ func UpdateKnowData(c *gin.Context) {
 }
 
 // 删除知识库(待修改,后续还要先删除其所有文档再删除知识库)
-func DeleteKnowData(c *gin.Context) {
+func DeleteKnowBase(c *gin.Context) {
 	// 获取路径参数 /knowledgebases/:id
 	idStr := c.Param("know_id")
 	knowID, err := strconv.ParseInt(idStr, 10, 64)
