@@ -71,6 +71,7 @@ func UploadFile(c *gin.Context) {
 		FileType:   utils.GetFileTypeBySuffix(fileSuffix),
 		FilePath:   filePath,
 		IsEnabled:  true,
+		Status:     models.None,
 	}
 	if err := db.DB.Create(&doc).Error; err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"msg": "文件保存失败"})
@@ -92,7 +93,7 @@ func GetFileList(c *gin.Context) {
 		return
 	}
 	// 获取base id
-	idStr, offsetStr, limitStr, searchText := c.Param("baseId"), c.Query("offset"), c.Query("limit"), c.Query("search")
+	idStr, offsetStr, limitStr, searchText := c.Query("baseId"), c.Query("offset"), c.Query("limit"), c.Query("search")
 	baseID, err := strconv.ParseInt(idStr, 10, 64)
 	if err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"msg": "无效的知识库ID"})
@@ -121,8 +122,9 @@ func GetFileList(c *gin.Context) {
 	}
 	// 查询文件列表
 	var docs []models.Document
+	search := "%" + searchText + "%"
 	err = db.DB.Model(&models.Document{}).
-		Where("base_id = ? AND doc_name LIKE ?", baseID, searchText).
+		Where("base_id = ? AND doc_name LIKE ?", baseID, search).
 		Offset(offset).
 		Limit(limit).
 		Find(&docs).Error
@@ -157,6 +159,21 @@ func RenameFile(c *gin.Context) {
 	var req request.DocUpdateName
 	if err := c.ShouldBindJSON(&req); err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"msg": "参数格式错误"})
+		return
+	}
+	var doc models.Document
+	err := db.DB.Model(&doc).Where("doc_id = ?", req.DocID).First(&doc).Error
+	if err != nil {
+		if err == gorm.ErrRecordNotFound {
+			c.JSON(http.StatusNotFound, gin.H{"msg": "找不到要更新的文件"})
+		} else {
+			c.JSON(http.StatusInternalServerError, gin.H{"msg": "修改失败"})
+		}
+		return
+	}
+	suffix := filepath.Ext(req.DocName)
+	if suffix != doc.FileSuffix {
+		c.JSON(http.StatusBadRequest, gin.H{"msg": "不能修改文件的后缀名"})
 		return
 	}
 	result := db.DB.Model(&models.Document{}).Where("doc_id = ?", req.DocID).Update("doc_name", req.DocName)

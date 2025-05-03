@@ -19,9 +19,9 @@ const (
 type ParseStatus int
 
 const (
-	None    ParseStatus = iota + 1 // 未解析
-	Success                        // 解析成功
-	Failure                        // 解析失败
+	None    ParseStatus = iota // 未解析
+	Success                    // 解析成功
+	Failure                    // 解析失败
 )
 
 // 知识库结构体(一个用户可以有多个知识库)
@@ -38,16 +38,16 @@ type KnowledgeBase struct {
 
 // 文档结构体(属于某一个知识库)
 type Document struct {
-	DocID      int64       `gorm:"primaryKey" json:"doc_id"`   //文档ID,主键
-	BaseID     int64       `gorm:"not null" json:"-"`          // 知识库ID，可作为外键关联到 know_base 表
-	DocName    string      `gorm:"not null" json:"doc_name"`   // 文档名称
-	FileSuffix string      `gorm:"not null" json:"-"`          // 文档后缀名
-	FileType   FileType    `gorm:"not null" json:"file_type"`  // 文档类型
-	FilePath   string      `gorm:"not null" json:"-"`          // 文档路径
-	IsEnabled  bool        `gorm:"not null" json:"is_enabled"` // 是否启用
-	Status     ParseStatus `gorm:"not null" json:"status"`     // 解析状态
-	CreatedAt  time.Time   `gorm:"not null" json:"created_at"` // 文档创建时间
-	UpdatedAt  time.Time   `gorm:"not null" json:"updated_at"` // 文档更新时间
+	DocID      int64       `gorm:"primaryKey" json:"docId,string"` //文档ID,主键
+	BaseID     int64       `gorm:"not null" json:"-"`              // 知识库ID，可作为外键关联到 know_base 表
+	DocName    string      `gorm:"not null" json:"doc_name"`       // 文档名称
+	FileSuffix string      `gorm:"not null" json:"-"`              // 文档后缀名
+	FileType   FileType    `gorm:"not null" json:"file_type"`      // 文档类型
+	FilePath   string      `gorm:"not null" json:"-"`              // 文档路径
+	IsEnabled  bool        `gorm:"not null" json:"is_enabled"`     // 是否启用
+	Status     ParseStatus `gorm:"not null" json:"status"`         // 解析状态
+	CreatedAt  time.Time   `gorm:"not null" json:"created_at"`     // 文档创建时间
+	UpdatedAt  time.Time   `gorm:"not null" json:"updated_at"`     // 文档更新时间
 }
 
 // 文档切片结构体(用于后续向量化处理,目前暂时不用)

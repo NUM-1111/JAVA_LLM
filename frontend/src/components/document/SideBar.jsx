@@ -24,7 +24,7 @@ const DocSideBar = () => {
   return (
     <Menu
       className="!border-none"
-      style={{ width: 256 }}
+      style={{ width: "auto" }}
       selectedKeys={[selectedKey]}
       items={items}
     />

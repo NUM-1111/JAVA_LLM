@@ -41,7 +41,7 @@ function DeleteDocModal({
       const msg =
         err.response?.data?.error ||
         err.response?.data?.msg ||
-        "获取数据失败,请稍后再试 !";
+        "请求失败,请稍后再试 !";
       messageApi.error(msg);
     }
   };

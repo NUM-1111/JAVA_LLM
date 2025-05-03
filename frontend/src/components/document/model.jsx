@@ -1,16 +1,26 @@
-import { Tag, Switch } from "antd";
+import { Tag } from "antd";
 import { MatchStatus } from "./utils";
-
-const onEnableChange = (checked) => {
-  console.log(`switch to ${checked}`);
-};
+import { Link } from "react-router-dom";
 
 export const docColumns = [
   {
     title: "文件名",
-    dataIndex: "filename",
-    key: "filename",
+    dataIndex: "doc_name",
+    key: "doc_name",
     width: 200,
+    fixed: "left",
+    align: "center",
+    render: (_, record) => {
+      return (
+        <Link to={`./detail?docId=${record.docId}`} className="text-blue-500">{record.doc_name}</Link>
+      );
+    },
+  },
+  {
+    title: "文档类型",
+    dataIndex: "file_type",
+    key: "file_type",
+    width: 120,
     fixed: "left",
     align: "center",
   },
@@ -18,7 +28,7 @@ export const docColumns = [
     title: "上传日期",
     dataIndex: "created_at",
     key: "created_at",
-    width: 120,
+    width: 150,
     align: "center",
   },
   {
@@ -30,7 +40,7 @@ export const docColumns = [
     render: (_, record) => {
       let color;
       switch (record.status) {
-        case 2:
+        case 1:
           color = "green";
           break;
         case 3:
@@ -40,21 +50,9 @@ export const docColumns = [
           return;
       }
       return (
-        <Tag color={color} key={record.status}>
+        <Tag className="scale-105" color={color} key={record.status}>
           {MatchStatus(record.status)}
         </Tag>
-      );
-    },
-  },
-  {
-    title: "启用",
-    dataIndex: "is_enabled",
-    key: "is_enabled",
-    width: 120,
-    align: "center",
-    render: (_, record) => {
-      return (
-        <Switch defaultValue={record.is_enabled} onChange={onEnableChange} />
       );
     },
   },

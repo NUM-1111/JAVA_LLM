@@ -1,9 +1,24 @@
 const statusMap = {
-  1: null,
-  2: "成功",
-  3: "失败",
+  0: null,
+  1: "成功",
+  2: "失败",
+};
+
+const fileTypeMap = {
+  1: "Word",
+  2: "Excel",
+  3: "PPT",
+  4: "PDF",
+  5: "TXT",
+  6: "Image",
+  7: "Markdown",
+  8: "Other",
 };
 
 export const MatchStatus = (type) => {
   return statusMap[type];
+};
+
+export const MatchFileType = (type) => {
+  return fileTypeMap[type];
 };
