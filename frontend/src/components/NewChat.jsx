@@ -1,8 +1,8 @@
 import { useNavigate } from "react-router-dom";
 import { useState, useEffect, useRef } from "react";
-import SideBar from "./Sidebar";
+import SideBar from "./chat/Sidebar";
 import { DeepThinkIcon, ArrowUpIcon, ImageUpLoadIcon } from "./svg-icons";
-import HeadBar from "./HeadBar";
+import HeadBar from "./chat/HeadBar";
 import { toastIfLogin } from "./user/utils";
 import { v4 as uuid } from "uuid";
 

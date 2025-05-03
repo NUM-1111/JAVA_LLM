@@ -9,7 +9,7 @@ import {
   BreadcrumbIcon,
   SelectedIcon,
   ShareIcon,
-} from "./svg-icons";
+} from "../svg-icons";
 
 function HeadBar({ isOpen, setIsOpen, selectedCode, setSelectedCode }) {
   const modelRef = useRef(null);
@@ -30,7 +30,6 @@ function HeadBar({ isOpen, setIsOpen, selectedCode, setSelectedCode }) {
     }
     getUsername();
   }, []);
-
 
   // 监听点击外部区域来关闭下拉菜单
   useEffect(() => {
@@ -112,7 +111,7 @@ function HeadBar({ isOpen, setIsOpen, selectedCode, setSelectedCode }) {
               isOpen ? "lg:hidden" : "block"
             } flex justify-center items-center size-8 sm:size-10 transition rounded-lg hover:shadow-md hover:bg-blue-300 group`}
           >
-            <SiderBarIcon className={"size-5 sm:size-6"}/>
+            <SiderBarIcon className={"size-5 sm:size-6"} />
             {/* 说明框：底部显示 */}
             <div className="absolute top-full left-1/2 transform -translate-x-1/2 hidden group-hover:block transition-all duration-300 bg-gray-700 text-white text-sm rounded py-1 px-2 whitespace-nowrap mt-1 ml-2">
               显示侧边栏
@@ -128,7 +127,7 @@ function HeadBar({ isOpen, setIsOpen, selectedCode, setSelectedCode }) {
               isOpen ? "lg:hidden" : "block"
             } flex justify-center items-center size-8 sm:size-10 transition rounded-lg hover:shadow-md hover:bg-blue-300 group`}
           >
-            <NewChatIcon className={"size-5 sm:size-6"}/>
+            <NewChatIcon className={"size-5 sm:size-6"} />
             {/* 说明框：底部显示 */}
             <div className="absolute top-full left-1/2 transform -translate-x-1/2 hidden group-hover:block transition-all duration-300 bg-gray-700 text-white text-sm rounded py-1 px-2 whitespace-nowrap mt-1">
               创建新对话
@@ -139,7 +138,10 @@ function HeadBar({ isOpen, setIsOpen, selectedCode, setSelectedCode }) {
 
       {/* 模型选择按钮 */}
       <div className="flex flex-1 justify-start sm:justify-center lg:justify-start mr-1">
-        <div ref={modelRef} className="relative group hover:bg-gray-100 rounded-lg w-fit">
+        <div
+          ref={modelRef}
+          className="relative group hover:bg-gray-100 rounded-lg w-fit"
+        >
           <button
             onClick={() => setShowModels(!showModels)}
             className={`relative flex flex-row items-center  px-2 py-2 rounded-lg justify-center min-w-24 sm:min-w-40 min-h-11  ${

@@ -14,8 +14,8 @@ import {
   CycleIcon,
   CopyIcon,
 } from "./svg-icons";
-import HeadBar from "./HeadBar";
-import SideBar from "./Sidebar";
+import HeadBar from "./chat/HeadBar";
+import SideBar from "./chat/Sidebar";
 
 function ChatPage() {
   const location = useLocation();
@@ -119,17 +119,14 @@ function ChatPage() {
     } else {
       const fetchMessages = async () => {
         try {
-          const response = await fetch(
-            "/api/query/messages",
-            {
-              method: "POST",
-              headers: {
-                "Content-Type": "application/json",
-                Authorization: localStorage.auth,
-              },
-              body: JSON.stringify({ conversation_id: conversationId }),
-            }
-          );
+          const response = await fetch("/api/query/messages", {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+              Authorization: localStorage.auth,
+            },
+            body: JSON.stringify({ conversation_id: conversationId }),
+          });
           if (!response.ok) throw new Error("服务器返回错误");
           // 切分解析ai文本
           const data = await response.json();
@@ -313,7 +310,7 @@ function ChatPage() {
   return (
     <div className="flex flex-row h-[100dvh] sm:h-screen bg-white">
       {/*侧边栏部分 */}
-      <SideBar isOpen={isOpen} setIsOpen={setIsOpen} finishText={finishText}/>
+      <SideBar isOpen={isOpen} setIsOpen={setIsOpen} finishText={finishText} />
       {/*右侧覆盖阴影 */}
       {isOpen && (
         <div

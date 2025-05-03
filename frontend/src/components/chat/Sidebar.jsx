@@ -8,15 +8,14 @@ import {
   OneConversationIcon,
   TrashIcon,
   RenameIcon,
-} from "./svg-icons";
+} from "../svg-icons";
 
-export default function SideBar({ isOpen, setIsOpen ,finishText}) {
+export default function SideBar({ isOpen, setIsOpen, finishText }) {
   const [conversations, setConversations] = useState([]); // 存储对话列表
   const navigate = useNavigate(); // 获取导航函数
-  const [hoveredIndex, setHoveredIndex] = useState(null);// 鼠标悬停
-  const [editingId, setEditingId] = useState(null);// 正在编辑的对话id
-  const [newTitle, setNewTitle] = useState("");// 新对话标题
-
+  const [hoveredIndex, setHoveredIndex] = useState(null); // 鼠标悬停
+  const [editingId, setEditingId] = useState(null); // 正在编辑的对话id
+  const [newTitle, setNewTitle] = useState(""); // 新对话标题
 
   //从后端API获取会话内容
   useEffect(() => {
@@ -27,7 +26,6 @@ export default function SideBar({ isOpen, setIsOpen ,finishText}) {
 
     loadConversations();
   }, [finishText, setIsOpen]); // 组件挂载时请求数据
-
 
   const [selectedConversationId, setSelectedConversationId] = useState(null);
   const optionsRef = useRef(null);
@@ -45,23 +43,17 @@ export default function SideBar({ isOpen, setIsOpen ,finishText}) {
     };
   }, []);
 
-
-
-
   //前端传conversion_id到后端，后端根据conversion_id删除会话
-  const deleteConversation = async ({conversation_id}) => {
+  const deleteConversation = async ({ conversation_id }) => {
     try {
-      const response = await fetch(
-        "/api/delete/conversation",
-        {
-          method: "POST",
-          headers: {
-            Authorization: localStorage.auth,
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify({ conversation_id }),
-        }
-      );
+      const response = await fetch("/api/delete/conversation", {
+        method: "POST",
+        headers: {
+          Authorization: localStorage.auth,
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ conversation_id }),
+      });
 
       console.log(conversation_id);
       console.log(response);
@@ -78,22 +70,18 @@ export default function SideBar({ isOpen, setIsOpen ,finishText}) {
       console.error("删除会话失败:", error);
     }
   };
-  
 
   // 重命名对话
   const renameConversation = async ({ conversation_id, title }) => {
     try {
-      const response = await fetch(
-        "/api/rename/conversation",
-        {
-          method: "PUT",
-          headers: {
-            Authorization: localStorage.auth,
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify({conversation_id, title }),
-        }
-      );
+      const response = await fetch("/api/rename/conversation", {
+        method: "PUT",
+        headers: {
+          Authorization: localStorage.auth,
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ conversation_id, title }),
+      });
 
       if (!response.ok) {
         const data = await response.text();
@@ -126,7 +114,7 @@ export default function SideBar({ isOpen, setIsOpen ,finishText}) {
               onClick={() => setIsOpen(false)}
               className={`flex justify-center items-center size-8 sm:size-10 rounded-lg hover:shadow-md hover:bg-blue-300 group`}
             >
-              <SiderBarIcon className={"size-5 sm:size-6"}/>
+              <SiderBarIcon className={"size-5 sm:size-6"} />
               <span className="absolute top-full left-1/2 transform -translate-x-1/2 hidden group-hover:block transition-all duration-300 bg-gray-700 text-white text-sm rounded py-1 px-2 whitespace-nowrap mt-1 ml-2">
                 显示侧边栏
               </span>
@@ -142,7 +130,7 @@ export default function SideBar({ isOpen, setIsOpen ,finishText}) {
                 navigate("/");
               }} // 跳转到新建对话页面
             >
-              <NewChatIcon className={"size-5 sm:size-6"}/>
+              <NewChatIcon className={"size-5 sm:size-6"} />
               {/* 说明框：右侧显示 */}
               <span className="absolute top-full left-1/2 transform -translate-x-1/2 hidden group-hover:block transition-all duration-300 bg-gray-700 text-white text-sm rounded py-1 px-2 whitespace-nowrap mt-1">
                 创建新对话
@@ -163,9 +151,7 @@ export default function SideBar({ isOpen, setIsOpen ,finishText}) {
             <AddIcon />
           </div>
           {/* 新建对话按钮文字 */}
-          <div className="flex flex-col justify-center ml-2">
-            开启新对话
-          </div>
+          <div className="flex flex-col justify-center ml-2">开启新对话</div>
         </button>
 
         {/* 侧边栏对话列表 */}
@@ -177,7 +163,9 @@ export default function SideBar({ isOpen, setIsOpen ,finishText}) {
               <div
                 key={conversation.conversation_id}
                 className="flex flex-row items-center justify-between hover:bg-gray-200 rounded-lg"
-                onMouseEnter={() => setHoveredIndex(conversation.conversation_id)}
+                onMouseEnter={() =>
+                  setHoveredIndex(conversation.conversation_id)
+                }
                 onMouseLeave={() => setHoveredIndex(null)}
               >
                 {/* 对话按钮 */}
@@ -190,7 +178,7 @@ export default function SideBar({ isOpen, setIsOpen ,finishText}) {
                       if (newTitle.trim() !== "") {
                         renameConversation({
                           conversation_id: conversation.conversation_id,
-                          title: newTitle
+                          title: newTitle,
                         });
                       }
                       setEditingId(null);
@@ -204,17 +192,16 @@ export default function SideBar({ isOpen, setIsOpen ,finishText}) {
                     className=" border-[0.5px] border-opacity-50 border-gray-50 rounded-lg px-2 py-1 min-w-52"
                   />
                 ) : (
-                    <button
-                      className="block w-full text-left px-4 py-2 my-1 text-gray-700"
-                      onClick={() => {
-                        console.log(`跳转到对话 ${conversation.conversation_id}`);
-                        navigate(`/c/${conversation.conversation_id}`);
-                      }}
-                    >
-                      {conversation.title || "未命名对话"}
-                    </button>
-                )
-                }
+                  <button
+                    className="block w-full text-left px-4 py-2 my-1 text-gray-700"
+                    onClick={() => {
+                      console.log(`跳转到对话 ${conversation.conversation_id}`);
+                      navigate(`/c/${conversation.conversation_id}`);
+                    }}
+                  >
+                    {conversation.title || "未命名对话"}
+                  </button>
+                )}
                 {/* 右侧菜单按钮，只有 hoveredIndex === index 时显示 */}
                 {hoveredIndex === conversation.conversation_id && (
                   <button
@@ -235,12 +222,14 @@ export default function SideBar({ isOpen, setIsOpen ,finishText}) {
                   {selectedConversationId === conversation.conversation_id && (
                     <div
                       ref={optionsRef}
-                      className="absolute right-0 top-7 w-32 bg-white shadow-lg rounded-lg border border-gray-200 " 
+                      className="absolute right-0 top-7 w-32 bg-white shadow-lg rounded-lg border border-gray-200 "
                     >
                       <button
                         className="flex flex-row items-center w-full px-4 py-2 text-left hover:bg-gray-100"
                         onClick={() => {
-                          console.log(`重命名对话 ${conversation.conversation_id}`);
+                          console.log(
+                            `重命名对话 ${conversation.conversation_id}`
+                          );
                           setSelectedConversationId(null);
                           setEditingId(conversation.conversation_id);
                           setNewTitle(conversation.title || "");
@@ -252,9 +241,13 @@ export default function SideBar({ isOpen, setIsOpen ,finishText}) {
                       <button
                         className="flex flex-row items-center w-full px-4 py-2 text-left text-red-600 hover:bg-red-100"
                         onClick={() => {
-                          console.log(`删除对话 ${conversation.conversation_id}`);
+                          console.log(
+                            `删除对话 ${conversation.conversation_id}`
+                          );
                           setSelectedConversationId(null);
-                          deleteConversation({ conversation_id: conversation.conversation_id });
+                          deleteConversation({
+                            conversation_id: conversation.conversation_id,
+                          });
                         }}
                       >
                         <TrashIcon />
@@ -275,16 +268,13 @@ export default function SideBar({ isOpen, setIsOpen ,finishText}) {
 async function fetchConversations() {
   try {
     // 发送请求，获取响应对象
-    const response = await fetch(
-      "/api/query/conversation",
-      {
-        method: "GET",
-        headers: {
-          Authorization: localStorage.auth,
-          "Content-Type": "application/json",
-        },
-      }
-    );
+    const response = await fetch("/api/query/conversation", {
+      method: "GET",
+      headers: {
+        Authorization: localStorage.auth,
+        "Content-Type": "application/json",
+      },
+    });
 
     // 判断是否请求成功（HTTP 状态码 200-299）
     if (!response.ok) {
