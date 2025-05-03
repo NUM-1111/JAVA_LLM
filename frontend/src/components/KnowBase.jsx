@@ -3,8 +3,8 @@ import { useNavigate } from "react-router-dom";
 import { fetchUsername } from "./chat/utils";
 import {
   EditOutlined,
-  EllipsisOutlined,
-  SettingOutlined,
+  FullscreenOutlined,
+  DeleteOutlined,
   PlusOutlined,
 } from "@ant-design/icons";
 import {
@@ -25,12 +25,6 @@ import { toast } from "react-toastify";
 const { Search } = Input;
 const onSearch = (value, _e, info) =>
   console.log(info === null || info === void 0 ? void 0 : info.source, value);
-
-const actions = [
-  <EditOutlined key="edit" />,
-  <SettingOutlined key="setting" />,
-  <EllipsisOutlined key="ellipsis" />,
-];
 
 const useStyle = createStyles(({ prefixCls, css }) => ({
   linearGradientButton: css`
@@ -58,7 +52,6 @@ const useStyle = createStyles(({ prefixCls, css }) => ({
   `,
 }));
 
-// <Avatar src="https://api.dicebear.com/7.x/miniavs/svg?seed=1" />
 
 function KnowBasepage() {
   const [username, setUsername] = useState("");
@@ -67,6 +60,8 @@ function KnowBasepage() {
   const [data, setData] = useState([]);
   const navigate = useNavigate();
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [isEditModalOpen, setIsEditModalOpen] = useState(false); // 控制编辑弹窗
+  const [currentEditData, setCurrentEditData] = useState(null); // 存储当前正在编辑的知识库数据
   const [baseName, setBaseName] = useState("");
   const [baseDesc, setBaseDesc] = useState("");
   const [form] = Form.useForm();
@@ -81,6 +76,29 @@ function KnowBasepage() {
     setIsModalOpen(false);
   };
 
+  // 打开编辑弹窗并填充数据
+  const handleEditClick = (item) => {
+    setCurrentEditData(item);
+    form.setFieldsValue({
+      baseName: item.base_name,
+      baseDesc: item.base_desc,
+    });
+    setIsEditModalOpen(true);
+  };
+
+  // 关闭编辑弹窗
+  const handleEditCancel = () => {
+    setIsEditModalOpen(false);
+    setCurrentEditData(null);
+    form.resetFields();
+  };
+    
+    // 提交编辑表单
+     const handleEditOk = () => {
+      editKnowledge(currentEditData.base_id);
+    };
+
+  // 获取知识库列表
   const fetchData = async () => {
     try {
       const response = await fetch("/api/knowledge/list", {
@@ -106,6 +124,7 @@ function KnowBasepage() {
     }
   };
 
+  // 创建知识库
   const createKnowledge = async () => {
     try {
       await form.validateFields(); // 验证表单
@@ -143,6 +162,74 @@ function KnowBasepage() {
     }
   };
 
+  /*
+   编辑知识库 
+   */
+    const editKnowledge = async (baseId) => {
+      console.log(currentEditData);
+    try {
+      await form.validateFields(); // 验证表单
+      const response = await fetch(`/api/knowledge/edit/${baseId}`, {
+        method: "PUT",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: localStorage.auth,
+        },
+        body: JSON.stringify({
+          base_name: baseName,
+          base_desc: baseDesc,
+        }),
+      });
+
+      const data = await response.json();
+      if (data.msg === "知识库更新成功") {
+        console.log("编辑成功");
+        toast.success("编辑成功");
+        // 关闭弹窗
+        setIsEditModalOpen(false);
+        // 刷新页面
+        fetchData();
+
+        // 重置表单
+        setBaseName("");
+        setBaseDesc("");
+        form.resetFields();
+      } else {
+          console.log(data.msg);
+        console.log("编辑失败");
+        toast.error("编辑失败");
+      }
+    } catch (error) {
+      console.error(error);
+    }
+  };
+
+  // 删除知识库
+  const deleteKnowledge = async (baseId) => {
+    try {
+      const response = await fetch(`/api/knowledge/delete/${baseId}`, {
+        method: "DELETE",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: localStorage.auth,
+        },
+      });
+
+      const data = await response.json();
+      if (data.msg === "删除知识库成功") {
+        console.log("删除成功");
+        toast.success("删除成功");
+        // 刷新页面
+        fetchData();
+      } else {
+        console.log("删除失败");
+        toast.error("删除失败");
+      }
+    } catch (error) {
+      console.error(error);
+    }
+  };
+
   // 获取用户名
   useEffect(() => {
     async function getUsername() {
@@ -155,7 +242,7 @@ function KnowBasepage() {
   // 获取知识库列表
   useEffect(() => {
     fetchData();
-  }, [fetchData]);
+  }, []);
 
   return (
     <div>
@@ -256,11 +343,20 @@ function KnowBasepage() {
               <Card
                 key={item.base_id}
                 loading={loading}
-                actions={actions}
+                actions={[
+                  <FullscreenOutlined
+                    key="fullscreen"
+                    onClick={() =>
+                      navigate(`/knowledge/dataset?baseId=${item.base_id}`)
+                    }
+                  />,
+                  <EditOutlined key="edit" onClick={() => handleEditClick(item)}/>,
+                  <DeleteOutlined
+                    key="delete"
+                    onClick={() => deleteKnowledge(item.base_id)}
+                  />,
+                ]}
                 style={{ minWidth: 300 }}
-                onClick={() =>
-                  navigate(`/knowledge/dataset?baseId=${item.base_id}`)
-                }
               >
                 <Card.Meta
                   avatar={
@@ -278,6 +374,33 @@ function KnowBasepage() {
           </Flex>
           <div className="bg-white p-6"></div>
         </div>
+        {/* 编辑知识库 Modal */}
+        <Modal
+          title="编辑知识库"
+          open={isEditModalOpen}
+          okText="提交"
+          cancelText="取消"
+          onOk={handleEditOk} // 提交编辑
+          onCancel={handleEditCancel} // 取消编辑
+        >
+          <Form form={form} layout="vertical">
+            <Form.Item
+              label="数据库名称"
+              name="baseName"
+              rules={[{ required: true, message: "数据库名称不能为空！" }]}
+            >
+              <Input placeholder="请输入知识库名称"  onChange={(e) => setBaseName(e.target.value)}/>
+            </Form.Item>
+
+            <Form.Item
+              label="数据库描述"
+              name="baseDesc"
+              rules={[{ required: true, message: "数据库描述不能为空！" }]}
+            >
+              <Input placeholder="请输入知识库描述" onChange={(e) => setBaseDesc(e.target.value)}/>
+            </Form.Item>
+          </Form>
+        </Modal>
       </main>
     </div>
   );

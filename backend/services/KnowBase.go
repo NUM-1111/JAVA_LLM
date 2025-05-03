@@ -93,18 +93,52 @@ func GetKnowBaseList(c *gin.Context) {
 
 // 修改知识库(重命名,描述)
 func UpdateKnowBase(c *gin.Context) {
-	var req request.BaseUpdateRequest
+	session, exists := c.Get("session")
+	if !exists {
+		c.JSON(http.StatusUnauthorized, gin.H{"err": "无效的登录凭证"})
+		return
+	}
+	s, ok := session.(*models.Session)
+	if !ok {
+		c.JSON(http.StatusUnauthorized, gin.H{"err": "身份认证失败"})
+		return
+	}
 
+	// 获取路径参数 /knowledge/:id
+	idStr := c.Param("id")
+	baseID, err := strconv.ParseInt(idStr, 10, 64)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"msg": "无效的知识库ID"})
+		return
+	}
+
+	// 检查知识库是否存在
+	var base models.KnowledgeBase
+	err = db.DB.Model(&base).Where("base_id = ? AND user_id = ?", baseID, s.UserID).First(&base).Error
+	if err != nil {
+		if err == gorm.ErrRecordNotFound {
+			c.JSON(http.StatusNotFound, gin.H{"msg": "找不到要修改的知识库"})
+		} else {
+			c.JSON(http.StatusInternalServerError, gin.H{"msg": "修改知识库失败"})
+		}
+		return
+	}
+
+	var req request.BaseUpdateRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"msg": "参数格式错误,更新失败"})
 		return
 	}
-	result := db.DB.Where("base_id = ?", req.BaseID).Updates(models.KnowledgeBase{
+	result := db.DB.Where("base_id = ?", baseID).Updates(models.KnowledgeBase{
 		BaseName: req.BaseName,
 		BaseDesc: req.BaseDesc,
 	})
 	if result.Error != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"msg": "知识库更新失败"})
+		return
+	}
+	if result.RowsAffected == 0 {
+		c.JSON(http.StatusNotFound, gin.H{"msg": "未找到要更新的知识库"})
 		return
 	}
 	c.JSON(http.StatusOK, gin.H{"msg": "知识库更新成功"})
