@@ -27,7 +27,7 @@ func UploadFile(c *gin.Context) {
 		return
 	}
 	// 获取base id
-	idStr := c.Param("id")
+	idStr := c.Query("baseId")
 	baseID, err := strconv.ParseInt(idStr, 10, 64)
 	if err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"msg": "无效的知识库ID"})
@@ -92,7 +92,7 @@ func GetFileList(c *gin.Context) {
 		return
 	}
 	// 获取base id
-	idStr, offsetStr, limitStr := c.Param("id"), c.Query("offset"), c.Query("limit")
+	idStr, offsetStr, limitStr, searchText := c.Param("baseId"), c.Query("offset"), c.Query("limit"), c.Query("search")
 	baseID, err := strconv.ParseInt(idStr, 10, 64)
 	if err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"msg": "无效的知识库ID"})
@@ -122,7 +122,7 @@ func GetFileList(c *gin.Context) {
 	// 查询文件列表
 	var docs []models.Document
 	err = db.DB.Model(&models.Document{}).
-		Where("base_id = ?", baseID).
+		Where("base_id = ? AND doc_name LIKE ?", baseID, searchText).
 		Offset(offset).
 		Limit(limit).
 		Find(&docs).Error

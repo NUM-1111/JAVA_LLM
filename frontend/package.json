@@ -14,8 +14,12 @@
     "@tailwindcss/forms": "^0.5.10",
     "@tailwindcss/typography": "^0.5.16",
     "antd": "^5.24.9",
+<<<<<<< HEAD
     "antd-style": "^3.7.1",
+=======
+>>>>>>> 4d2b8146a47dfcfcd69b6dc13f88d73d45612413
     "axios": "^1.8.4",
+    "dayjs": "^1.11.13",
     "eventsource-parser": "^3.0.0",
     "github-markdown-css": "^5.8.1",
     "highlight.js": "^11.11.1",
