@@ -1,4 +1,5 @@
-import React, { useState, useEffect, useNavigate } from "react";
+import React, { useState, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
 import { fetchUsername } from "./chat/utils";
 import {
   EditOutlined,
@@ -52,8 +53,8 @@ function KnowBasepage() {
   const [username, setUsername] = useState("");
   const [loading, setLoading] = useState(false); // 加载中状态(有动画效果,后续可以优化)
   const { styles } = useStyle();
-    const [data, setData] = useState([]);
-    const navigate = useNavigate();
+  const [data, setData] = useState([]);
+  const navigate = useNavigate();
 
   // 获取用户名
   useEffect(() => {
@@ -68,16 +69,13 @@ function KnowBasepage() {
   useEffect(() => {
     const fetchData = async () => {
       try {
-        const response = await fetch(
-          "/api/knowledge/list",
-          {
-            method: "GET",
-            headers: {
-              "Content-Type": "application/json",
-              Authorization: localStorage.auth,
-            },
-          }
-        );
+        const response = await fetch("/api/knowledge/list", {
+          method: "GET",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: localStorage.auth,
+          },
+        });
 
         const data = await response.json();
 
@@ -95,27 +93,22 @@ function KnowBasepage() {
     };
     fetchData();
   }, []);
-    
-    const createKnowledge = async () => {
-      
-        const response = await fetch(
-          "/api/knowledge/create",
-          {
-            method: "POST",
-            headers: {
-              "Content-Type": "application/json",
-              Authorization: localStorage.auth,
-            },
-            body: JSON.stringify({
-              base_name: "水声知识库",
-              base_desc: "这是知识库",
-            }),
-          }
-        );
-          const data = await response.json();
-          console.log(data);
-      
-    };
+
+  const createKnowledge = async () => {
+    const response = await fetch("/api/knowledge/create", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: localStorage.auth,
+      },
+      body: JSON.stringify({
+        base_name: "水声知识库",
+        base_desc: "这是知识库",
+      }),
+    });
+    const data = await response.json();
+    console.log(data);
+  };
 
   return (
     <div>
@@ -174,8 +167,10 @@ function KnowBasepage() {
                 key={item.base_id}
                 loading={loading}
                 actions={actions}
-                    style={{ minWidth: 300 }}
-                    onClick={() => navigate(`./knowledge/dataset?baseId=${item.base_id}`)}
+                style={{ minWidth: 300 }}
+                onClick={() =>
+                  navigate(`./knowledge/dataset?baseId=${item.base_id}`)
+                }
               >
                 <Card.Meta
                   avatar={

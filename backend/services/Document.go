@@ -133,6 +133,43 @@ func GetFileList(c *gin.Context) {
 	c.JSON(http.StatusOK, gin.H{"msg": "文件查找成功", "data": docs, "total": len(docs)})
 }
 
+// 更新文件启用状态
+func UpdateEnableStatus(c *gin.Context) {
+	var req request.DocUpdateEnable
+	if err := c.ShouldBindJSON(&req); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"msg": "参数格式错误"})
+		return
+	}
+	result := db.DB.Model(&models.Document{}).Where("doc_id = ?", req.DocID).Update("is_enabled", req.IsEnabled)
+	if result.Error != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"msg": "修改失败"})
+		return
+	} else if result.RowsAffected == 0 {
+		c.JSON(http.StatusNotFound, gin.H{"msg": "找不到要更新的文件"})
+		return
+	}
+	c.JSON(http.StatusOK, gin.H{"msg": "修改成功"})
+
+}
+
+// 文件重命名
+func RenameFile(c *gin.Context) {
+	var req request.DocUpdateName
+	if err := c.ShouldBindJSON(&req); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"msg": "参数格式错误"})
+		return
+	}
+	result := db.DB.Model(&models.Document{}).Where("doc_id = ?", req.DocID).Update("doc_name", req.DocName)
+	if result.Error != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"msg": "重命名失败"})
+		return
+	} else if result.RowsAffected == 0 {
+		c.JSON(http.StatusNotFound, gin.H{"msg": "找不到要更新的文件"})
+		return
+	}
+	c.JSON(http.StatusOK, gin.H{"msg": "修改成功"})
+}
+
 // 删除文件
 func DeleteFile(c *gin.Context) {
 	session, exists := c.Get("session")

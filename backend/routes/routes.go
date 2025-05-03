@@ -46,10 +46,11 @@ func SetupRoutes(r *gin.Engine) {
 	api.POST("/query/messages", services.QueryMessages)           // 对话页查询历史消息
 	// knowledgeBase路由
 	baseGroup := api.Group("/knowledge")
-	baseGroup.POST("/create", services.CreateKnowBase)     // 创建知识库
-	baseGroup.GET("/list", services.GetKnowBaseList)         // 查询知识库列表
-	baseGroup.POST("/upload/file", services.UploadFile)     // 上传单个文件到知识库
-	baseGroup.GET("/document/list", services.GetFileList)   // 查询文件列表
-	baseGroup.POST("/delete/document", services.DeleteFile) // 删除单个文件
-
+	baseGroup.POST("/create", services.CreateKnowBase)                     // 创建知识库
+	baseGroup.GET("/list", services.GetKnowBaseList)                       // 查询知识库列表
+	baseGroup.POST("/upload/file", services.UploadFile)                    // 上传单个文件到知识库
+	baseGroup.GET("/document/list", services.GetFileList)                  // 查询文件列表
+	baseGroup.POST("/document/change/status", services.UpdateEnableStatus) // 更新启用状态
+	baseGroup.POST("/document/rename", services.RenameFile)                // 文件重命名
+	baseGroup.POST("/delete/document", services.DeleteFile)                // 删除单个文件
 }

@@ -23,15 +23,7 @@ function DatasetPage() {
   const query = useQuery();
   const baseId = query.get("baseId");
   // filedata
-  const [fileList, setFileList] = useState([
-    {
-      docId: 0,
-      filename: "测试文件",
-      created_at: "2025-5-3",
-      is_enabled: true,
-      status: 2,
-    },
-  ]);
+  const [fileList, setFileList] = useState([]);
   // search
   const [searchText, setSearchText] = useState("");
   const [doSearch, setDoSearch] = useState(0);
