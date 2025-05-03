@@ -68,7 +68,7 @@ function KnowBasepage() {
     const fetchData = async () => {
       try {
         const response = await fetch(
-          "/api/knowledgebase/list",
+          "/api/knowledge/list",
           {
             method: "GET",
             headers: {
@@ -94,6 +94,33 @@ function KnowBasepage() {
     };
     fetchData();
   }, []);
+    
+    const createKnowledge = async () => {
+      try {
+        const response = await fetch(
+          "/api/knowledge/create",
+          {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+              Authorization: localStorage.auth,
+            },
+            body: JSON.stringify({
+              base_name: "水声知识库",
+              base_desc: "这是知识库",
+            }),
+          }
+        );
+
+        const data = await response.json();
+
+        if (data.success) {
+          setData([...data.data]);
+        }
+      } catch (error) {
+        console.error(error);
+      }
+    };
 
   return (
     <div>
@@ -129,7 +156,7 @@ function KnowBasepage() {
             }}
           >
             <Space>
-              <Button type="primary" size="middle" icon={<PlusOutlined />}>
+              <Button type="primary" size="middle" icon={<PlusOutlined />} onClick={createKnowledge}>
                 添加新知识库
               </Button>
             </Space>
