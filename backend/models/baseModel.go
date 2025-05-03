@@ -26,13 +26,13 @@ const (
 
 // 知识库结构体(一个用户可以有多个知识库)
 type KnowledgeBase struct {
-	BaseID    int64      `gorm:"primaryKey" json:"base_id"`  //知识库ID,主键
-	UserID    int64      `gorm:"not null" json:"-"`          // 用户ID，可作为外键关联到 users 表
-	BaseName  string     `gorm:"not null" json:"base_name"`  // 知识库名称
-	BaseDesc  string     `gorm:"not null" json:"base_desc"`  // 知识库描述
-	BasePath  string     `gorm:"not null" json:"-"`          // 知识库存储路径
-	CreatedAt time.Time  `gorm:"not null" json:"created_at"` // 知识库创建时间
-	UpdatedAt time.Time  `gorm:"not null" json:"updated_at"` // 知识库更新时间
+	BaseID    int64      `gorm:"primaryKey" json:"base_id,string"` //知识库ID,主键
+	UserID    int64      `gorm:"not null" json:"-"`                // 用户ID，可作为外键关联到 users 表
+	BaseName  string     `gorm:"not null" json:"base_name"`        // 知识库名称
+	BaseDesc  string     `gorm:"not null" json:"base_desc"`        // 知识库描述
+	BasePath  string     `gorm:"not null" json:"-"`                // 知识库存储路径
+	CreatedAt time.Time  `gorm:"not null" json:"created_at"`       // 知识库创建时间
+	UpdatedAt time.Time  `gorm:"not null" json:"updated_at"`       // 知识库更新时间
 	Documents []Document `gorm:"foreignKey:BaseID"`
 }
 
