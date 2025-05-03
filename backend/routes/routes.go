@@ -46,6 +46,7 @@ func SetupRoutes(r *gin.Engine) {
 	api.POST("/query/messages", services.QueryMessages)           // 对话页查询历史消息
 	// knowledgeBase路由
 	baseGroup := api.Group("/knowledge")
+	baseGroup.GET("/info/:id", services.GetKnowBaseInfo)                   // 获取知识库基本信息
 	baseGroup.POST("/create", services.CreateKnowBase)                     // 创建知识库
 	baseGroup.GET("/list", services.GetKnowBaseList)                       // 查询知识库列表
 	baseGroup.POST("/upload/file", services.UploadFile)                    // 上传单个文件到知识库

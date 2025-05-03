@@ -65,6 +65,36 @@ func CreateKnowBase(c *gin.Context) {
 	c.JSON(http.StatusOK, gin.H{"msg": "知识库创建成功"})
 }
 
+// 获取单个知识库信息
+func GetKnowBaseInfo(c *gin.Context) {
+	// 获取 session
+	session, exists := c.Get("session")
+	if !exists {
+		c.JSON(http.StatusUnauthorized, gin.H{"err": "无效的登录凭证"})
+		return
+	}
+	s, ok := session.(*models.Session)
+	if !ok {
+		c.JSON(http.StatusUnauthorized, gin.H{"err": "身份认证失败"})
+		return
+	}
+	// 获取路径参数 /knowledge/info/:id
+	idStr := c.Param("id")
+	baseID, err := strconv.ParseInt(idStr, 10, 64)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"msg": "无效的知识库ID"})
+		return
+	}
+	var base models.KnowledgeBase
+	// 查询知识库信息
+	err = db.DB.Where("user_id = ? AND base_id = ?", s.UserID, baseID).First(&base).Error
+	if err != nil && err != gorm.ErrRecordNotFound {
+		c.JSON(http.StatusInternalServerError, gin.H{"msg": "获取知识库信息失败"})
+		return
+	}
+	c.JSON(http.StatusOK, gin.H{"msg": "获取成功", "data": base})
+}
+
 // 获取知识库列表
 func GetKnowBaseList(c *gin.Context) {
 	// 获取 session
