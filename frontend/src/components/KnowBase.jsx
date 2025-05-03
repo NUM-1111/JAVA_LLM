@@ -169,7 +169,7 @@ function KnowBasepage() {
                 actions={actions}
                 style={{ minWidth: 300 }}
                 onClick={() =>
-                  navigate(`./knowledge/dataset?baseId=${item.base_id}`)
+                  navigate(`/knowledge/dataset?baseId=${item.base_id}`)
                 }
               >
                 <Card.Meta
