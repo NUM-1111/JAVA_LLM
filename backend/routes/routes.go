@@ -42,4 +42,7 @@ func SetupRoutes(r *gin.Engine) {
 	api.GET("/query/conversation", services.QueryConversation)    //侧边栏查询历史记录
 	api.POST("/query/messages", services.QueryMessages)           // 对话页查询历史消息
 	api.GET("/user/info", services.GetUserNameBySession)          //返回用户名信息
+
+	// 知识库部分
+	api.GET("/knowledgebase/list", services.GetKnowBaseList)
 }
