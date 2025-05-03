@@ -26,6 +26,7 @@ function DatasetPage() {
   const navigate = useNavigate();
   const query = useQuery();
   const baseId = query.get("baseId");
+  const [baseinfo, setBaseInfo] = useState({});
   // filedata
   const [fileList, setFileList] = useState([]);
   // search
@@ -43,6 +44,25 @@ function DatasetPage() {
   const [deleteId, setDeleteId] = useState(null);
   const [renameId, setRenameId] = useState(null);
 
+  // 获取知识库信息
+  const GetBaseInfo = async () => {
+    try {
+      setLoading(true);
+      const res = await axios.get(`/api/knowledge/info/${baseId}`, {
+        headers: {
+          Authorization: localStorage.auth,
+        },
+      });
+      const data = res.data.data || {};
+      setBaseInfo(data);
+    } catch (err) {
+      console.error(err);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // 获取文件列表
   const GetFileList = async () => {
     try {
       setLoading(true);
@@ -134,6 +154,10 @@ function DatasetPage() {
   };
 
   useEffect(() => {
+    GetBaseInfo();
+  }, []);
+
+  useEffect(() => {
     GetFileList();
   }, [pagination.pageSize, doSearch, refresh]);
 
@@ -143,8 +167,8 @@ function DatasetPage() {
       <div className="flex flex-row h-screen mx-4">
         <div className="flex flex-col h-full w-60 mr-10">
           <div className="flex flex-col h-1/5 items-center justify-center">
-            <p className="text-lg font-bold">测试知识库</p>
-            <p className="text-gray-600">这是知识库的描述文本</p>
+            <p className="text-lg font-bold">{baseinfo.base_name}</p>
+            <p className="text-gray-600">{baseinfo.base_desc}</p>
           </div>
           <div
             className="flex-grow border-t border-gray-300 border-dashed -mt-5"
@@ -277,6 +301,7 @@ function DatasetPage() {
                       </Button>
                       <DeleteDocModal
                         open={deleteId === record.docId}
+                        baseId={baseId}
                         docId={record.docId}
                         onRefresh={() => setRefresh((prev) => prev + 1)}
                         onCancel={() => setDeleteId(null)}
