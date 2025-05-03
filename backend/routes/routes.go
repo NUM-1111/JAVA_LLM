@@ -31,15 +31,23 @@ func SetupRoutes(r *gin.Engine) {
 	// 受保护的 API 路由（需要用户身份认证）
 	api := r.Group("/api")
 	api.Use(middleware.AuthSession) // 使用会话认证中间件，确保用户已登录
-	api.POST("/get/latest/id", services.QueryMessageId)
-	api.POST("/change/username", services.ChangeUserName)         // 允许用户修改用户名
-	api.POST("/change/email", services.ChangeUserEmail)           // 允许用户修改邮箱
-	api.POST("/delete/account", services.DeleteUser)              // 允许用户注销账户
-	api.POST("/delete/chat", services.DeleteAllConversations)     // 允许用户删除所有聊天记录
-	api.POST("/delete/conversation", services.DeleteConversation) // 允许用户删除单条聊天记录
+	// user路由
+	api.POST("/change/username", services.ChangeUserName) // 允许用户修改用户名
+	api.POST("/change/email", services.ChangeUserEmail)   // 允许用户修改邮箱
+	api.POST("/delete/account", services.DeleteUser)      // 允许用户注销账户
+	api.GET("/user/info", services.GetUserNameBySession)  //返回用户名信息
+	// conversation路由
+	api.POST("/get/latest/id", services.QueryMessageId)           // 查询最新的message id
 	api.POST("/new/message", services.HandleNewMessage)           // 处理新的聊天消息
-	api.PUT("/rename/conversation", services.RenameConversation)  // 允许用户重命名对话
+	api.POST("/delete/chat", services.DeleteAllConversations)     // 删除所有聊天记录
+	api.POST("/delete/conversation", services.DeleteConversation) // 删除单条聊天记录
+	api.PUT("/rename/conversation", services.RenameConversation)  // 重命名对话
 	api.GET("/query/conversation", services.QueryConversation)    //侧边栏查询历史记录
 	api.POST("/query/messages", services.QueryMessages)           // 对话页查询历史消息
-	api.GET("/user/info", services.GetUserNameBySession)          //返回用户名信息
+	// knowledgeBase路由
+	baseGroup := api.Group("/knowledge")
+	baseGroup.POST("/upload/file", services.UploadFile)     // 上传单个文件到知识库
+	baseGroup.GET("/document/list", services.GetFileList)   // 查询文件列表
+	baseGroup.POST("/delete/document", services.DeleteFile) // 删除单个文件
+
 }

@@ -6,12 +6,12 @@ type BaseCreateRequest struct {
 }
 
 type BaseUpdateRequest struct {
-	BaseID   int64  `json:"base_id,string"`
+	BaseID   int64  `json:"baseId,string"`
 	BaseName string `json:"base_name"`
 	BaseDesc string `json:"base_desc,omitempty"`
 }
 
 type DocDeleteRequest struct {
-	BaseID int64 `json:"base_id,string"`
-	DocID  int64 `json:"doc_id,string"`
+	BaseID int64 `json:"baseId,string"`
+	DocID  int64 `json:"docId,string"`
 }
