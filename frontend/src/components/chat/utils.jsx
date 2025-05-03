@@ -83,4 +83,32 @@ const processSSE = async (
   }
 };
 
-export { createUserMessage, createAIMessage, processSSE };
+// 获取用户名
+  const fetchUsername = async () => {
+    try {
+      const response = await fetch("/api/user/info", {
+        method: "GET",
+        headers: {
+          Authorization: localStorage.auth,
+          "Content-Type": "application/json",
+        },
+      });
+
+      if (!response.ok) {
+        if (response.status === 401) {
+          localStorage.removeItem("auth");
+          setIsLoggedIn(false);
+          return "";
+        }
+        throw new Error(`HTTP error! Status: ${response.status}`);
+      }
+
+      const data = await response.json();
+      return typeof data.username === "string" ? data.username : "";
+    } catch (error) {
+      console.error("Failed to fetch username:", error);
+      return "";
+    }
+  }
+
+export { createUserMessage, createAIMessage, processSSE, fetchUsername };

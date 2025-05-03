@@ -3,6 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { toast } from "react-toastify";
 import { useState, useEffect, useRef } from "react";
 import "react-toastify/dist/ReactToastify.css";
+import { fetchUsername } from "./utils";
 import {
   SiderBarIcon,
   NewChatIcon,
@@ -51,34 +52,6 @@ function HeadBar({ isOpen, setIsOpen, selectedCode, setSelectedCode }) {
     const sessionId = localStorage.getItem("auth");
     setIsLoggedIn(!!sessionId); //!!sessionId 是一种 JavaScript 逻辑转换技巧，用于将变量 sessionId 转换为布尔值
   }, []);
-
-  // 获取用户名
-  async function fetchUsername() {
-    try {
-      const response = await fetch("/api/user/info", {
-        method: "GET",
-        headers: {
-          Authorization: localStorage.auth,
-          "Content-Type": "application/json",
-        },
-      });
-
-      if (!response.ok) {
-        if (response.status === 401) {
-          localStorage.removeItem("auth");
-          setIsLoggedIn(false);
-          return "";
-        }
-        throw new Error(`HTTP error! Status: ${response.status}`);
-      }
-
-      const data = await response.json();
-      return typeof data.username === "string" ? data.username : "";
-    } catch (error) {
-      console.error("Failed to fetch username:", error);
-      return "";
-    }
-  }
 
   // 退出登录
   const handleLogout = () => {
