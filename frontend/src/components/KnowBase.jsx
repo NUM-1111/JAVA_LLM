@@ -7,11 +7,22 @@ import {
   SettingOutlined,
   PlusOutlined,
 } from "@ant-design/icons";
-import { Avatar, Card, Flex, Input, Button, ConfigProvider, Space } from "antd";
+import {
+  Form,
+  Avatar,
+  Card,
+  Flex,
+  Input,
+  Button,
+  ConfigProvider,
+  Space,
+  Modal,
+  message,
+} from "antd";
 import { createStyles } from "antd-style";
+import { toast } from "react-toastify";
 
 const { Search } = Input;
-
 const onSearch = (value, _e, info) =>
   console.log(info === null || info === void 0 ? void 0 : info.source, value);
 
@@ -55,6 +66,82 @@ function KnowBasepage() {
   const { styles } = useStyle();
   const [data, setData] = useState([]);
   const navigate = useNavigate();
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [baseName, setBaseName] = useState("");
+  const [baseDesc, setBaseDesc] = useState("");
+  const [form] = Form.useForm();
+
+  const showModal = () => {
+    setIsModalOpen(true);
+  };
+  const handleOk = () => {
+    createKnowledge();
+  };
+  const handleCancel = () => {
+    setIsModalOpen(false);
+  };
+
+  const fetchData = async () => {
+    try {
+      const response = await fetch("/api/knowledge/list", {
+        method: "GET",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: localStorage.auth,
+        },
+      });
+
+      const data = await response.json();
+
+      if (data.total == 0) {
+        setData([]);
+        setLoading(false);
+        return;
+      }
+      setData(data.data);
+      setLoading(false);
+    } catch (error) {
+      console.error(error);
+      setLoading(false);
+    }
+  };
+
+  const createKnowledge = async () => {
+    try {
+      await form.validateFields(); // 验证表单
+      const response = await fetch("/api/knowledge/create", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: localStorage.auth,
+        },
+        body: JSON.stringify({
+          base_name: baseName,
+          base_desc: baseDesc,
+        }),
+      });
+
+      const data = await response.json();
+      if (data.msg === "知识库创建成功") {
+        console.log("创建成功");
+        toast.success("创建成功");
+        // 关闭弹窗
+        setIsModalOpen(false);
+        // 刷新页面
+        fetchData();
+
+        // 重置表单
+        setBaseName("");
+        setBaseDesc("");
+        form.resetFields();
+      } else {
+        console.log("创建失败");
+        toast.error("创建失败");
+      }
+    } catch (error) {
+      console.error(error);
+    }
+  };
 
   // 获取用户名
   useEffect(() => {
@@ -67,48 +154,8 @@ function KnowBasepage() {
 
   // 获取知识库列表
   useEffect(() => {
-    const fetchData = async () => {
-      try {
-        const response = await fetch("/api/knowledge/list", {
-          method: "GET",
-          headers: {
-            "Content-Type": "application/json",
-            Authorization: localStorage.auth,
-          },
-        });
-
-        const data = await response.json();
-
-        if (data.total == 0) {
-          setData([]);
-          setLoading(false);
-          return;
-        }
-        setData(data.data);
-        setLoading(false);
-      } catch (error) {
-        console.error(error);
-        setLoading(false);
-      }
-    };
     fetchData();
-  }, []);
-
-  const createKnowledge = async () => {
-    const response = await fetch("/api/knowledge/create", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        Authorization: localStorage.auth,
-      },
-      body: JSON.stringify({
-        base_name: "水声知识库",
-        base_desc: "这是知识库",
-      }),
-    });
-    const data = await response.json();
-    console.log(data);
-  };
+  }, [fetchData]);
 
   return (
     <div>
@@ -148,10 +195,53 @@ function KnowBasepage() {
                 type="primary"
                 size="middle"
                 icon={<PlusOutlined />}
-                onClick={createKnowledge}
+                onClick={showModal}
               >
                 添加新知识库
               </Button>
+              <Modal
+                title="创建新知识库"
+                okText="创建"
+                cancelText="取消"
+                open={isModalOpen}
+                onOk={handleOk} // 使用创建函数而不是直接关闭
+                onCancel={handleCancel}
+              >
+                {/* 使用 Form 包裹输入框 */}
+                <Form form={form} layout="vertical" name="knowledge_form">
+                  {/* 数据库名称输入框 */}
+                  <Form.Item
+                    label="数据库名称"
+                    name="baseName"
+                    rules={[
+                      { required: true, message: "数据库名称不能为空！" },
+                    ]} // 验证是否为空
+                  >
+                    <Input
+                      placeholder="请输入知识库名称"
+                      value={baseName}
+                      onChange={(e) => setBaseName(e.target.value)}
+                      className="mt-2 mb-2"
+                    />
+                  </Form.Item>
+
+                  {/* 数据库描述输入框 */}
+                  <Form.Item
+                    label="数据库描述"
+                    name="baseDesc"
+                    rules={[
+                      { required: true, message: "数据库描述不能为空！" },
+                    ]} // 验证是否为空
+                  >
+                    <Input
+                      placeholder="请输入知识库描述"
+                      value={baseDesc}
+                      onChange={(e) => setBaseDesc(e.target.value)}
+                      className="mt-2 mb-2"
+                    />
+                  </Form.Item>
+                </Form>
+              </Modal>
             </Space>
           </ConfigProvider>
         </div>
