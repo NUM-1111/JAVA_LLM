@@ -22,7 +22,7 @@ function Layout() {
         <Route path="/settings" element={<SettingsPage />} />
         <Route path="/forgot-password" element={<ForgotPasswordPage />} />
         <Route path="/introduce" element={<IntroducePage />} />
-        <Route path="/know-base" element={<KnowBasepage />} />
+        <Route path="/knowledge" element={<KnowBasepage />} />
         <Route path="/knowledge/dataset" element={<DatasetPage />} />
       </Routes>
       <ToastContainer />

@@ -42,7 +42,7 @@ func CreateKnowBase(c *gin.Context) {
 	basePath := config.KBRootPath + fmt.Sprintf("/%d/%d", s.UserID, baseID)
 	if err := utils.Makedir(basePath); err != nil {
 		log.Println(err)
-		c.JSON(http.StatusInternalServerError, gin.H{"msg": "创建知识库失败"})
+		c.JSON(http.StatusInternalServerError, gin.H{"msg": "创建知识库失败(路径)"})
 		return
 	}
 
@@ -58,7 +58,7 @@ func CreateKnowBase(c *gin.Context) {
 	result := db.DB.Create(&knowBase)
 	if result.Error != nil {
 		log.Println(result.Error)
-		c.JSON(http.StatusInternalServerError, gin.H{"msg": "创建知识库失败"})
+		c.JSON(http.StatusInternalServerError, gin.H{"msg": "创建知识库失败(底层)"})
 		return
 	}
 

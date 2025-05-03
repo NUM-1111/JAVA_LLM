@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useNavigate } from "react";
 import { fetchUsername } from "./chat/utils";
 import {
   EditOutlined,
@@ -52,7 +52,8 @@ function KnowBasepage() {
   const [username, setUsername] = useState("");
   const [loading, setLoading] = useState(false); // 加载中状态(有动画效果,后续可以优化)
   const { styles } = useStyle();
-  const [data, setData] = useState([]);
+    const [data, setData] = useState([]);
+    const navigate = useNavigate();
 
   // 获取用户名
   useEffect(() => {
@@ -80,7 +81,7 @@ function KnowBasepage() {
 
         const data = await response.json();
 
-        if (data.total === 0) {
+        if (data.total == 0) {
           setData([]);
           setLoading(false);
           return;
@@ -96,7 +97,7 @@ function KnowBasepage() {
   }, []);
     
     const createKnowledge = async () => {
-      try {
+      
         const response = await fetch(
           "/api/knowledge/create",
           {
@@ -111,15 +112,9 @@ function KnowBasepage() {
             }),
           }
         );
-
-        const data = await response.json();
-
-        if (data.success) {
-          setData([...data.data]);
-        }
-      } catch (error) {
-        console.error(error);
-      }
+          const data = await response.json();
+          console.log(data);
+      
     };
 
   return (
@@ -156,7 +151,12 @@ function KnowBasepage() {
             }}
           >
             <Space>
-              <Button type="primary" size="middle" icon={<PlusOutlined />} onClick={createKnowledge}>
+              <Button
+                type="primary"
+                size="middle"
+                icon={<PlusOutlined />}
+                onClick={createKnowledge}
+              >
                 添加新知识库
               </Button>
             </Space>
@@ -169,34 +169,22 @@ function KnowBasepage() {
         {/* 知识库列表 */}
         <div className="grid gap-6 grid-cols-1">
           <Flex gap="middle" align="start" wrap="wrap" vertical={false}>
-            <Card loading={loading} actions={actions} style={{ minWidth: 300 }}>
-              <Card.Meta
-                avatar={
-                  <Avatar src="https://api.dicebear.com/7.x/miniavs/svg?seed=1" />
-                }
-                title="水声知识库"
-                description={
-                  <>
-                    <p>这是知识库</p>
-                  </>
-                }
-              />
-            </Card>
             {data.map((item) => (
               <Card
-                key={item.id}
+                key={item.base_id}
                 loading={loading}
                 actions={actions}
-                style={{ minWidth: 300 }}
+                    style={{ minWidth: 300 }}
+                    onClick={() => navigate(`./knowledge/dataset?baseId=${item.base_id}`)}
               >
                 <Card.Meta
                   avatar={
                     <Avatar src="https://api.dicebear.com/7.x/miniavs/svg?seed=1" />
                   }
-                  title={item.name}
+                  title={item.base_name}
                   description={
                     <>
-                      <p>{item.description}</p>
+                      <p>{item.base_desc}</p>
                     </>
                   }
                 />
