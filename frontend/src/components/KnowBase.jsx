@@ -105,7 +105,7 @@ function KnowBasepage() {
 
   // 提交编辑表单
   const handleEditOk = () => {
-    editKnowledge(currentEditData.base_id);
+    editKnowledge(currentEditData.baseId);
   };
 
   // 打开删除弹窗并填充数据
@@ -122,7 +122,7 @@ function KnowBasepage() {
 
   // 提交删除表单
   const handleDeleteOk = () => {
-    deleteKnowledge(currentDeleteData.base_id);
+    deleteKnowledge(currentDeleteData.baseId);
   };
 
   /*
@@ -412,13 +412,13 @@ function KnowBasepage() {
               data.map((item) => (
                 <Card
                   className="hover:shadow-md"
-                  key={item.base_id}
+                  key={item.baseId}
                   loading={loading}
                   actions={[
                     <FullscreenOutlined
                       key="fullscreen"
                       onClick={() =>
-                        navigate(`/knowledge/dataset?baseId=${item.base_id}`)
+                        navigate(`/knowledge/dataset?baseId=${item.baseId}`)
                       }
                     />,
                     <EditOutlined
@@ -435,11 +435,11 @@ function KnowBasepage() {
                   <Card.Meta
                     avatar={
                       <Avatar
-                        src={`https://api.dicebear.com/7.x/miniavs/svg?seed=${item.base_id}`}
+                        src={`https://api.dicebear.com/7.x/miniavs/svg?seed=${item.baseId}`}
                       />
                     }
                     onClick={() =>
-                      navigate(`/knowledge/dataset?baseId=${item.base_id}`)
+                      navigate(`/knowledge/dataset?baseId=${item.baseId}`)
                     }
                     title={item.base_name}
                     description={

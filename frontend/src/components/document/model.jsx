@@ -12,7 +12,12 @@ export const docColumns = [
     align: "center",
     render: (_, record) => {
       return (
-        <Link to={`./detail?docId=${record.docId}`} className="text-blue-500">{record.doc_name}</Link>
+        <Link
+          to={`./detail?baseId=${record.baseId}&docId=${record.docId}`}
+          className="text-blue-500"
+        >
+          {record.doc_name}
+        </Link>
       );
     },
   },

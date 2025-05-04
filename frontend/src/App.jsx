@@ -25,7 +25,10 @@ function Layout() {
         <Route path="/introduce" element={<IntroducePage />} />
         <Route path="/knowledge" element={<KnowBasepage />} />
         <Route path="/knowledge/dataset" element={<DatasetPage />} />
-        <Route path="/:filepath" element={<FileShowPage />} />
+        <Route
+          path="/knowledge/dataset/detail"
+          element={<FileShowPage />}
+        />
       </Routes>
       <ToastContainer />
     </>
