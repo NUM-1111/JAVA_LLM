@@ -32,7 +32,7 @@ function FileShowPage() {
 
   useEffect(() => {
     if (baseId) {
-      GetBaseInfo(); 
+      GetBaseInfo();
     }
   }, [baseId]);
 
@@ -63,7 +63,7 @@ function FileShowPage() {
             }}
           ></div>
           <div className="flex flex-col h-4/5 overflow-x-hidden justify-between">
-            <DocSideBar />
+            <DocSideBar baseId={baseId} />
             <Button
               type="primary"
               className="mb-14 mx-2"

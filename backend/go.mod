@@ -107,7 +107,6 @@ require (
 	github.com/grpc-ecosystem/go-grpc-middleware v1.3.0 // indirect
 	github.com/kr/pretty v0.3.1 // indirect
 	github.com/milvus-io/milvus-proto/go-api/v2 v2.5.11 // indirect
-	github.com/milvus-io/milvus-sdk-go/v2 v2.4.2
 	github.com/pkg/errors v0.9.1 // indirect
 	github.com/tidwall/gjson v1.17.1 // indirect
 	github.com/tidwall/match v1.1.1 // indirect
