@@ -159,6 +159,7 @@ func UpdateKnowBase(c *gin.Context) {
 		c.JSON(http.StatusBadRequest, gin.H{"msg": "参数格式错误,更新失败"})
 		return
 	}
+	fmt.Println("update BaseName: ", req.BaseName, " BaseDesc: ", req.BaseDesc)
 	result := db.DB.Where("base_id = ?", baseID).Updates(models.KnowledgeBase{
 		BaseName: req.BaseName,
 		BaseDesc: req.BaseDesc,
@@ -232,4 +233,34 @@ func DeleteKnowBase(c *gin.Context) {
 	}
 
 	c.JSON(200, gin.H{"msg": "删除知识库成功"})
+}
+
+//搜索知识库(通过BaseName)
+func SearchKnowBase(c *gin.Context) {
+	session, exists := c.Get("session")
+	if !exists {
+		c.JSON(http.StatusUnauthorized, gin.H{"msg": "无效的登录凭证"})
+		return
+	}
+	s, ok := session.(*models.Session)
+	if !ok {
+		c.JSON(http.StatusUnauthorized, gin.H{"msg": "身份认证失败"})
+		return
+	}
+	var req request.BaseSearchRequest
+	if err := c.ShouldBindJSON(&req); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"msg": "参数格式错误,搜索失败"})
+		return
+	}
+	var knowBaseList []models.KnowledgeBase
+	err := db.DB.Where("user_id = ? AND base_name LIKE ?", s.UserID, "%"+req.BaseName+"%").Find(&knowBaseList).Error
+	if err != nil {
+		if err == gorm.ErrRecordNotFound {
+			c.JSON(http.StatusNotFound, gin.H{"msg": "找不到要搜索的知识库", "data": nil, "total": 0})
+		} else {
+			c.JSON(http.StatusInternalServerError, gin.H{"msg": "搜索知识库失败"})
+		}
+		return
+	}
+	c.JSON(http.StatusOK, gin.H{"msg": "搜索成功", "data": knowBaseList, "total": len(knowBaseList)})
 }

@@ -10,6 +10,10 @@ type BaseUpdateRequest struct {
 	BaseDesc string `json:"base_desc,omitempty"`
 }
 
+type BaseSearchRequest struct {
+	BaseName string `json:"base_name"`
+}
+
 type DocDeleteRequest struct {
 	BaseID int64 `json:"baseId,string"`
 	DocID  int64 `json:"docId,string"`

@@ -51,6 +51,7 @@ func SetupRoutes(r *gin.Engine) {
 	baseGroup.GET("/list", services.GetKnowBaseList)                       // 查询知识库列表
 	baseGroup.DELETE("/delete/:id", services.DeleteKnowBase)                  // 删除知识库
 	baseGroup.PUT("/edit/:id", services.UpdateKnowBase)                   // 更新知识库
+	baseGroup.POST("/search",services.SearchKnowBase)                     // 搜索知识库
 	baseGroup.POST("/upload/file", services.UploadFile)                    // 上传单个文件到知识库
 	baseGroup.GET("/document/list", services.GetFileList)                  // 查询文件列表
 	baseGroup.POST("/document/change/status", services.UpdateEnableStatus) // 更新启用状态
