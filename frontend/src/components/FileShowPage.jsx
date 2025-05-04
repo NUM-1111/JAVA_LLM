@@ -165,7 +165,7 @@ function FileShowPage() {
             ) : (
               <>
                 {docSlice.map((slice) => (
-                  <Card key={slice.id} style={{ width: "100%" }}>
+                  <Card key={slice.chunk_id} style={{ width: "100%" }}>
                     <p>{slice.content}</p>
                   </Card>
                 ))}

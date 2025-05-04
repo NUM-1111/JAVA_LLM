@@ -11,8 +11,6 @@ import {
   ArrowUpIcon,
   StopIcon,
   ImageUpLoadIcon,
-  CycleIcon,
-  CopyIcon,
 } from "./svg-icons";
 import HeadBar from "./chat/HeadBar";
 import SideBar from "./chat/Sidebar";
@@ -36,7 +34,9 @@ function ChatPage() {
   const bottomRef = useRef(null);
   const chatContainerRef = useRef(null);
   const [shouldAutoScroll, setShouldAutoScroll] = useState(true);
-
+  // 知识库
+  const [currentBase, setCurrentBase] = useState({});
+  const baseIdRef = useRef(null);
   //处理上传图片
   const fileInputRef = useRef(null);
 
@@ -116,6 +116,9 @@ function ChatPage() {
 
       setDeepThink(location.state?.useDeepTink || false);
       setSelectedCode(location.state?.selectedCode || 1);
+      const base = location.state.currentBase;
+      setCurrentBase(base || {});
+      baseIdRef.current = base.baseId;
     } else {
       const fetchMessages = async () => {
         try {
@@ -187,6 +190,7 @@ function ChatPage() {
     abortController.current = new AbortController();
 
     try {
+      console.log(baseIdRef.current)
       const response = await fetch("/api/new/message", {
         method: "POST",
         headers: {
@@ -198,6 +202,7 @@ function ChatPage() {
           message: userMessage.message,
           message_id: userMessage.message_id,
           conversation_id: userMessage.conversation_id,
+          baseId: baseIdRef.current,
           parent: userMessage.parent,
           model: aiMessage.message.model,
           use_deep_think: deepThink,
@@ -331,6 +336,8 @@ function ChatPage() {
           setIsOpen={setIsOpen}
           selectedCode={selectedCode}
           setSelectedCode={setSelectedCode}
+          currentBase={currentBase}
+          setCurrentBase={setCurrentBase}
         />
 
         {/* 可滚动的主内容区域 */}
