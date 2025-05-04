@@ -11,6 +11,7 @@ import ForgotPasswordPage from "./components/user/ForgotPassword";
 import IntroducePage from "./components/IntroducePage";
 import KnowBasepage from "./components/KnowBase";
 import DatasetPage from "./components/DatasetPage";
+import FileShowPage from "./components/FileShowPage";
 function Layout() {
   return (
     <>
@@ -24,6 +25,7 @@ function Layout() {
         <Route path="/introduce" element={<IntroducePage />} />
         <Route path="/knowledge" element={<KnowBasepage />} />
         <Route path="/knowledge/dataset" element={<DatasetPage />} />
+        <Route path="/:filepath" element={<FileShowPage />} />
       </Routes>
       <ToastContainer />
     </>
