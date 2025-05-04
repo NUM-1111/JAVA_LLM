@@ -32,3 +32,16 @@ type DocUpdateName struct {
 type DocSearchRequest struct {
 	DocName string `json:"doc_name"`
 	}
+type FileParseRequest struct {
+	DocID    int64  `json:"document_id,string"`
+	FilePath string `json:"process_document"`
+}
+
+type FileParseResult struct {
+	Type     string `json:"type"`
+	Message  string `json:"message"`
+	DocID    int64  `json:"document_id,string,omitempty"`
+	FilePath string `json:"file_path,omitempty"`
+	Pages    int    `json:"pages,omitempty"`
+	Chunks   int    `json:"chunks,omitempty"`
+}

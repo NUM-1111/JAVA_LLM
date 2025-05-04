@@ -163,12 +163,22 @@ function HeadBar({ isOpen, setIsOpen, selectedCode, setSelectedCode }) {
 
       {/* 右侧登录/注册按钮 --- 登录成功后为用户功能菜单 */}
       <div className="flex flex-row justify-center items-center gap-2">
+        <button
+          className="flex flex-row items-center gap-1 mr-1 sm:mr-4 hover:opacity-75 text-gray-800"
+          onClick={() => navigate("/introduce")}
+        >
+          <ShareIcon className={"size-4 mt-[1px] scale-105"} />
+          <div className="inline-flex">
+            <span className="text-base">关于</span>
+            <span className="text-base hidden sm:block">我们</span>
+          </div>
+        </button>
         {isLoggedIn ? (
           // 用户已登录，显示用户菜单
           <div className="relative">
             {/* 点击按钮展开/收起菜单 */}
             <button
-              className="px-4 py-[0.40rem] rounded-full bg-blue-500 text-white border border-blue-500 hover:bg-gray-50 hover:text-blue-500 hover:border-blue-500  transition duration-200"
+              className="px-4 py-[0.30rem] rounded-full bg-blue-500 text-white border border-blue-500 hover:bg-gray-50 hover:text-blue-500 hover:border-blue-500  transition duration-200"
               onClick={() => setMenuOpen(!menuOpen)}
             >
               {username.slice(0, 8) || "Guest"}
@@ -206,16 +216,6 @@ function HeadBar({ isOpen, setIsOpen, selectedCode, setSelectedCode }) {
         ) : (
           // 未登录，显示登录/注册按钮
           <div className="absolute right-6 lg:relative lg:right-0 flex flex-row gap-1">
-            <button
-              className="flex flex-row items-center gap-1 mr-1 sm:mr-4 hover:opacity-75 text-gray-800"
-              onClick={() => navigate("/introduce")}
-            >
-              <ShareIcon className={"size-4 mt-[1px] scale-105"} />
-              <div className="inline-flex">
-                <span className="text-base">关于</span>
-                <span className="text-base hidden sm:block">我们</span>
-              </div>
-            </button>
             <button
               className="px-3 py-[0.25rem] justify-center items-center sm:px-4 sm:py-[0.40rem] rounded-full bg-blue-500 border-blue-500 border text-white hover:text-blue-600 hover:bg-blue-200 transition"
               onClick={onLoginClick}
