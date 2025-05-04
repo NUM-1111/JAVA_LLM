@@ -13,7 +13,7 @@ import (
 	"go.mongodb.org/mongo-driver/mongo/options"
 )
 
-var client *mongo.Client
+var mongoClient *mongo.Client
 var Conversation *mongo.Collection
 var ChatMessage *mongo.Collection
 
@@ -25,26 +25,26 @@ func InitMongoDB(url string) {
 	ctx, cancel := context.WithTimeout(context.Background(), 20*time.Second)
 	defer cancel()
 	var err error
-	client, err = mongo.Connect(ctx, clientOptions)
+	mongoClient, err = mongo.Connect(ctx, clientOptions)
 	if err != nil {
 		panic(err)
 	}
 	// 验证连接
-	if err = client.Ping(ctx, nil); err != nil {
+	if err = mongoClient.Ping(ctx, nil); err != nil {
 		panic(err)
 	}
 	// 两个Collection分别存储会话和消息
-	Conversation = client.Database("users_db").Collection("conversation")
-	ChatMessage = client.Database("users_db").Collection("chat_message")
+	Conversation = mongoClient.Database("users_db").Collection("conversation")
+	ChatMessage = mongoClient.Database("users_db").Collection("chat_message")
 	log.Println("[Mongo] service is running.")
 }
 
 func CloseMongoDB() {
-	if client != nil {
+	if mongoClient != nil {
 		// 创建专用关闭上下文
 		ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 		defer cancel()
-		if err := client.Disconnect(ctx); err != nil {
+		if err := mongoClient.Disconnect(ctx); err != nil {
 			log.Printf("MongoDB关闭异常: %v", err)
 		}
 	}

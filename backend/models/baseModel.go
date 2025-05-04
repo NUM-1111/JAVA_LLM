@@ -50,6 +50,12 @@ type Document struct {
 	UpdatedAt  time.Time   `gorm:"not null" json:"updated_at"`     // 文档更新时间
 }
 
+// 向量数据库存储的文件分块
+type FileChunk struct {
+	ID      string `json:"chunk_id"`
+	Content string `json:"content"`
+}
+
 // 文档切片结构体(用于后续向量化处理,目前暂时不用)
 /*
 type Chunk struct{

@@ -25,6 +25,10 @@ func main() {
 	db.InitRedis(&config.RedisOpt)
 	defer db.CloseRedis()
 
+	// 启动Milvus
+	db.InitMilvus(config.MilvusAddr)
+	defer db.CloseMilvus()
+
 	// 启动gRPC
 	middleware.InitGRPCConn()
 	defer middleware.CloseGRPCConn()
