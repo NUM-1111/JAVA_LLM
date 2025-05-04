@@ -1,9 +1,19 @@
 package utils
 
 import (
+	"Go_LLM_Web/db"
+	"Go_LLM_Web/middleware"
+	pb "Go_LLM_Web/middleware/streamservice"
 	"Go_LLM_Web/models"
+	"Go_LLM_Web/models/request"
+	"context"
+	"encoding/json"
+	"fmt"
+	"io"
+	"log"
 	"os"
 	"strings"
+	"time"
 )
 
 // PathExists 判断路径是否存在（文件或目录都可以）
@@ -53,5 +63,56 @@ func GetFileTypeBySuffix(suffix string) models.FileType {
 		return models.DocTypeMarkdown
 	default:
 		return models.DocTypeOther
+	}
+}
+
+// 请求解析文件
+func FileParse(docId int64, path string) {
+	ctx := context.Background()
+
+	// 生成gRPC客户端
+	var client = middleware.NewStreamClient()
+
+	// 转换为JSON
+	jsonData, err := json.Marshal(request.FileParseRequest{
+		DocID:    docId,
+		FilePath: path,
+	})
+	if err != nil {
+		log.Printf("转换JSON失败: %v", err)
+	}
+	// 发送请求
+	fmt.Println("正在解析文件 -> id:", docId)
+	for true {
+		stream, err := client.ProcessRequest(ctx, &pb.Request{JsonData: string(jsonData)})
+		if err != nil {
+			log.Println("调用gRPC服务失败:", err)
+			return
+		}
+		resp, err := stream.Recv()
+		if err != nil && err != io.EOF {
+			log.Printf("gRPC 读取失败: %v", err)
+			return
+		}
+		var result request.FileParseResult
+		err = json.Unmarshal([]byte(resp.GetData()), &result)
+		if err != nil {
+			log.Println("结果解析失败: %v", err)
+			return
+		}
+		if result.Type == "document_processed" {
+			db.DB.Model(&models.Document{}).Where("doc_id = ?", docId).Updates(&models.Document{
+				Status:      models.Success,
+				TotalChunks: result.Chunks,
+			})
+			return
+		} else if result.Type == "error" {
+			db.DB.Model(&models.Document{}).Where("doc_id = ?", docId).Updates(&models.Document{
+				Status:      models.Failure,
+				TotalChunks: 0,
+			})
+			return
+		}
+		time.Sleep(1 * time.Second)
 	}
 }

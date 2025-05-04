@@ -38,16 +38,17 @@ type KnowledgeBase struct {
 
 // 文档结构体(属于某一个知识库)
 type Document struct {
-	DocID      int64       `gorm:"primaryKey" json:"docId,string"` //文档ID,主键
-	BaseID     int64       `gorm:"not null" json:"baseId,string"`  // 知识库ID，可作为外键关联到 know_base 表
-	DocName    string      `gorm:"not null" json:"doc_name"`       // 文档名称
-	FileSuffix string      `gorm:"not null" json:"-"`              // 文档后缀名
-	FileType   FileType    `gorm:"not null" json:"file_type"`      // 文档类型
-	FilePath   string      `gorm:"not null" json:"-"`              // 文档路径
-	IsEnabled  bool        `gorm:"not null" json:"is_enabled"`     // 是否启用
-	Status     ParseStatus `gorm:"not null" json:"status"`         // 解析状态
-	CreatedAt  time.Time   `gorm:"not null" json:"created_at"`     // 文档创建时间
-	UpdatedAt  time.Time   `gorm:"not null" json:"updated_at"`     // 文档更新时间
+	DocID       int64       `gorm:"primaryKey" json:"docId,string"` //文档ID,主键
+	BaseID      int64       `gorm:"not null" json:"baseId,string"`  // 知识库ID，可作为外键关联到 know_base 表
+	DocName     string      `gorm:"not null" json:"doc_name"`       // 文档名称
+	FileSuffix  string      `gorm:"not null" json:"-"`              // 文档后缀名
+	FileType    FileType    `gorm:"not null" json:"file_type"`      // 文档类型
+	FilePath    string      `gorm:"not null" json:"-"`              // 文档路径
+	IsEnabled   bool        `gorm:"not null" json:"is_enabled"`     // 是否启用
+	Status      ParseStatus `gorm:"not null" json:"status"`         // 解析状态
+	TotalChunks int         `gorm:"not null" json:"total_chunks"`   //chunk总数
+	CreatedAt   time.Time   `gorm:"not null" json:"created_at"`     // 文档创建时间
+	UpdatedAt   time.Time   `gorm:"not null" json:"updated_at"`     // 文档更新时间
 }
 
 // 向量数据库存储的文件分块

@@ -66,19 +66,24 @@ func UploadFile(c *gin.Context) {
 	}
 	// 创建文件记录
 	var doc = models.Document{
-		DocID:      docID,
-		BaseID:     baseID,
-		DocName:    filename,
-		FileSuffix: fileSuffix,
-		FileType:   utils.GetFileTypeBySuffix(fileSuffix),
-		FilePath:   filePath,
-		IsEnabled:  true,
-		Status:     models.None,
+		DocID:       docID,
+		BaseID:      baseID,
+		DocName:     filename,
+		FileSuffix:  fileSuffix,
+		FileType:    utils.GetFileTypeBySuffix(fileSuffix),
+		FilePath:    filePath,
+		IsEnabled:   true,
+		Status:      models.None,
+		TotalChunks: 0,
 	}
+
 	if err := db.DB.Create(&doc).Error; err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"msg": "文件保存失败"})
 		return
 	}
+	// 开始解析文件
+	go utils.FileParse(docID, filePath)
+
 	c.JSON(http.StatusOK, gin.H{"msg": "文件上传成功"})
 }
 

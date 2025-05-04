@@ -57,7 +57,7 @@ var (
 	EmailExpire = 5                                        // 验证码过期时间
 
 	// 知识库存储根目录
-	KBRootPath = "./data/KnowledgeBase"
+	KBRootPath string
 )
 
 func init() {
@@ -66,7 +66,12 @@ func init() {
 	if err != nil {
 		log.Fatalf("Error loading .env file. err:%s", err)
 	}
-
+	// 知识库
+	workPath, err := os.Getwd()
+	if err != nil {
+		log.Panicln(err)
+	}
+	KBRootPath = workPath + "/data/KnowledgeBase"
 	//Postgres
 	PG_dsn = fmt.Sprintf("host=%s user=%s password=%s dbname=%s port=%s sslmode=disable",
 		os.Getenv("POSTGRES_HOST"), os.Getenv("POSTGRES_USER"), os.Getenv("POSTGRES_PASSWORD"), os.Getenv("POSTGRES_DB"), os.Getenv("POSTGRES_PORT"))

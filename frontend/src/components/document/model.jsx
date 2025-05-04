@@ -45,10 +45,13 @@ export const docColumns = [
     render: (_, record) => {
       let color;
       switch (record.status) {
+        case 0:
+          color = "geekblue";
+          break;
         case 1:
           color = "green";
           break;
-        case 3:
+        case 2:
           color = "volcano";
           break;
         default:

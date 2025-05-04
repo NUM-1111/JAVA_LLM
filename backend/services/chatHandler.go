@@ -89,7 +89,6 @@ func handleChunk(w io.Writer, rawChunk any) bool {
 	// 显式刷新缓冲区
 	if f, ok := w.(http.Flusher); ok {
 		f.Flush()
-		//time.Sleep(100 * time.Millisecond) // 强制拆分
 	}
 	//fmt.Println("流式响应:", rawChunk)
 	return true
