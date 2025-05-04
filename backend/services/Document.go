@@ -107,16 +107,16 @@ func GetFileList(c *gin.Context) {
 		return
 	}
 	// 验证知识库是否存在
-	var count int64
+	var baseCount int64
 	err = db.DB.Model(&models.KnowledgeBase{}).
 		Where("base_id = ? AND user_id = ?", baseID, s.UserID).
 		Limit(1).
-		Count(&count).Error
+		Count(&baseCount).Error
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"msg": "查找知识库失败"})
 		return
 	}
-	if count == 0 {
+	if baseCount == 0 {
 		c.JSON(http.StatusNotFound, gin.H{"msg": "找不到对应的知识库"})
 		return
 	}
@@ -127,12 +127,20 @@ func GetFileList(c *gin.Context) {
 		Where("base_id = ? AND doc_name LIKE ?", baseID, search).
 		Offset(offset).
 		Limit(limit).
+		//Order("created_at ASC").
 		Find(&docs).Error
 	if err != nil && err != gorm.ErrRecordNotFound {
 		c.JSON(http.StatusInternalServerError, gin.H{"msg": "查找知识库文件失败"})
 		return
 	}
-	c.JSON(http.StatusOK, gin.H{"msg": "文件查找成功", "data": docs, "total": len(docs)})
+	// 查询总文件数
+	var count int64
+	err = db.DB.Model(&models.Document{}).Where("base_id = ? AND doc_name LIKE ?", baseID, search).Count(&count).Error
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"msg": "查找知识库文件失败"})
+		return
+	}
+	c.JSON(http.StatusOK, gin.H{"msg": "文件查找成功", "data": docs, "total": count})
 }
 
 // 更新文件启用状态

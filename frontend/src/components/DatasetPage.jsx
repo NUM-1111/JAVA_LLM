@@ -1,7 +1,7 @@
 import { useLocation, useNavigate } from "react-router-dom";
 import { useEffect, useState } from "react";
 import DocSideBar from "./document/SideBar";
-import { Button, Space, Table, Input, Switch, message } from "antd";
+import { Button, Space, Table, Input, Switch, Pagination, message } from "antd";
 import { docColumns } from "./document/model";
 import { ReloadOutlined } from "@ant-design/icons";
 import { AddIcon } from "@/components/svg-icons";
@@ -84,11 +84,9 @@ function DatasetPage() {
         prev.file_type = MatchFileType(prev.file_type);
         return prev;
       });
+      console.log(res.data.total);
       setFileList(files);
-      setPagination((prev) => ({
-        ...prev,
-        total: res.data.total,
-      }));
+      setPagination({ ...pagination, total: res.data.total });
     } catch (err) {
       console.error(err);
       if (err.response?.status === 401) {
@@ -115,7 +113,6 @@ function DatasetPage() {
       is_enabled: checked,
     };
     try {
-      setLoading(true);
       const res = await axios.post(
         `/api/knowledge/document/change/status`,
         postdata,
@@ -148,8 +145,6 @@ function DatasetPage() {
         err.response?.data?.msg ||
         "请求失败,请稍后再试 !";
       messageApi.error(msg);
-    } finally {
-      setLoading(false);
     }
   };
 
@@ -159,7 +154,7 @@ function DatasetPage() {
 
   useEffect(() => {
     GetFileList();
-  }, [pagination.pageSize, doSearch, refresh]);
+  }, [pagination.current, doSearch, refresh]);
 
   return (
     <>
@@ -203,7 +198,7 @@ function DatasetPage() {
                 value={searchText}
                 onSearch={() => {
                   setDoSearch((prev) => prev + 1);
-                  setPagination((prev) => ({ ...prev, current: 1 }));
+                  setPagination({ ...pagination, current: 1 });
                 }}
                 onChange={(e) => {
                   const value = e.target.value;
@@ -245,11 +240,12 @@ function DatasetPage() {
               messageApi={messageApi}
             />
           </div>
-          <div className="overflow-y-hidden border rounded-t-md shadow-sm">
+          <div className="overflow-y-auto border rounded-t-md shadow-sm">
             <Table
               bordered
               rowKey="docId"
               loading={loading}
+              pagination={false}
               columns={[
                 ...docColumns,
                 {
@@ -312,6 +308,19 @@ function DatasetPage() {
                 },
               ]}
               dataSource={fileList}
+            />
+          </div>
+          <div className="flex justify-end pb-2">
+            <Pagination
+              current={pagination.current}
+              total={pagination.total}
+              pageSize={pagination.pageSize}
+              onChange={(current) =>
+                setPagination({
+                  ...pagination,
+                  current: current,
+                })
+              }
             />
           </div>
         </div>
