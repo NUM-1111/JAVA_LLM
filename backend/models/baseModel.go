@@ -29,7 +29,7 @@ type KnowledgeBase struct {
 	BaseID    int64      `gorm:"primaryKey" json:"base_id,string"` //知识库ID,主键
 	UserID    int64      `gorm:"not null" json:"-"`                // 用户ID，可作为外键关联到 users 表
 	BaseName  string     `gorm:"not null" json:"base_name"`        // 知识库名称
-	BaseDesc  string     ` json:"base_desc"`        // 知识库描述,可为空
+	BaseDesc  string     ` json:"base_desc"`                       // 知识库描述,可为空
 	BasePath  string     `gorm:"not null" json:"-"`                // 知识库存储路径
 	CreatedAt time.Time  `gorm:"not null" json:"created_at"`       // 知识库创建时间
 	UpdatedAt time.Time  `gorm:"not null" json:"updated_at"`       // 知识库更新时间
@@ -48,6 +48,12 @@ type Document struct {
 	Status     ParseStatus `gorm:"not null" json:"status"`         // 解析状态
 	CreatedAt  time.Time   `gorm:"not null" json:"created_at"`     // 文档创建时间
 	UpdatedAt  time.Time   `gorm:"not null" json:"updated_at"`     // 文档更新时间
+}
+
+// 向量数据库存储的文件分块
+type FileChunk struct {
+	ID      string `json:"chunk_id"`
+	Content string `json:"content"`
 }
 
 // 文档切片结构体(用于后续向量化处理,目前暂时不用)

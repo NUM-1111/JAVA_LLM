@@ -1,6 +1,7 @@
 package services
 
 import (
+	"Go_LLM_Web/config"
 	"Go_LLM_Web/db"
 	"Go_LLM_Web/models"
 	"Go_LLM_Web/models/request"
@@ -12,6 +13,7 @@ import (
 	"strconv"
 
 	"github.com/gin-gonic/gin"
+	"github.com/milvus-io/milvus/client/v2/milvusclient"
 	"gorm.io/gorm"
 )
 
@@ -246,4 +248,49 @@ func DeleteFile(c *gin.Context) {
 		return
 	}
 	c.JSON(http.StatusOK, gin.H{"msg": "文件删除成功"})
+}
+
+// 查找文件分块内容
+func GetFileDetail(c *gin.Context) {
+	ctx := c.Request.Context()
+	// 获取doc id
+	idStr, offsetStr, limitStr, searchText := c.Query("docId"), c.Query("offset"), c.Query("limit"), c.Query("search")
+	docId, err := strconv.ParseInt(idStr, 10, 64)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"msg": "无效的知识库ID"})
+		return
+	}
+	// 获取查询参数
+	offset, err1 := strconv.Atoi(offsetStr)
+	limit, err2 := strconv.Atoi(limitStr)
+	if err1 != nil || err2 != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"msg": "无效的查询参数"})
+		return
+	}
+	// 查询向量库
+	filter := fmt.Sprintf("id like '%d%%' && content like '%%%s%%'", docId, searchText)
+	queryOpt := milvusclient.NewQueryOption(config.MilvusDB).
+		WithFilter(filter).
+		WithOffset(offset).               // 分页偏移
+		WithLimit(limit).                 // 分页大小
+		WithOutputFields("id", "content") // 返回字段
+
+	queryResult, err := db.Milvus.Query(ctx, queryOpt)
+	if err != nil {
+		log.Println(err)
+		c.JSON(http.StatusInternalServerError, gin.H{"msg": "文档内容获取失败"})
+		return
+	}
+	// 提取字段列
+	ids := queryResult.GetColumn("id").FieldData().GetScalars().GetStringData().Data
+	contents := queryResult.GetColumn("content").FieldData().GetScalars().GetStringData().Data
+	var fileChunks []models.FileChunk
+	for i := range ids {
+		var chunk = models.FileChunk{
+			ID:      ids[i],
+			Content: contents[i],
+		}
+		fileChunks = append(fileChunks, chunk)
+	}
+	c.JSON(http.StatusOK, gin.H{"msg": "获取成功", "data": fileChunks})
 }
