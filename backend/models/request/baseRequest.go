@@ -28,3 +28,7 @@ type DocUpdateName struct {
 	DocID   int64  `json:"docId,string"`
 	DocName string `json:"doc_name"`
 }
+
+type DocSearchRequest struct {
+	DocName string `json:"doc_name"`
+	}

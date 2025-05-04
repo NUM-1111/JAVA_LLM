@@ -58,4 +58,5 @@ func SetupRoutes(r *gin.Engine) {
 	baseGroup.POST("/document/rename", services.RenameFile)                // 文件重命名
 	baseGroup.POST("/delete/document", services.DeleteFile)                // 删除单个文件
 	baseGroup.GET("/document/detail", services.GetFileDetail)              // 查询文件分块内容
+	baseGroup.GET("/document/:id", services.GetFileName)
 }

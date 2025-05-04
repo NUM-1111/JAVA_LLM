@@ -294,3 +294,27 @@ func GetFileDetail(c *gin.Context) {
 	}
 	c.JSON(http.StatusOK, gin.H{"msg": "获取成功", "data": fileChunks})
 }
+
+//根据文件id获取文件名称
+func GetFileName(c *gin.Context) {
+	idParam := c.Param("id")
+	docId, err := strconv.ParseInt(idParam, 10, 64)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"msg": "无效的文档ID"})
+		return
+	}
+
+	var doc models.Document
+	err = db.DB.Where("doc_id = ?", docId).First(&doc).Error
+	if err != nil {
+		fmt.Println(err)
+		fmt.Println(docId)
+		if err == gorm.ErrRecordNotFound {
+			c.JSON(http.StatusNotFound, gin.H{"msg": "找不到对应的文档!"})
+		} else {
+			c.JSON(http.StatusInternalServerError, gin.H{"msg": "查找文档失败"})
+		}
+		return
+	}
+	c.JSON(http.StatusOK, gin.H{"msg": "获取成功", "data": doc.DocName})
+}
