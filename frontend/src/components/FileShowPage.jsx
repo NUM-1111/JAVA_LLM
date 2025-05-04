@@ -1,6 +1,6 @@
 import DocSideBar from "./document/SideBar";
 import { useSearchParams, useNavigate } from "react-router-dom";
-import { Button, Input, Space, Card } from "antd";
+import { Button, Input, Space, Card, Pagination } from "antd";
 import { FileTextOutlined, ArrowLeftOutlined } from "@ant-design/icons";
 import axios from "axios";
 import { useEffect, useState } from "react";
@@ -17,6 +17,8 @@ function FileShowPage() {
   const baseId = searchParams.get("baseId");
   const navigate = useNavigate();
   const [docSlice, setDocSlice] = useState([]);
+  const [totalSlice, setTotalSlice] = useState(0); // 总数
+  const [page, setPage] = useState(1); // 当前页码
   const [loading, setLoading] = useState(false);
 
   // 获取知识库信息
@@ -60,16 +62,20 @@ function FileShowPage() {
     try {
       setLoading(true);
       const res = await axios.get(
-        `/api/knowledge/document/detail?docId=${docId}`,
+        `/api/knowledge/document/detail?docId=${docId}&limit=10&offset=${
+          (page - 1) * 10
+        }`,
         {
           headers: {
             Authorization: localStorage.auth,
           },
         }
       );
-      const data = res.data.data;
-      console.log(data);
-      setDocSlice(data);
+        console.log(res);
+        const data = res.data;
+        console.log(data);
+      setDocSlice(data.data || []); 
+      setTotalSlice(data.total || 0); 
     } catch (err) {
       console.error(err);
     } finally {
@@ -88,7 +94,11 @@ function FileShowPage() {
       GetDocName();
       GetDocSlice();
     }
-  }, [docId]);
+  }, [docId, page]);
+    
+    const handlePageChange = (pageNum) => {
+      setPage(pageNum);
+    };
 
   return (
     <div className="flex flex-row w-full h-full">
@@ -148,13 +158,27 @@ function FileShowPage() {
               <div className="flex flex-col items-center justify-center h-full">
                 <p>Loading...</p>
               </div>
+            ) : (docSlice.length === 0? (
+              <div className="flex flex-col items-center justify-center h-full">
+                <p>暂无内容</p>
+              </div>
             ) : (
-              docSlice.map((slice) => (
-                <Card key={slice.id} style={{ width: "100%" }}>
-                  <p>{slice.content}</p>
-                </Card>
-              ))
-            )}
+              <>
+                {docSlice.map((slice) => (
+                  <Card key={slice.id} style={{ width: "100%" }}>
+                    <p>{slice.content}</p>
+                  </Card>
+                ))}
+                <Pagination
+                  className="mt-4 justify-end  border-gray-300"
+                  current={page}
+                  pageSize={10}
+                  total={totalSlice}
+                  onChange={handlePageChange}
+                  showSizeChanger={false}
+                />
+              </>
+            ))}
           </div>
           {/*搜索查找区 */}
           <div className="flex flex-col w-full h-full mt-8 items-center">
