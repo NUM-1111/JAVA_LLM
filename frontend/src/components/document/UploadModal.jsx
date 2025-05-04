@@ -24,12 +24,19 @@ function UploadDocModal({ open, baseId, onRefresh, onCancel, messageApi }) {
     });
 
     try {
-      await axios.post(`/api/knowledge/upload/file?baseId=${baseId}`, formData, {
-        headers: {
-          "Content-Type": "multipart/form-data",
-          Authorization: localStorage.auth,
-        },
-      });
+      for (const file of fileList) {
+        const formData = new FormData();
+        formData.append("file", file.originFileObj);
+        await axios.post(
+          `/api/knowledge/upload/file?baseId=${baseId}`,
+          formData,
+          {
+            headers: {
+              Authorization: localStorage.auth,
+            },
+          }
+        );
+      }
 
       messageApi.success("上传成功！");
       setFileList([]);
@@ -73,7 +80,9 @@ function UploadDocModal({ open, baseId, onRefresh, onCancel, messageApi }) {
             <InboxOutlined />
           </p>
           <p className="ant-upload-text">点击或拖拽上传文件</p>
-          <p className="ant-upload-hint">支持选择单个或多个文件，点击“上传”统一提交</p>
+          <p className="ant-upload-hint">
+            支持选择单个或多个文件，点击“上传”统一提交
+          </p>
         </div>
       </Dragger>
     </Modal>
