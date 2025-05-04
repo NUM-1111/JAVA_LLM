@@ -83,12 +83,12 @@ func FileParse(docId int64, path string) {
 	}
 	// 发送请求
 	fmt.Println("正在解析文件 -> id:", docId)
+	stream, err := client.ProcessRequest(ctx, &pb.Request{JsonData: string(jsonData)})
+	if err != nil {
+		log.Println("调用gRPC服务失败:", err)
+		return
+	}
 	for true {
-		stream, err := client.ProcessRequest(ctx, &pb.Request{JsonData: string(jsonData)})
-		if err != nil {
-			log.Println("调用gRPC服务失败:", err)
-			return
-		}
 		resp, err := stream.Recv()
 		if err != nil && err != io.EOF {
 			log.Printf("gRPC 读取失败: %v", err)
@@ -101,16 +101,30 @@ func FileParse(docId int64, path string) {
 			return
 		}
 		if result.Type == "document_processed" {
-			db.DB.Model(&models.Document{}).Where("doc_id = ?", docId).Updates(&models.Document{
+			result := db.DB.Model(&models.Document{}).Where("doc_id = ?", docId).Updates(&models.Document{
 				Status:      models.Success,
 				TotalChunks: result.Chunks,
 			})
+			if result.Error != nil {
+				log.Println("文件解析状态更新失败:", err.Error())
+			} else if result.RowsAffected == 0 {
+				log.Println("找不到要解析的文件")
+			} else {
+				log.Println("文件解析状态更新为\"成功\" -> id:", docId)
+			}
 			return
 		} else if result.Type == "error" {
-			db.DB.Model(&models.Document{}).Where("doc_id = ?", docId).Updates(&models.Document{
+			result := db.DB.Model(&models.Document{}).Where("doc_id = ?", docId).Updates(&models.Document{
 				Status:      models.Failure,
 				TotalChunks: 0,
 			})
+			if result.Error != nil {
+				log.Println("文件解析状态更新失败:", err.Error())
+			} else if result.RowsAffected == 0 {
+				log.Println("找不到要解析的文件")
+			} else {
+				log.Println("文件解析状态更新为\"失败\" -> id:", docId)
+			}
 			return
 		}
 		time.Sleep(1 * time.Second)

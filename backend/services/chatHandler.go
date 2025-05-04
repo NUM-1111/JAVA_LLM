@@ -21,6 +21,7 @@ import (
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/mongo"
 	"google.golang.org/grpc"
+	"gorm.io/gorm"
 )
 
 // 分块数据结构
@@ -33,8 +34,9 @@ type StreamChunk struct {
 
 // gRPC接口数据格式
 type GRPCData struct {
-	ConversationID string `json:"conversation_id"`
-	CurrentNode    string `json:"current_node"`
+	ConversationID string   `json:"conversation_id"`
+	CurrentNode    string   `json:"current_node"`
+	DocIDs         []string `json:"doc_ids,omitempty"`
 }
 
 // 添加流式响应头
@@ -132,7 +134,7 @@ func HandleNewMessage(c *gin.Context) {
 		UpdatedAt:      time.Now(),
 		Children:       make([]string, 0),
 	}
-	fmt.Println(user_chatMessage.Parent)
+
 	// 处理会话
 	conversation, err := db.FindOneConversation(ctx, bson.M{"user_id": user_id, "conversation_id": user_chatMessage.ConversationID})
 	if err == mongo.ErrNoDocuments {
@@ -206,14 +208,39 @@ func HandleNewMessage(c *gin.Context) {
 	}
 	fmt.Printf("插入成功，ID: %v\n", insertResult.InsertedID)
 
+	// 获取启用的doc id
+	base_id := chatRequest.BaseID
+	var docs []models.Document
+	var docIds []string
+	if base_id != 0 {
+		err = db.DB.Model(&models.Document{}).Where("base_id = ? AND status = 1 AND is_enabled = true", base_id).Find(&docs).Error
+		if err != nil {
+			if err == gorm.ErrRecordNotFound {
+				c.JSON(http.StatusNotFound, gin.H{"msg": "找不到指定的知识库"})
+			} else {
+				c.JSON(http.StatusInternalServerError, gin.H{"msg": "查找知识库失败"})
+			}
+			return
+		}
+		for _, doc := range docs {
+			docIds = append(docIds, string(doc.DocID))
+		}
+	}
+
 	// 生成gRPC客户端
 	var client = middleware.NewStreamClient()
 
 	// 将Conversation转换为JSON
-	jsonData, err := json.Marshal(GRPCData{
+	var postData = GRPCData{
 		ConversationID: conversation.ConversationID,
 		CurrentNode:    conversation.CurrentNode,
-	})
+	}
+	// 调用rag, 传递doc ids
+	if base_id != 0 {
+		log.Println(docIds)
+		postData.DocIDs = docIds
+	}
+	jsonData, err := json.Marshal(postData)
 	if err != nil {
 		log.Printf("转换JSON失败: %v", err)
 		c.JSON(http.StatusInternalServerError, gin.H{"msg": "conversation marshal failed."})
