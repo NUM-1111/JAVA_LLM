@@ -9,6 +9,7 @@ import {
   TrashIcon,
   RenameIcon,
 } from "../svg-icons";
+import { FileTextOutlined } from "@ant-design/icons";
 
 export default function SideBar({ isOpen, setIsOpen, finishText }) {
   const [conversations, setConversations] = useState([]); // 存储对话列表
@@ -138,19 +139,29 @@ export default function SideBar({ isOpen, setIsOpen, finishText }) {
             </button>
           </div>
         </header>
+        {/* 知识库模块 */}
+        <button
+          className="flex flex-row min-w-full mt-4  font-bold text-sm rounded-lg border border-gray-300 bg-gray-200 text-black  hover:bg-gray-200/20"
+          onClick={() => {
+            navigate("/knowledge");
+          }} // 跳转到新建对话页面
+        >
+          <div className="flex px-2 py-2.5">
+            <FileTextOutlined />
+          </div>
+          <div className="flex flex-col justify-center ml-2">我的知识库</div>
+        </button>
 
         {/* 新对话模块 */}
         <button
-          className="flex flex-row min-w-full mt-4 sm:mt-8 font-bold text-sm rounded-lg border border-blue-200 text-blue-600 bg-blue-500/15 hover:bg-blue-500/20"
+          className="flex flex-row min-w-full mt-4 font-bold text-sm rounded-lg border border-blue-200 text-blue-600 bg-blue-500/15 hover:bg-blue-500/20"
           onClick={() => {
             navigate("/");
           }} // 跳转到新建对话页面
         >
-          {/* AddIcon 图标 */}
           <div className="flex px-2 py-2.5">
             <AddIcon />
           </div>
-          {/* 新建对话按钮文字 */}
           <div className="flex flex-col justify-center ml-2">开启新对话</div>
         </button>
 
