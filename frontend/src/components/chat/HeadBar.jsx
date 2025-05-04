@@ -11,6 +11,7 @@ import {
   SelectedIcon,
   ShareIcon,
 } from "../svg-icons";
+import { Modal } from "antd";
 
 function HeadBar({ isOpen, setIsOpen, selectedCode, setSelectedCode }) {
   const modelRef = useRef(null);
@@ -69,6 +70,47 @@ function HeadBar({ isOpen, setIsOpen, selectedCode, setSelectedCode }) {
     navigate("/login");
   };
 
+  /*
+  获取知识库列表(查询接口)
+  */
+  const [data, setData] = useState([]);
+  const [showModals, setShowModals] = useState(false);
+  const [isuseBase, setIsuseBase] = useState(false)
+  const [currentBase, setCurrentBase] = useState(null)
+  
+  const handleOk = (item) => {
+    modelRef.current.focus();
+    setShowModals(false);
+    setIsuseBase(true)
+    setCurrentBase(item)
+  };
+  const handleCancel = () => {
+    modelRef.current.focus();
+    setShowModals(false);
+  };
+
+  const fetchData = async () => {
+    try {
+      const response = await fetch("/api/knowledge/list", {
+        method: "GET",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: localStorage.auth,
+        },
+      });
+
+      const data = await response.json();
+
+      if (data.total == 0) {
+        setData([]);
+        return;
+      }
+      setData(data.data);
+    } catch (error) {
+      console.error(error);
+    }
+  };
+
   return (
     <header className="sticky xl:absolute w-full z-20 top-0 flex flex-row px-5 py-3 bg-white justify-between items-center select-none xl:bg-transparent">
       {/* 左侧按钮 */}
@@ -122,7 +164,7 @@ function HeadBar({ isOpen, setIsOpen, selectedCode, setSelectedCode }) {
             }  transition`}
           >
             <span className="text-base sm:text-lg font-semibold text-gray-700 mr-5">
-              {models[selectedCode]}
+              {isuseBase? currentBase.base_name : models[selectedCode]}
             </span>
             <BreadcrumbIcon
               className={`${
@@ -137,7 +179,7 @@ function HeadBar({ isOpen, setIsOpen, selectedCode, setSelectedCode }) {
               id="selectModel"
             >
               <button
-                onClick={() => setSelectedCode(1)}
+                onClick={() => { setSelectedCode(1), setShowModels(false), setIsuseBase(false), setCurrentBase(null) }}
                 className={`flex flex-row w-full px-6 py-2 text-left whitespace-nowrap hover:bg-gray-100  items-start justify-between rounded-lg`}
               >
                 <div className="flex flex-col text-gray-800">
@@ -147,7 +189,7 @@ function HeadBar({ isOpen, setIsOpen, selectedCode, setSelectedCode }) {
                 {selectedCode === 1 && <SelectedIcon />}
               </button>
               <button
-                onClick={() => setSelectedCode(2)}
+                onClick={() => { setSelectedCode(2) , setShowModels(false), setIsuseBase(false), setCurrentBase(null) }}
                 className={`flex flex-row w-full px-6 py-2 text-left whitespace-nowrap hover:bg-gray-100 items-start justify-between rounded-lg`}
               >
                 <div className="flex flex-col text-gray-800">
@@ -156,10 +198,45 @@ function HeadBar({ isOpen, setIsOpen, selectedCode, setSelectedCode }) {
                 </div>
                 {selectedCode === 2 && <SelectedIcon />}
               </button>
+              <button
+                onClick={() => {setShowModals(true),fetchData()}}
+                className={`flex flex-row w-full px-6 py-2 text-left whitespace-nowrap hover:bg-gray-100 items-start justify-between rounded-lg`}
+              >
+                <div className="flex flex-col text-gray-800">
+                  <p className="text-sm font-semibold">知识库</p>
+                  <p className="text-xs">加强专业领域对话</p>
+                </div>
+              </button>
             </div>
           )}
         </div>
       </div>
+
+      <Modal
+        title="选择知识库"
+        open={showModals}
+        onOk={handleOk}
+        onCancel={handleCancel}
+        footer={null}
+        width={400}
+      >
+        {data.length === 0 ? (<p className="text-center text-gray-500">╮(╯▽╰)╭暂无知识库</p>) : (
+          (
+            data.map((item) => (
+              <button
+                key={item.baseId}
+                className="px-4 py-2 mt-1 bg-gray-100 hover:bg-gray-200 cursor-pointer w-full text-left rounded-md"
+                onClick={() => {
+                  setShowModels(false);
+                  setShowModals(false);
+                  setIsuseBase(true)
+                  setCurrentBase(item)
+                }}
+              >{item.base_name}</button>
+            ))
+          )
+        )}
+      </Modal>
 
       {/* 右侧登录/注册按钮 --- 登录成功后为用户功能菜单 */}
       <div className="flex flex-row justify-center items-center gap-2">
