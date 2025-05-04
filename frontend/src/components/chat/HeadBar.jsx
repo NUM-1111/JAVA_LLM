@@ -155,22 +155,34 @@ function HeadBar({ isOpen, setIsOpen, selectedCode, setSelectedCode }) {
       <div className="flex flex-1 justify-start sm:justify-center lg:justify-start mr-1">
         <div
           ref={modelRef}
-          className="relative group hover:bg-gray-100 rounded-lg w-fit"
+          className="relative group  rounded-lg w-fit flex flex-row"
         >
           <button
             onClick={() => setShowModels(!showModels)}
-            className={`relative flex flex-row items-center  px-2 py-2 rounded-lg justify-center min-w-24 sm:min-w-40 min-h-11  ${
+            className={`hover:bg-gray-100 relative flex flex-row items-center  px-2 py-2 rounded-lg justify-center min-w-24 sm:min-w-40 min-h-11  ${
               showModels ? "bg-gray-200" : ""
             }  transition`}
           >
             <span className="text-base sm:text-lg font-semibold text-gray-700 mr-5">
-              {isuseBase? currentBase.base_name : models[selectedCode]}
+              {models[selectedCode]}
             </span>
             <BreadcrumbIcon
               className={`${
                 showModels && "transform scale-y-[-1]"
               } absolute right-2 size-5 `}
             />
+          </button>
+          <button
+            onClick={() => {
+              setShowModals(true), fetchData();
+            }}
+            className={`flex flex-row w-full px-6 py-2 text-left whitespace-nowrap hover:bg-gray-100 items-start justify-between rounded-lg mt-1`}
+          >
+            <div className="flex flex-col text-gray-800">
+              <p className="text font-semibold">
+                {isuseBase ? currentBase.base_name : "未选择知识库"}
+              </p>
+            </div>
           </button>
           {/* 下拉菜单 */}
           {showModels && (
@@ -179,7 +191,9 @@ function HeadBar({ isOpen, setIsOpen, selectedCode, setSelectedCode }) {
               id="selectModel"
             >
               <button
-                onClick={() => { setSelectedCode(1), setShowModels(false), setIsuseBase(false), setCurrentBase(null) }}
+                onClick={() => {
+                  setSelectedCode(1), setShowModels(false);
+                }}
                 className={`flex flex-row w-full px-6 py-2 text-left whitespace-nowrap hover:bg-gray-100  items-start justify-between rounded-lg`}
               >
                 <div className="flex flex-col text-gray-800">
@@ -189,7 +203,9 @@ function HeadBar({ isOpen, setIsOpen, selectedCode, setSelectedCode }) {
                 {selectedCode === 1 && <SelectedIcon />}
               </button>
               <button
-                onClick={() => { setSelectedCode(2) , setShowModels(false), setIsuseBase(false), setCurrentBase(null) }}
+                onClick={() => {
+                  setSelectedCode(2), setShowModels(false);
+                }}
                 className={`flex flex-row w-full px-6 py-2 text-left whitespace-nowrap hover:bg-gray-100 items-start justify-between rounded-lg`}
               >
                 <div className="flex flex-col text-gray-800">
@@ -197,15 +213,6 @@ function HeadBar({ isOpen, setIsOpen, selectedCode, setSelectedCode }) {
                   <p className="text-xs">轻量化 性能媲美满血R1</p>
                 </div>
                 {selectedCode === 2 && <SelectedIcon />}
-              </button>
-              <button
-                onClick={() => {setShowModals(true),fetchData()}}
-                className={`flex flex-row w-full px-6 py-2 text-left whitespace-nowrap hover:bg-gray-100 items-start justify-between rounded-lg`}
-              >
-                <div className="flex flex-col text-gray-800">
-                  <p className="text-sm font-semibold">知识库</p>
-                  <p className="text-xs">加强专业领域对话</p>
-                </div>
               </button>
             </div>
           )}
@@ -219,22 +226,43 @@ function HeadBar({ isOpen, setIsOpen, selectedCode, setSelectedCode }) {
         onCancel={handleCancel}
         footer={null}
         width={400}
+        bodyStyle={{
+          maxHeight: "300px",
+          overflowY: "auto",
+          paddingRight: "8px",
+        }} // 关键点
       >
-        {data.length === 0 ? (<p className="text-center text-gray-500">╮(╯▽╰)╭暂无知识库</p>) : (
-          (
-            data.map((item) => (
+        {data.length === 0 ? (
+          <p className="text-center text-gray-500">╮(╯▽╰)╭暂无知识库</p>
+        ) : (
+          <>
+            {data.map((item) => (
               <button
                 key={item.baseId}
                 className="px-4 py-2 mt-1 bg-gray-100 hover:bg-gray-200 cursor-pointer w-full text-left rounded-md"
                 onClick={() => {
                   setShowModels(false);
                   setShowModals(false);
-                  setIsuseBase(true)
-                  setCurrentBase(item)
+                  setIsuseBase(true);
+                  setCurrentBase(item);
                 }}
-              >{item.base_name}</button>
-            ))
-          )
+              >
+                {item.base_name}
+              </button>
+            ))}
+
+            <button
+              className="px-4 py-2 mt-3 bg-red-100 hover:bg-red-200 text-red-700 font-semibold cursor-pointer w-full text-center rounded-md"
+              onClick={() => {
+                setShowModels(false);
+                setShowModals(false);
+                setIsuseBase(false);
+                setCurrentBase(null);
+              }}
+            >
+              🚫 不选择任何知识库
+            </button>
+          </>
         )}
       </Modal>
 
