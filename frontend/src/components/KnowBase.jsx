@@ -17,7 +17,6 @@ import {
   ConfigProvider,
   Space,
   Modal,
-  message,
 } from "antd";
 import { createStyles } from "antd-style";
 import { toast } from "react-toastify";
@@ -412,6 +411,7 @@ function KnowBasepage() {
             ) : (
               data.map((item) => (
                 <Card
+                  className="hover:shadow-md"
                   key={item.base_id}
                   loading={loading}
                   actions={[
@@ -437,6 +437,9 @@ function KnowBasepage() {
                       <Avatar
                         src={`https://api.dicebear.com/7.x/miniavs/svg?seed=${item.base_id}`}
                       />
+                    }
+                    onClick={() =>
+                      navigate(`/knowledge/dataset?baseId=${item.base_id}`)
                     }
                     title={item.base_name}
                     description={
