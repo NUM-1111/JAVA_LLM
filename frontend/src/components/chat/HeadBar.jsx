@@ -12,8 +12,16 @@ import {
   ShareIcon,
 } from "../svg-icons";
 import { Modal } from "antd";
+import { CheckOutlined } from "@ant-design/icons";
 
-function HeadBar({ isOpen, setIsOpen, selectedCode, setSelectedCode }) {
+function HeadBar({
+  isOpen,
+  setIsOpen,
+  selectedCode,
+  setSelectedCode,
+  currentBase,
+  setCurrentBase,
+}) {
   const modelRef = useRef(null);
   const settingRef = useRef(null);
   const navigate = useNavigate(); // 获取导航函数
@@ -75,14 +83,11 @@ function HeadBar({ isOpen, setIsOpen, selectedCode, setSelectedCode }) {
   */
   const [data, setData] = useState([]);
   const [showModals, setShowModals] = useState(false);
-  const [isuseBase, setIsuseBase] = useState(false)
-  const [currentBase, setCurrentBase] = useState(null)
-  
+
   const handleOk = (item) => {
     modelRef.current.focus();
     setShowModals(false);
-    setIsuseBase(true)
-    setCurrentBase(item)
+    setCurrentBase(item);
   };
   const handleCancel = () => {
     modelRef.current.focus();
@@ -110,7 +115,6 @@ function HeadBar({ isOpen, setIsOpen, selectedCode, setSelectedCode }) {
       console.error(error);
     }
   };
-
   return (
     <header className="sticky xl:absolute w-full z-20 top-0 flex flex-row px-5 py-3 bg-white justify-between items-center select-none xl:bg-transparent">
       {/* 左侧按钮 */}
@@ -172,18 +176,6 @@ function HeadBar({ isOpen, setIsOpen, selectedCode, setSelectedCode }) {
               } absolute right-2 size-5 `}
             />
           </button>
-          <button
-            onClick={() => {
-              setShowModals(true), fetchData();
-            }}
-            className={`flex flex-row w-full px-6 py-2 text-left whitespace-nowrap hover:bg-gray-100 items-start justify-between rounded-lg mt-1`}
-          >
-            <div className="flex flex-col text-gray-800">
-              <p className="text font-semibold">
-                {isuseBase ? currentBase.base_name : "未选择知识库"}
-              </p>
-            </div>
-          </button>
           {/* 下拉菜单 */}
           {showModels && (
             <div
@@ -216,6 +208,18 @@ function HeadBar({ isOpen, setIsOpen, selectedCode, setSelectedCode }) {
               </button>
             </div>
           )}
+          <button
+            onClick={() => {
+              setShowModals(true), fetchData();
+            }}
+            className={`flex flex-row w-full px-6 py-2 text-left whitespace-nowrap hover:bg-gray-100 items-start justify-between rounded-lg mt-1`}
+          >
+            <div className="flex flex-col text-gray-800">
+              <p className="text font-semibold">
+                {currentBase.base_name ? currentBase.base_name : "不使用知识库"}
+              </p>
+            </div>
+          </button>
         </div>
       </div>
 
@@ -226,11 +230,6 @@ function HeadBar({ isOpen, setIsOpen, selectedCode, setSelectedCode }) {
         onCancel={handleCancel}
         footer={null}
         width={400}
-        bodyStyle={{
-          maxHeight: "300px",
-          overflowY: "auto",
-          paddingRight: "8px",
-        }} // 关键点
       >
         {data.length === 0 ? (
           <p className="text-center text-gray-500">╮(╯▽╰)╭暂无知识库</p>
@@ -239,15 +238,15 @@ function HeadBar({ isOpen, setIsOpen, selectedCode, setSelectedCode }) {
             {data.map((item) => (
               <button
                 key={item.baseId}
-                className="px-4 py-2 mt-1 bg-gray-100 hover:bg-gray-200 cursor-pointer w-full text-left rounded-md"
+                className="px-4 py-2 mt-1 bg-gray-100 hover:bg-gray-200 cursor-pointer w-full text-left rounded-md justify-between flex flex-row"
                 onClick={() => {
                   setShowModels(false);
                   setShowModals(false);
-                  setIsuseBase(true);
                   setCurrentBase(item);
                 }}
               >
-                {item.base_name}
+                <p>{item.base_name}</p>
+                {currentBase?.baseId == item.baseId && <CheckOutlined />}
               </button>
             ))}
 
@@ -256,8 +255,7 @@ function HeadBar({ isOpen, setIsOpen, selectedCode, setSelectedCode }) {
               onClick={() => {
                 setShowModels(false);
                 setShowModals(false);
-                setIsuseBase(false);
-                setCurrentBase(null);
+                setCurrentBase({});
               }}
             >
               🚫 不选择任何知识库

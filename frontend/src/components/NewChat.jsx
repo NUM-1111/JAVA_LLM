@@ -17,6 +17,8 @@ function NewChatPage() {
   const textareaRef = useRef(null);
   //处理上传图片
   const fileInputRef = useRef(null);
+  // 知识库
+  const [currentBase, setCurrentBase] = useState({});
 
   // 触发文件选择窗口
   const handleButtonClick = () => {
@@ -83,6 +85,7 @@ function NewChatPage() {
         initialMessage: userMessage,
         selectedCode: selectedCode,
         useDeepTink: deepThink,
+        currentBase: currentBase,
       },
     });
   };
@@ -110,6 +113,8 @@ function NewChatPage() {
           setIsOpen={setIsOpen}
           selectedCode={selectedCode}
           setSelectedCode={setSelectedCode}
+          currentBase={currentBase}
+          setCurrentBase={setCurrentBase}
         />
 
         {/* 可滚动的主内容区域 */}

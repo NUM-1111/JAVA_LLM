@@ -9,6 +9,7 @@ import (
 	"fmt"
 	"io"
 	"log"
+	"strconv"
 	"sync"
 
 	"time"
@@ -157,13 +158,12 @@ func HandleNewMessage(c *gin.Context) {
 				return
 			}
 
-			insertResult, err := db.Conversation.InsertOne(ctx, conversation)
+			_, err := db.Conversation.InsertOne(ctx, conversation)
 			if err != nil {
 				log.Println("插入失败:", err)
 				c.JSON(http.StatusInternalServerError, gin.H{"msg": "会话插入失败", "err": err.Error()})
 				return
 			}
-			log.Printf("插入成功，ID: %v\n", insertResult.InsertedID)
 		} else {
 			log.Println("找不到会话，且 parent 不是 'client-created-root'")
 			c.JSON(http.StatusNotFound, gin.H{"msg": "会话不存在!"})
@@ -223,7 +223,7 @@ func HandleNewMessage(c *gin.Context) {
 			return
 		}
 		for _, doc := range docs {
-			docIds = append(docIds, string(doc.DocID))
+			docIds = append(docIds, strconv.FormatInt(doc.DocID, 10))
 		}
 	}
 
@@ -237,7 +237,6 @@ func HandleNewMessage(c *gin.Context) {
 	}
 	// 调用rag, 传递doc ids
 	if base_id != 0 {
-		log.Println(docIds)
 		postData.DocIDs = docIds
 	}
 	jsonData, err := json.Marshal(postData)
