@@ -59,7 +59,7 @@ function FileShowPage() {
   };
 
   //获取文档切片
-  const GetDocSlice = async (searchvalue) => {
+  const GetDocSlice = async () => {
     try {
       setLoading(true);
       const res = await axios.get(
