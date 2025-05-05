@@ -20,6 +20,7 @@ function FileShowPage() {
   const [totalSlice, setTotalSlice] = useState(0); // 总数
   const [page, setPage] = useState(1); // 当前页码
   const [loading, setLoading] = useState(false);
+  const [searchvalue, setSearchvalue] = useState("");
 
   // 获取知识库信息
   const GetBaseInfo = async () => {
@@ -58,11 +59,11 @@ function FileShowPage() {
   };
 
   //获取文档切片
-  const GetDocSlice = async () => {
+  const GetDocSlice = async (searchvalue) => {
     try {
       setLoading(true);
       const res = await axios.get(
-        `/api/knowledge/document/detail?docId=${docId}&limit=10&offset=${
+        `/api/knowledge/document/detail?docId=${docId}&search=${searchvalue}&limit=10&offset=${
           (page - 1) * 10
         }`,
         {
@@ -71,11 +72,9 @@ function FileShowPage() {
           },
         }
       );
-        console.log(res);
-        const data = res.data;
-        console.log(data);
-      setDocSlice(data.data || []); 
-      setTotalSlice(data.total || 0); 
+      const data = res.data;
+      setDocSlice(data.data || []);
+      setTotalSlice(data.total || 0);
     } catch (err) {
       console.error(err);
     } finally {
@@ -145,7 +144,8 @@ function FileShowPage() {
               placeholder="查找切片"
               onSearch={onSearch}
               enterButton
-              onChange={(e) => searchKnowledge(e.target.value)}
+              onChange={(e) => setSearchvalue(e.target.value)}
+              onPressEnter={GetDocSlice}
             />
           </Space>
         </div>
@@ -179,10 +179,6 @@ function FileShowPage() {
                 />
               </>
             ))}
-          </div>
-          {/*搜索查找区 */}
-          <div className="flex flex-col w-full h-full mt-8 items-center">
-            搜索查找区
           </div>
         </div>
       </div>
