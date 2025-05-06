@@ -124,6 +124,8 @@ func HandleNewMessage(c *gin.Context) {
 	defer cancel()
 
 	user_id := session.(*models.Session).UserID // 获取用户ID
+	// 获取启用的doc id
+	base_id := chatRequest.BaseID
 
 	// 构建用户消息体
 	var user_chatMessage = models.ChatMessage{
@@ -145,6 +147,7 @@ func HandleNewMessage(c *gin.Context) {
 				UserID:         user_id,
 				Title:          "New Chat",
 				CurrentNode:    user_chatMessage.MessageID,
+				BaseID: base_id,
 				DefaultModel:   "auto",
 				IsArchived:     false,
 				CreatedAt:      user_chatMessage.CreatedAt,
@@ -201,15 +204,13 @@ func HandleNewMessage(c *gin.Context) {
 	// 更新并插入用户消息
 	user_chatMessage.ConversationID = conversation.ConversationID
 	user_chatMessage.UpdatedAt = time.Now()
-	insertResult, err := db.ChatMessage.InsertOne(ctx, user_chatMessage)
+	_, err = db.ChatMessage.InsertOne(ctx, user_chatMessage)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"msg": "消息插入失败", "err": err.Error()})
 		return
 	}
-	fmt.Printf("插入成功，ID: %v\n", insertResult.InsertedID)
 
-	// 获取启用的doc id
-	base_id := chatRequest.BaseID
+	// 查找启用的知识库文件
 	var docs []models.Document
 	var docIds []string
 	if base_id != 0 {
@@ -239,6 +240,7 @@ func HandleNewMessage(c *gin.Context) {
 	if base_id != 0 {
 		postData.DocIDs = docIds
 	}
+	log.Println(base_id,postData)
 	jsonData, err := json.Marshal(postData)
 	if err != nil {
 		log.Printf("转换JSON失败: %v", err)

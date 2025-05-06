@@ -15,7 +15,7 @@ import (
 )
 
 /*
-查询session会话
+查询conversation会话
 */
 func QueryConversation(c *gin.Context) {
 	// 从上下文中获取session信息（由中间件 AuthSession 提供）

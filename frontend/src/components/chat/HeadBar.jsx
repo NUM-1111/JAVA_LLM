@@ -19,9 +19,9 @@ function HeadBar({
   setIsOpen,
   selectedCode,
   setSelectedCode,
-  currentBase,
-  setCurrentBase,
+  baseIdRef,
 }) {
+  const [currentBase, setCurrentBase] = useState({});
   const modelRef = useRef(null);
   const settingRef = useRef(null);
   const navigate = useNavigate(); // 获取导航函数
@@ -111,10 +111,20 @@ function HeadBar({
         return;
       }
       setData(data.data);
+      data.data.map((base) => {
+        if (base.baseId == baseIdRef.current) {
+          setCurrentBase(base);
+        }
+      });
     } catch (error) {
       console.error(error);
     }
   };
+
+  useEffect(() => {
+    fetchData();
+  }, []);
+
   return (
     <header className="sticky xl:absolute w-full z-20 top-0 flex flex-row px-5 py-3 bg-white justify-between items-center select-none xl:bg-transparent">
       {/* 左侧按钮 */}
@@ -210,7 +220,7 @@ function HeadBar({
           )}
           <button
             onClick={() => {
-              setShowModals(true), fetchData();
+              setShowModals(true);
             }}
             className={`flex flex-row w-full px-6 py-2 text-left whitespace-nowrap hover:bg-gray-100 items-start justify-between rounded-lg mt-1`}
           >
@@ -243,10 +253,11 @@ function HeadBar({
                   setShowModels(false);
                   setShowModals(false);
                   setCurrentBase(item);
+                  baseIdRef.current = item.baseId;
                 }}
               >
                 <p>{item.base_name}</p>
-                {currentBase?.baseId == item.baseId && <CheckOutlined />}
+                {baseIdRef.current == item.baseId && <CheckOutlined />}
               </button>
             ))}
 
