@@ -131,7 +131,6 @@ function ChatPage() {
           );
           if (!response.ok) throw new Error("请求失败");
           const data = await response.json();
-          console.log(data.data?.baseId)
           baseIdRef.current = data.data?.baseId || null;
         } catch (error) {
           console.error("请求失败:", error);
@@ -385,9 +384,7 @@ function ChatPage() {
                     >
                       <DeepThinkIcon className={"size-4"} />
                       <span className="text-sm select-none pr-2">
-                        {msg.message.thinking
-                          ? "正在深度思考"
-                          : "已完成深度思考"}
+                        {msg.message.thinkTitle || "已完成回答"}
                       </span>
                       <BreadcrumbIcon
                         className={`${

@@ -61,12 +61,19 @@ const processSSE = async (reader, aiMessage, setMessages, abortController) => {
           });
         }
       } else if (jsonData.type === "status") {
+        setMessages((prev) => {
+          const newMessages = [...prev];
+          const aiMsg = newMessages[newMessages.length - 1];
+          if (aiMsg.message.author.role === "assistant") {
+            aiMsg.message.thinkTitle = jsonData.message;
+          }
+          return newMessages;
+        });
         if (jsonData.message === "ANSWER_DONE") {
           console.log("SSE 响应接受完成.");
           abortController.current?.abort();
           return;
         }
-        console.log("SSE:" + jsonData.message);
       } else if (jsonData.type === "error") {
         console.error("SSE:" + jsonData.message);
       } else {
@@ -81,30 +88,30 @@ const processSSE = async (reader, aiMessage, setMessages, abortController) => {
 };
 
 // 获取用户名
-  const fetchUsername = async () => {
-    try {
-      const response = await fetch("/api/user/info", {
-        method: "GET",
-        headers: {
-          Authorization: localStorage.auth,
-          "Content-Type": "application/json",
-        },
-      });
+const fetchUsername = async () => {
+  try {
+    const response = await fetch("/api/user/info", {
+      method: "GET",
+      headers: {
+        Authorization: localStorage.auth,
+        "Content-Type": "application/json",
+      },
+    });
 
-      if (!response.ok) {
-        if (response.status === 401) {
-          localStorage.removeItem("auth");
-          return "";
-        }
-        throw new Error(`HTTP error! Status: ${response.status}`);
+    if (!response.ok) {
+      if (response.status === 401) {
+        localStorage.removeItem("auth");
+        return "";
       }
-
-      const data = await response.json();
-      return typeof data.username === "string" ? data.username : "";
-    } catch (error) {
-      console.error("Failed to fetch username:", error);
-      return "";
+      throw new Error(`HTTP error! Status: ${response.status}`);
     }
+
+    const data = await response.json();
+    return typeof data.username === "string" ? data.username : "";
+  } catch (error) {
+    console.error("Failed to fetch username:", error);
+    return "";
   }
+};
 
 export { createUserMessage, createAIMessage, processSSE, fetchUsername };

@@ -126,7 +126,7 @@ function HeadBar({
   }, [baseIdRef.current]);
 
   return (
-    <header className="sticky xl:absolute w-full z-20 top-0 flex flex-row px-5 py-3 bg-white justify-between items-center select-none xl:bg-transparent">
+    <header className="sticky xl:absolute w-full z-20 top-0 flex flex-row px-5 py-3 bg-white justify-between items-center select-none ">
       {/* 左侧按钮 */}
       <div className="sm:absolute sm:left-6 lg:left-0 lg:relative flex flex-row mr-1 text-gray-700">
         {/*显示侧边栏按钮 */}
@@ -267,6 +267,7 @@ function HeadBar({
                 setShowModels(false);
                 setShowModals(false);
                 setCurrentBase({});
+                baseIdRef.current = null
               }}
             >
               🚫 不选择任何知识库
