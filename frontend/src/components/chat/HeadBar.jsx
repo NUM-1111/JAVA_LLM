@@ -123,7 +123,7 @@ function HeadBar({
 
   useEffect(() => {
     fetchData();
-  }, []);
+  }, [baseIdRef.current]);
 
   return (
     <header className="sticky xl:absolute w-full z-20 top-0 flex flex-row px-5 py-3 bg-white justify-between items-center select-none xl:bg-transparent">

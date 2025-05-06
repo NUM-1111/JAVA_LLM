@@ -34,12 +34,7 @@ const createAIMessage = (userMessage, selectedCode, models) => ({
 });
 
 // 处理 SSE 数据流
-const processSSE = async (
-  reader,
-  aiMessage,
-  setMessages,
-  abortController
-) => {
+const processSSE = async (reader, aiMessage, setMessages, abortController) => {
   while (true) {
     const { done, value } = await reader.read();
     if (done) {
@@ -65,13 +60,15 @@ const processSSE = async (
             return newMessages;
           });
         }
-      } else if (
-        jsonData.type === "status" &&
-        jsonData.message === "ANSWER_DONE"
-      ) {
-        console.log("SSE 响应接受完成.");
-        abortController.current?.abort();
-        return;
+      } else if (jsonData.type === "status") {
+        if (jsonData.message === "ANSWER_DONE") {
+          console.log("SSE 响应接受完成.");
+          abortController.current?.abort();
+          return;
+        }
+        console.log("SSE:" + jsonData.message);
+      } else if (jsonData.type === "error") {
+        console.error("SSE:" + jsonData.message);
       } else {
         console.log("未知 SSE 格式:", jsonData);
       }
@@ -97,7 +94,6 @@ const processSSE = async (
       if (!response.ok) {
         if (response.status === 401) {
           localStorage.removeItem("auth");
-          setIsLoggedIn(false);
           return "";
         }
         throw new Error(`HTTP error! Status: ${response.status}`);

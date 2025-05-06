@@ -147,7 +147,7 @@ func HandleNewMessage(c *gin.Context) {
 				UserID:         user_id,
 				Title:          "New Chat",
 				CurrentNode:    user_chatMessage.MessageID,
-				BaseID: base_id,
+				BaseID:         base_id,
 				DefaultModel:   "auto",
 				IsArchived:     false,
 				CreatedAt:      user_chatMessage.CreatedAt,
@@ -189,10 +189,10 @@ func HandleNewMessage(c *gin.Context) {
 			return
 		}
 
-		// 更新 conversation 的 current_node
+		// 更新 conversation
 		conversation.CurrentNode = user_chatMessage.MessageID
 		err = db.UpdateOneConversation(ctx, bson.M{"user_id": user_id, "conversation_id": conversation.ConversationID}, bson.M{
-			"$set": bson.M{"current_node": conversation.CurrentNode, "updated_at": time.Now()},
+			"$set": bson.M{"current_node": conversation.CurrentNode, "base_id": base_id, "updated_at": time.Now()},
 		})
 		if err != nil {
 			log.Println("err:", err)
@@ -240,7 +240,7 @@ func HandleNewMessage(c *gin.Context) {
 	if base_id != 0 {
 		postData.DocIDs = docIds
 	}
-	log.Println(base_id,postData)
+	log.Println(base_id, postData)
 	jsonData, err := json.Marshal(postData)
 	if err != nil {
 		log.Printf("转换JSON失败: %v", err)

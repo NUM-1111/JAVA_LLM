@@ -37,13 +37,14 @@ func SetupRoutes(r *gin.Engine) {
 	api.POST("/delete/account", services.DeleteUser)      // 允许用户注销账户
 	api.GET("/user/info", services.GetUserNameBySession)  //返回用户名信息
 	// conversation路由
-	api.POST("/get/latest/id", services.QueryMessageId)           // 查询最新的message id
-	api.POST("/new/message", services.HandleNewMessage)           // 处理新的聊天消息
-	api.POST("/delete/chat", services.DeleteAllConversations)     // 删除所有聊天记录
-	api.POST("/delete/conversation", services.DeleteConversation) // 删除单条聊天记录
-	api.PUT("/rename/conversation", services.RenameConversation)  // 重命名对话
-	api.GET("/query/conversation", services.QueryConversation)    //侧边栏查询历史记录
-	api.POST("/query/messages", services.QueryMessages)           // 对话页查询历史消息
+	api.POST("/get/latest/id", services.QueryMessageId)             // 查询最新的message id
+	api.POST("/new/message", services.HandleNewMessage)             // 处理新的聊天消息
+	api.POST("/delete/chat", services.DeleteAllConversations)       // 删除所有聊天记录
+	api.POST("/delete/conversation", services.DeleteConversation)   // 删除单条聊天记录
+	api.PUT("/rename/conversation", services.RenameConversation)    // 重命名对话
+	api.GET("/get/conversation/:id", services.QueryOneConversation) // 查询当前会话信息
+	api.GET("/query/conversation", services.QueryConversations)     //侧边栏查询历史记录
+	api.POST("/query/messages", services.QueryMessages)             // 对话页查询历史消息
 	// knowledgeBase路由
 	baseGroup := api.Group("/knowledge")
 	baseGroup.GET("/info/:id", services.GetKnowBaseInfo)                   // 获取知识库基本信息

@@ -23,7 +23,7 @@ type Conversation struct {
 	UserID         int64  `bson:"user_id" json:"omitempty"`
 	Title          string `bson:"title" json:"title"`
 	CurrentNode    string `bson:"current_node" json:"current_node"` // 记录最新一次消息的id
-	BaseID int64 `bson:"base_id"` // 记录最新一次使用的知识库id
+	BaseID         int64  `bson:"base_id" json:"baseId,string"`     // 记录最新一次使用的知识库id
 	//Mapping     map[string]ChatMessage `bson:"mapping" json:"mapping"`
 	//TemplateId       string                 `bson:"template_id"`        // 对话模板id, 例如 "g-rmdbtMF7a"
 	//TemplateType     string                 `bson:"template_type"`      // 模板基于的模型, GPT为 "gpt"

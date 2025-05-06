@@ -206,7 +206,9 @@ export default function SideBar({ isOpen, setIsOpen, finishText }) {
                   <button
                     className="block w-full text-left px-4 py-2 my-1 text-gray-700"
                     onClick={() => {
-                      console.log(`跳转到对话 ${conversation.conversation_id}`);
+                      console.log(
+                        `跳转到对话 ${conversation.conversation_id} ${conversation.baseId}`
+                      );
                       navigate(`/c/${conversation.conversation_id}`);
                     }}
                   >

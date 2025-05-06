@@ -14,10 +14,38 @@ import (
 	"go.mongodb.org/mongo-driver/bson"
 )
 
+// 查询一个会话
+func QueryOneConversation(c *gin.Context) {
+	// 从上下文中获取session信息（由中间件 AuthSession 提供）
+	_, exists := c.Get("session")
+	if !exists {
+		c.JSON(http.StatusUnauthorized, gin.H{"err": "无效的登录凭证"})
+		return
+	}
+
+	id := c.Param("id")
+	if id == "" {
+		c.JSON(http.StatusBadRequest, gin.H{"msg": "无效的会话id"})
+		return
+	}
+	// 构造查询条件，按照 user_id 查询该用户的所有会话
+	query := bson.M{"conversation_id": id}
+
+	// 调用数据库查询函数
+	conversation, err := db.FindOneConversation(c.Request.Context(), query)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"msg": "数据库查询失败!", "err": err.Error()})
+		return
+	}
+
+	// 返回数据给前端
+	c.JSON(http.StatusOK, gin.H{"msg": "请求成功", "data": conversation})
+}
+
 /*
 查询conversation会话
 */
-func QueryConversation(c *gin.Context) {
+func QueryConversations(c *gin.Context) {
 	// 从上下文中获取session信息（由中间件 AuthSession 提供）
 	session, exists := c.Get("session")
 	if !exists {

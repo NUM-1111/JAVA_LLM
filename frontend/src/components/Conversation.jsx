@@ -117,7 +117,27 @@ function ChatPage() {
       setSelectedCode(location.state?.selectedCode || 1);
       baseIdRef.current = location.state?.baseId;
     } else {
-      baseIdRef.current = location.state?.baseId;
+      const fetchConversationInfo = async () => {
+        try {
+          const response = await fetch(
+            `/api/get/conversation/${conversationId}`,
+            {
+              method: "Get",
+              headers: {
+                "Content-Type": "application/json",
+                Authorization: localStorage.auth,
+              },
+            }
+          );
+          if (!response.ok) throw new Error("请求失败");
+          const data = await response.json();
+          console.log(data.data?.baseId)
+          baseIdRef.current = data.data?.baseId || null;
+        } catch (error) {
+          console.error("请求失败:", error);
+        }
+      };
+
       const fetchMessages = async () => {
         try {
           const response = await fetch("/api/query/messages", {
@@ -131,13 +151,13 @@ function ChatPage() {
           if (!response.ok) throw new Error("服务器返回错误");
           // 切分解析ai文本
           const data = await response.json();
-
           const messages = processMessages(data.current_id, data.messages);
           setMessages(messages || []);
         } catch (error) {
           console.error("请求失败:", error);
         }
       };
+      fetchConversationInfo();
       fetchMessages();
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -188,7 +208,6 @@ function ChatPage() {
     abortController.current = new AbortController();
 
     try {
-      console.log(baseIdRef.current);
       const response = await fetch("/api/new/message", {
         method: "POST",
         headers: {
