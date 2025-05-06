@@ -94,10 +94,10 @@ function FileShowPage() {
       GetDocSlice();
     }
   }, [docId, page]);
-    
-    const handlePageChange = (pageNum) => {
-      setPage(pageNum);
-    };
+
+  const handlePageChange = (pageNum) => {
+    setPage(pageNum);
+  };
 
   return (
     <div className="flex flex-row w-full h-full">
@@ -138,18 +138,34 @@ function FileShowPage() {
             <FileTextOutlined className="ml-2 text-gray-600" />
             <p className="text-gray-600 ml-2">{docName}</p>
           </div>
-          {/* 搜索框 */}
-          <Space direction="vertical" size="middle" className="mr-10">
-            <Search
-              placeholder="查找切片"
-              onSearch={onSearch}
-              enterButton
-              onChange={(e) => setSearchvalue(e.target.value)}
-              onPressEnter={GetDocSlice}
-            />
-          </Space>
+          {/* 搜索区域 */}
+          <div className="flex flex-row items-center">
+            {/* 搜索框 */}
+            <Space direction="vertical" size="middle" className="mr-2">
+              <Search
+                placeholder="查找切片"
+                onSearch={GetDocSlice}
+                enterButton
+                value={searchvalue}
+                onChange={(e) => setSearchvalue(e.target.value)}
+                onPressEnter={GetDocSlice} // 按回车触发搜索
+              />
+            </Space>
+            {/*重置按钮 */}
+            <Button
+              className="mr-8"
+              type="primary"
+              onClick={() => {
+                setSearchvalue("");
+                GetDocSlice();
+                setPage(1);
+                navigate(0, { replace: true });
+              }}
+            >
+              重置
+            </Button>
+          </div>
         </div>
-
         {/*文件内容展示区*/}
         <div className="flex flex-row w-full h-full justify-between">
           {/*内容切片展示区 */}
@@ -158,7 +174,7 @@ function FileShowPage() {
               <div className="flex flex-col items-center justify-center h-full">
                 <p>Loading...</p>
               </div>
-            ) : (docSlice.length === 0? (
+            ) : docSlice.length === 0 ? (
               <div className="flex flex-col items-center justify-center h-full">
                 <p>暂无内容</p>
               </div>
@@ -178,7 +194,7 @@ function FileShowPage() {
                   showSizeChanger={false}
                 />
               </>
-            ))}
+            )}
           </div>
         </div>
       </div>
