@@ -106,7 +106,7 @@ function HeadBar({
 
       const data = await response.json();
 
-      if (data.total == 0) {
+      if (response.status !== 200 ||  data.total == 0) {
         setData([]);
         return;
       }
@@ -282,7 +282,7 @@ function HeadBar({
           className="flex flex-row items-center gap-1 mr-1 sm:mr-4 hover:opacity-75 text-gray-800"
           onClick={() => navigate("/introduce")}
         >
-          <ShareIcon className={"size-4 mt-[1px] scale-105"} />
+          <ShareIcon className={"flex flex-row size-4 mt-[1px] scale-105"} />
           <div className="inline-flex">
             <span className="text-base">关于</span>
             <span className="text-base hidden sm:block">我们</span>
