@@ -317,12 +317,12 @@ function KnowBasepage() {
   return (
     <div>
       {/* 顶部导航栏 */}
-      <header className="bg-gray-200 text-black p-4 text-center relative">
+      <header className="bg-gradient-to-l from-blue-400 to-indigo-500 text-white p-4 text-center relative">
         <ArrowLeftOutlined
           onClick={() => navigate("/")}
           className="absolute left-4 top-1/2 transform -translate-y-1/2 text-2xl cursor-pointer"
         />
-        <h1 className="text-4xl font-mono">知识库系统</h1>
+        <h1 className="text-3xl font-bold">知识库系统</h1>
       </header>
 
       {/* 介绍语 + 功能区块 */}
