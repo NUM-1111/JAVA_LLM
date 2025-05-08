@@ -70,6 +70,7 @@ function KnowBasepage() {
   const [baseDesc, setBaseDesc] = useState("");
   const [form] = Form.useForm();
 
+
   /**
    * 弹窗逻辑部分
    * 有创建弹窗,编辑弹窗,删除弹窗
@@ -141,12 +142,12 @@ function KnowBasepage() {
 
       const data = await response.json();
 
-      if (data.total == 0) {
+      if (data.total == 0 || response.status !== 200) {
         setData([]);
         setLoading(false);
         return;
       }
-      setData(data.data);
+      setData(data.data || []);
       setLoading(false);
     } catch (error) {
       console.error(error);
@@ -186,8 +187,17 @@ function KnowBasepage() {
         setBaseDesc("");
         form.resetFields();
       } else {
-        console.log("创建失败");
-        toast.error("创建失败");
+        if (response.status === 401) {
+          console.log("登录失效");
+          toast.error("登录失效,请重新登录");
+          localStorage.removeItem("auth");
+          setTimeout(() => {
+            navigate("/login");
+          }, 3000);
+        } else {
+          console.log("创建失败");
+          toast.error("创建失败");
+        }
       }
     } catch (error) {
       console.error(error);
@@ -285,12 +295,12 @@ function KnowBasepage() {
       });
 
       const data = await response.json();
-      if (data.total == 0) {
+      if (data.total == 0 || response.status !== 200) {
         setData([]);
         setLoading(false);
         return;
-      }
-      setData(data.data);
+      } 
+      setData(data.data || []);
       setLoading(false);
     } catch (error) {
       console.error(error);
