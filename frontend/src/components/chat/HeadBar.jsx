@@ -110,7 +110,7 @@ function HeadBar({
         setData([]);
         return;
       }
-      setData(data.data);
+      setData(data.data || []);
       data.data.map((base) => {
         if (base.baseId == baseIdRef.current) {
           setCurrentBase(base);
@@ -241,7 +241,7 @@ function HeadBar({
         footer={null}
         width={400}
       >
-        {data.length === 0 ? (
+        {data?.length === 0 ? (
           <p className="text-center text-gray-500">╮(╯▽╰)╭暂无知识库</p>
         ) : (
           <>
