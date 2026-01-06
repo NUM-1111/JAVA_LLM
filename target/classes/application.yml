@@ -1,0 +1,37 @@
+server:
+  port: 8080
+
+spring:
+  application:
+    name: java-rag-backend
+  # PostgreSQL
+  datasource:
+    url: jdbc:postgresql://localhost:5432/rag_db
+    username: rag_user
+    password: rag_password
+    driver-class-name: org.postgresql.Driver
+  jpa:
+    hibernate:
+      ddl-auto: update
+    show-sql: true
+
+  # MongoDB
+  data:
+    mongodb:
+      uri: mongodb://localhost:27017/rag_chat_history
+
+  # Spring AI
+  ai:
+    ollama:
+      base-url: http://localhost:11434
+      chat:
+        model: qwen2.5:7b # Qwen2.5 7B model
+      embedding:
+        model: qwen2.5:7b # Use same model for embeddings
+    vectorstore:
+      milvus:
+        client:
+          host: localhost
+          port: 19530
+        embedding-dimension: 4096 # Adjust based on your Ollama model (Qwen2.5 7B is typically 4096)
+
