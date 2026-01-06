@@ -13,6 +13,7 @@ var DB *gorm.DB
 
 func InitPostgresDB(dsn string) {
 	//连接数据库
+	log.Println("Connecting to PostgreSQL with DSN:", dsn)
 	var err error
 	DB, err = gorm.Open(postgres.Open(dsn), &gorm.Config{
 		PrepareStmt:    true, // 预编译 SQL 语句
