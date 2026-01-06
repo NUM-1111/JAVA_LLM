@@ -1,3 +1,4 @@
+
 #!/bin/bash
 # Spring Boot Application Startup Script
 # Ensures Java 17 is used for running the application
