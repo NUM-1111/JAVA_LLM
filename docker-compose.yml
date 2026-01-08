@@ -64,7 +64,8 @@ services:
   postgres:
     container_name: java-rag-postgres
     image: postgres:15-alpine
-    restart: always
+    restart: on-failure:5
+    stop_grace_period: 30s
     environment:
       POSTGRES_USER: rag_user
       POSTGRES_PASSWORD: rag_password
@@ -72,7 +73,12 @@ services:
     ports:
       - "5433:5432"
     volumes:
-      - ${DOCKER_VOLUME_DIRECTORY:-.}/volumes/postgres:/var/lib/postgresql/data
+      - rag_postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-rag_user} -d ${POSTGRES_DB:-rag_db} || exit 1"]
+      interval: 5s
+      timeout: 3s
+      retries: 20
 
   # ---------------------------------------------------------------
   # 3. 缓存与限流 (Redis)
@@ -86,6 +92,9 @@ services:
     command: redis-server --requirepass "redis_password"
     volumes:
       - ${DOCKER_VOLUME_DIRECTORY:-.}/volumes/redis:/data
+
+volumes:
+  rag_postgres_data:
 
 networks:
   default:
