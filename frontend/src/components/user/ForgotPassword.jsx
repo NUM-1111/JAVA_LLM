@@ -58,11 +58,11 @@ function ForgotPasswordPage() {
     const data = await req.json();
     setMsgStruct({
       title: "验证码发送",
-      description: data.msg,
-      type: req.status === 200 ? "success" : "error",
+      description: data.msg || (data.code === 200 ? "验证码已发送" : "验证码发送失败"),
+      type: data.code === 200 ? "success" : "error",
     });
     setShowMsg(true);
-    if (req.status === 200) setStep(2);
+    if (data.code === 200) setStep(2);
   };
 
   // 验证验证码
@@ -80,13 +80,13 @@ function ForgotPasswordPage() {
     const data = await req.json();
     setMsgStruct({
       title: "验证码验证",
-      description: data.msg,
-      type: req.status === 200 ? "success" : "error",
+      description: data.msg || (data.code === 200 ? "验证码验证成功" : "验证码验证失败"),
+      type: data.code === 200 ? "success" : "error",
     });
     setShowMsg(true);
-    if (req.status === 200) {
-      // 存储 token，确保后续请求能用到
-      localStorage.setItem("token", data.token);
+    if (data.code === 200) {
+      // 存储 reset token，确保后续请求能用到
+      localStorage.setItem("token", data.data);
       setStep(3);
     }
   };
@@ -95,7 +95,7 @@ function ForgotPasswordPage() {
   const resetPassword = async () => {
     if (!validatePassword()) return;
 
-    const token = localStorage.getItem("token"); // 取出存储的 token
+    const token = localStorage.getItem("token"); // 取出存储的 reset token
     if (!token) {
       setMsgStruct({
         title: "密码重置",
@@ -116,16 +116,16 @@ function ForgotPasswordPage() {
 
     setMsgStruct({
       title: "密码重置",
-      description: data.msg,
-      type: req.status === 200 ? "success" : "error",
+      description: data.msg || (data.code === 200 ? "密码重置成功" : "密码重置失败"),
+      type: data.code === 200 ? "success" : "error",
     });
     setTimeout(() => {
       setShowMsg(false);
     }, 1500);
     setShowMsg(true);
 
-    if (req.status === 200) {
-      localStorage.removeItem("resetToken"); // 重置成功后清除 token
+    if (data.code === 200) {
+      localStorage.removeItem("token"); // 重置成功后清除 token
       setTimeout(() => navigate("/login"), 2000);
     }
   };

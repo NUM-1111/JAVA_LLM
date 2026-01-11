@@ -65,10 +65,10 @@ function LoginPage() {
       body: JSON.stringify(formData),
     });
     const data = await req.json();
-    if (req.status != 200) {
+    if (data.code !== 200) {
       setMsgStruct({
         title: "登录失败!",
-        description: data.msg,
+        description: data.msg || "登录失败，请检查账号和密码",
         type: "error",
       });
       setShowMsg(true);
@@ -77,7 +77,7 @@ function LoginPage() {
       }, 2000);
     } else {
       localStorage.loginStatus = "login";
-      localStorage.auth = data.session_id;
+      localStorage.auth = data.data; // JWT token
       setMsgStruct({
         title: "登录成功",
         description: "即将跳转至聊天界面...",

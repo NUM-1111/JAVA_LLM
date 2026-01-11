@@ -101,13 +101,18 @@ const fetchUsername = async () => {
     if (!response.ok) {
       if (response.status === 401) {
         localStorage.removeItem("auth");
+        localStorage.removeItem("loginStatus");
         return "";
       }
       throw new Error(`HTTP error! Status: ${response.status}`);
     }
 
     const data = await response.json();
-    return typeof data.username === "string" ? data.username : "";
+    // 后端返回Result格式: {code: 200, msg: "success", data: {username: "..."}}
+    if (data.code === 200 && data.data && typeof data.data.username === "string") {
+      return data.data.username;
+    }
+    return "";
   } catch (error) {
     console.error("Failed to fetch username:", error);
     return "";

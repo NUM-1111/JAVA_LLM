@@ -8,6 +8,7 @@ import {
   OpenEyeIcon,
 } from "../svg-icons";
 import {isValidHrbeuEmail} from "./utils";
+import { EMAIL_VERIFICATION_ENABLED } from "../../constants";
 
 function RegisterPage() {
   const navigate = useNavigate();
@@ -66,13 +67,13 @@ function RegisterPage() {
       body: JSON.stringify({ email: email }),
     });
     const data = await req.json();
-    if (req.status != 200) {
+    if (data.code !== 200) {
       setTimeout(() => {
         setSendState(false);
       }, 300);
       setMsgStruct({
         title: "发送失败",
-        description: data.msg,
+        description: data.msg || "验证码发送失败",
         type: "error",
       });
       setShowMsg(true);
@@ -85,7 +86,7 @@ function RegisterPage() {
       changeWaitText();
       setMsgStruct({
         title: "发送成功",
-        description: data.msg,
+        description: data.msg || "验证码已发送",
         type: "success",
       });
       setShowMsg(true);
@@ -111,7 +112,13 @@ function RegisterPage() {
       newErrors.email = "* 邮箱必须为@hrbeu.edu.cn";
       formIsValid = false;
     }
-    if (!formData.code) {
+    // ============================================
+    // EMAIL VERIFICATION (CONDITIONAL)
+    // ============================================
+    // Only validate verification code if EMAIL_VERIFICATION_ENABLED is true
+    // When disabled: code field is optional and not validated
+    // ============================================
+    if (EMAIL_VERIFICATION_ENABLED && !formData.code) {
       newErrors.code = "* 验证码为必填项";
       formIsValid = false;
     }
@@ -139,18 +146,27 @@ function RegisterPage() {
       return;
     }
     const url = "/api/register";
+    // Prepare request data - only include code if email verification is enabled
+    const requestData = {
+      email: formData.email,
+      username: formData.username,
+      password: formData.password,
+      // Only send code if email verification is enabled
+      // Backend will handle empty/null code when verification is disabled
+      ...(EMAIL_VERIFICATION_ENABLED ? { code: formData.code } : { code: "" }),
+    };
     const req = await fetch(url, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
       },
-      body: JSON.stringify(formData),
+      body: JSON.stringify(requestData),
     });
     const data = await req.json();
-    if (req.status != 200) {
+    if (data.code !== 200) {
       setMsgStruct({
         title: "注册失败!",
-        description: data.msg,
+        description: data.msg || "注册失败，请检查输入信息",
         type: "error",
       });
       setShowMsg(true);
@@ -159,7 +175,7 @@ function RegisterPage() {
       }, 2000);
     } else {
       localStorage.loginStatus = "login";
-      localStorage.auth = data.session_id;
+      localStorage.auth = data.data; // JWT token
       setMsgStruct({
         title: "注册成功",
         description: "即将跳转对话页面...",
@@ -220,54 +236,63 @@ function RegisterPage() {
               </div>
             </div>
 
-            <div className="w-full">
-              <div className="text-lg py-2 flex flex-row">
-                <RedStarIcon />
-                <span className="text-base">邮箱验证码:</span>
-              </div>
-              <div className="relative">
+            {/* ============================================
+                EMAIL VERIFICATION CODE INPUT (CONDITIONAL)
+                ============================================
+                This section is only shown when EMAIL_VERIFICATION_ENABLED is true
+                When disabled: entire verification code section is hidden
+                TODO: When email verification is ready, set EMAIL_VERIFICATION_ENABLED = true
+                ============================================ */}
+            {EMAIL_VERIFICATION_ENABLED && (
+              <div className="w-full">
+                <div className="text-lg py-2 flex flex-row">
+                  <RedStarIcon />
+                  <span className="text-base">邮箱验证码:</span>
+                </div>
                 <div className="relative">
-                  <input
-                    name="code"
-                    type="text"
-                    value={formData.code}
-                    onChange={handleFormChange}
-                    className="w-full rounded-lg sm:hover:scale-105  border border-indigo-300 hover:border-indigo-500 p-3 pe-12 focus:outline-none focus:ring-2 focus:ring-indigo-300 duration-200"
-                    placeholder="请输入邮箱验证码"
-                  />
-                  {errors.code && (
-                    <div className="absolute right-0 mt-1 text-right text-sm text-red-500 ">
-                      {errors.code}
-                    </div>
+                  <div className="relative">
+                    <input
+                      name="code"
+                      type="text"
+                      value={formData.code}
+                      onChange={handleFormChange}
+                      className="w-full rounded-lg sm:hover:scale-105  border border-indigo-300 hover:border-indigo-500 p-3 pe-12 focus:outline-none focus:ring-2 focus:ring-indigo-300 duration-200"
+                      placeholder="请输入邮箱验证码"
+                    />
+                    {errors.code && (
+                      <div className="absolute right-0 mt-1 text-right text-sm text-red-500 ">
+                        {errors.code}
+                      </div>
+                    )}
+                  </div>
+                  {btnWaiting ? (
+                    <button
+                      type="button"
+                      disabled={true}
+                      className={`bg-indigo-300 absolute right-2 top-2 bottom-2 text-white font-semibold rounded-sm px-5 text-center inline-flex items-center transition-colors duration-300`}
+                    >
+                      {waitText}
+                    </button>
+                  ) : (
+                    <button
+                      type="button"
+                      disabled={sendState}
+                      className={`${
+                        sendState ? "bg-indigo-400" : "bg-indigo-500"
+                      } absolute right-2 top-2 bottom-2 text-white hover:bg-indigo-600 font-semibold rounded-sm px-5 text-center inline-flex items-center transition-colors duration-300
+                        active:scale-95 active:transition-none
+                      `}
+                      onClick={() =>
+                        handleSendEmail(formData.email, setSendState)
+                      }
+                    >
+                      <SpinCircle loading={sendState} />
+                      发送
+                    </button>
                   )}
                 </div>
-                {btnWaiting ? (
-                  <button
-                    type="button"
-                    disabled={true}
-                    className={`bg-indigo-300 absolute right-2 top-2 bottom-2 text-white font-semibold rounded-sm px-5 text-center inline-flex items-center transition-colors duration-300`}
-                  >
-                    {waitText}
-                  </button>
-                ) : (
-                  <button
-                    type="button"
-                    disabled={sendState}
-                    className={`${
-                      sendState ? "bg-indigo-400" : "bg-indigo-500"
-                    } absolute right-2 top-2 bottom-2 text-white hover:bg-indigo-600 font-semibold rounded-sm px-5 text-center inline-flex items-center transition-colors duration-300
-                      active:scale-95 active:transition-none
-                    `}
-                    onClick={() =>
-                      handleSendEmail(formData.email, setSendState)
-                    }
-                  >
-                    <SpinCircle loading={sendState} />
-                    发送
-                  </button>
-                )}
               </div>
-            </div>
+            )}
             <div className="w-full">
               <div className="text-lg py-2 flex flex-row">
                 <RedStarIcon />

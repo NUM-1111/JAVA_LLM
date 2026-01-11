@@ -1,5 +1,5 @@
 server:
-  port: 8080
+  port: 8081
 
 spring:
   application:
@@ -15,10 +15,21 @@ spring:
       ddl-auto: update
     show-sql: true
 
-  # MongoDB
+  # MongoDB & Redis
   data:
     mongodb:
       uri: mongodb://localhost:27017/rag_chat_history
+    redis:
+      host: localhost
+      port: 6379
+      password: # Redis password if needed
+      database: 0
+      timeout: 2000ms
+      lettuce:
+        pool:
+          max-active: 8
+          max-idle: 8
+          min-idle: 0
 
   # Spring AI
   ai:
@@ -34,4 +45,44 @@ spring:
           host: localhost
           port: 19530
         embedding-dimension: 4096 # Adjust based on your Ollama model (Qwen2.5 7B is typically 4096)
+
+  # Mail Configuration
+  mail:
+    host: smtp.hrbeu.edu.cn
+    port: 465
+    username: jyw20051117@hrbeu.edu.cn
+    password: ${HEU_SMTP_PASSWORD:heu19530901} # Set via environment variable
+    properties:
+      mail:
+        smtp:
+          auth: true
+          ssl:
+            enable: true
+            trust: "*"
+          connectiontimeout: 5000
+          timeout: 5000
+          writetimeout: 5000
+
+# JWT Configuration
+jwt:
+  secret: your-secret-key-must-be-at-least-256-bits-long-for-hs256-algorithm-change-this-in-production
+  expiration: 86400000 # 24 hours in milliseconds
+
+# Email Configuration
+email:
+  # ============================================
+  # EMAIL VERIFICATION FEATURE TOGGLE
+  # ============================================
+  # Set to false to disable email verification during development/testing
+  # Set to true to enable email verification (production mode)
+  # When disabled: registration will skip email code verification
+  # When enabled: registration requires valid email verification code
+  # ============================================
+  verification:
+    enabled: false # TODO: Set to true when email service is ready for production
+  code:
+    expire: 300 # Verification code expiration in seconds (5 minutes)
+  reset:
+    token:
+      expire: 900 # Reset token expiration in seconds (15 minutes)
 

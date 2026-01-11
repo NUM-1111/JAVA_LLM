@@ -93,6 +93,25 @@ services:
     volumes:
       - ${DOCKER_VOLUME_DIRECTORY:-.}/volumes/redis:/data
 
+  # ---------------------------------------------------------------
+  # 4. 聊天历史数据库 (MongoDB)
+  # ---------------------------------------------------------------
+  mongodb:
+    container_name: java-rag-mongodb
+    image: mongo:7.0
+    restart: on-failure:5
+    ports:
+      - "27017:27017"
+    volumes:
+      - ${DOCKER_VOLUME_DIRECTORY:-.}/volumes/mongodb:/data/db
+    environment:
+      MONGO_INITDB_DATABASE: rag_chat_history
+    healthcheck:
+      test: ["CMD", "mongosh", "--eval", "db.adminCommand('ping')"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
 volumes:
   rag_postgres_data:
 
