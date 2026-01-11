@@ -68,7 +68,8 @@
     | code | Integer | 状态码，200=成功，500=错误 |
     | msg | String | 消息 |
     | data | String | 成功时返回 token（UUID），失败时为 null |
-- **备注**：无
+- **备注**：
+  -1.为什么要有uuid->安全性,不易攻击,可替代敏感信息去userid,起到身份识别的作用
 
 #### POST /api/register
 
