@@ -4,16 +4,14 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.Data;
 
 /**
- * Request DTO for creating knowledge base
- * Frontend sends snake_case fields: base_name, base_desc
+ * Request DTO for updating knowledge base
  */
 @Data
-public class BaseCreateRequest {
-    
+public class BaseUpdateRequest {
+
     @JsonProperty("base_name")
     private String baseName;
-    
+
     @JsonProperty("base_desc")
     private String baseDesc;
 }
-

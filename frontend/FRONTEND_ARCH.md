@@ -286,16 +286,21 @@ pnpm preview
 - **响应结构**:
   ```json
   {
-    "total": number,
-    "data": [
-      {
-        "baseId": "string",
-        "base_name": "string",
-        "base_desc": "string"
-      }
-    ]
+    "code": 200,
+    "msg": "success",
+    "data": {
+      "total": number,
+      "data": [
+        {
+          "baseId": "string",
+          "base_name": "string",
+          "base_desc": "string"
+        }
+      ]
+    }
   }
   ```
+- **响应处理**: 使用 `data.data` 访问列表数据（`data.data.data` 为数组，`data.data.total` 为总数）
 
 #### 3.3.2 创建知识库
 
@@ -306,6 +311,18 @@ pnpm preview
   {
     "base_name": "string",
     "base_desc": "string"
+  }
+  ```
+- **响应结构**:
+  ```json
+  {
+    "code": 200,
+    "msg": "success",
+    "data": {
+      "baseId": "string",
+      "base_name": "string",
+      "base_desc": "string"
+    }
   }
   ```
 
@@ -320,12 +337,32 @@ pnpm preview
     "base_desc": "string"
   }
   ```
+- **响应结构**:
+  ```json
+  {
+    "code": 200,
+    "msg": "success",
+    "data": {
+      "baseId": "string",
+      "base_name": "string",
+      "base_desc": "string"
+    }
+  }
+  ```
 
 #### 3.3.4 删除知识库
 
 - **前端触发点**: `deleteKnowledge` in `KnowBase.jsx` (line 252)
 - **后端接口**: `DELETE /api/knowledge/delete/:baseId`
 - **请求头**: `Authorization: localStorage.auth`
+- **响应结构**:
+  ```json
+  {
+    "code": 200,
+    "msg": "success",
+    "data": "Knowledge base deleted successfully"
+  }
+  ```
 
 #### 3.3.5 搜索知识库
 
@@ -337,6 +374,24 @@ pnpm preview
     "base_name": "string"
   }
   ```
+- **响应结构**:
+  ```json
+  {
+    "code": 200,
+    "msg": "success",
+    "data": {
+      "total": number,
+      "data": [
+        {
+          "baseId": "string",
+          "base_name": "string",
+          "base_desc": "string"
+        }
+      ]
+    }
+  }
+  ```
+- **响应处理**: 使用 `data.data` 访问列表数据（`data.data.data` 为数组，`data.data.total` 为总数）
 
 #### 3.3.6 获取知识库详情
 

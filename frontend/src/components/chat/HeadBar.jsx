@@ -106,12 +106,12 @@ function HeadBar({
 
       const data = await response.json();
 
-      if (response.status !== 200 ||  data.total == 0) {
+      if (response.status !== 200 || data.code !== 200 || !data.data || data.data.total == 0) {
         setData([]);
         return;
       }
-      setData(data.data || []);
-      data.data.map((base) => {
+      setData(data.data.data || []);
+      data.data.data.map((base) => {
         if (base.baseId == baseIdRef.current) {
           setCurrentBase(base);
         }

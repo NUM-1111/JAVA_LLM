@@ -142,12 +142,12 @@ function KnowBasepage() {
 
       const data = await response.json();
 
-      if (data.total == 0 || response.status !== 200) {
+      if (response.status !== 200 || data.code !== 200 || !data.data || data.data.total == 0) {
         setData([]);
         setLoading(false);
         return;
       }
-      setData(data.data || []);
+      setData(data.data.data || []);
       setLoading(false);
     } catch (error) {
       console.error(error);
@@ -174,7 +174,7 @@ function KnowBasepage() {
       });
 
       const data = await response.json();
-      if (data.msg === "知识库创建成功") {
+      if (data.code === 200) {
         console.log("创建成功");
         toast.success("创建成功");
         // 关闭弹窗
@@ -224,7 +224,7 @@ function KnowBasepage() {
       });
 
       const data = await response.json();
-      if (data.msg === "知识库更新成功") {
+      if (data.code === 200) {
         console.log("编辑成功");
         toast.success("编辑成功");
         // 关闭弹窗
@@ -260,7 +260,7 @@ function KnowBasepage() {
       });
 
       const data = await response.json();
-      if (data.msg === "删除知识库成功") {
+      if (data.code === 200) {
         console.log("删除成功");
         toast.success("删除成功");
         // 刷新页面
@@ -295,12 +295,12 @@ function KnowBasepage() {
       });
 
       const data = await response.json();
-      if (data.total == 0 || response.status !== 200) {
+      if (response.status !== 200 || data.code !== 200 || !data.data || data.data.total == 0) {
         setData([]);
         setLoading(false);
         return;
-      } 
-      setData(data.data || []);
+      }
+      setData(data.data.data || []);
       setLoading(false);
     } catch (error) {
       console.error(error);
