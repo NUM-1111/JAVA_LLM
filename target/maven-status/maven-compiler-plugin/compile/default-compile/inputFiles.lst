@@ -1,7 +1,10 @@
 /root/go/src/Go_LLM_Web/src/main/java/com/heu/rag/RagApplication.java
 /root/go/src/Go_LLM_Web/src/main/java/com/heu/rag/common/Result.java
 /root/go/src/Go_LLM_Web/src/main/java/com/heu/rag/config/CorsConfig.java
+/root/go/src/Go_LLM_Web/src/main/java/com/heu/rag/config/EmbeddingDimensionValidator.java
 /root/go/src/Go_LLM_Web/src/main/java/com/heu/rag/config/GlobalExceptionHandler.java
+/root/go/src/Go_LLM_Web/src/main/java/com/heu/rag/config/MilvusConfig.java
+/root/go/src/Go_LLM_Web/src/main/java/com/heu/rag/config/MultipartConfig.java
 /root/go/src/Go_LLM_Web/src/main/java/com/heu/rag/config/SnowflakeIdGenerator.java
 /root/go/src/Go_LLM_Web/src/main/java/com/heu/rag/core/config/JwtConfig.java
 /root/go/src/Go_LLM_Web/src/main/java/com/heu/rag/core/config/SecurityConfig.java

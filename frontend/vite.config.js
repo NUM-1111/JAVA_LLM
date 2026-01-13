@@ -18,6 +18,19 @@ export default defineConfig({
         target: 'http://localhost:8081',
         changeOrigin: true,
         secure: false,
+        // Support large file uploads
+        timeout: 300000, // 5 minutes timeout for large files
+        configure: (proxy, _options) => {
+          proxy.on('error', (err, _req, res) => {
+            console.log('proxy error', err);
+          });
+          proxy.on('proxyReq', (proxyReq, req, _res) => {
+            console.log('Sending Request to the Target:', req.method, req.url);
+          });
+          proxy.on('proxyRes', (proxyRes, req, _res) => {
+            console.log('Received Response from the Target:', proxyRes.statusCode, req.url);
+          });
+        },
       }
     }
   }

@@ -1,5 +1,12 @@
 server:
   port: 8081
+  # File upload size limits
+  servlet:
+    multipart:
+      enabled: true
+      max-file-size: 100MB # Maximum size per file
+      max-request-size: 100MB # Maximum size for entire request
+      file-size-threshold: 2KB # Size threshold after which files will be written to disk
 
 spring:
   application:
@@ -44,7 +51,20 @@ spring:
         client:
           host: localhost
           port: 19530
-        embedding-dimension: 4096 # Adjust based on your Ollama model (Qwen2.5 7B is typically 4096)
+        collection-name: vector_store # Collection name
+        embedding-dimension: 3584 # Qwen2.5:7b model outputs 3584-dimensional embeddings (NOT 4096)
+        auto-create: true # Auto-create collection if it doesn't exist
+        # ============================================
+        # CRITICAL: Field Name Configuration
+        # ============================================
+        # Milvus集合schema使用的字段名（见MilvusConfig.java）：
+        # - 主键字段: "id" (Spring AI默认是 "doc_id")
+        # - Metadata字段: "metadata_json" (Spring AI默认是 "metadata")
+        # 必须显式配置以匹配集合schema，否则会报 "field is not provided" 错误
+        id-field-name: id # Must match Milvus collection schema (default is doc_id)
+        metadata-field-name: metadata_json # Must match Milvus collection schema (default is metadata)
+        auto-id: false # Must match Milvus collection schema (collection uses manual ID)
+        # ============================================
 
   # Mail Configuration
   mail:

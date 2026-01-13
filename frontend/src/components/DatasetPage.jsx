@@ -77,16 +77,18 @@ function DatasetPage() {
           offset: (pagination.current - 1) * pagination.pageSize,
         },
       });
-      const data = res.data.data || [];
+      // 后端返回格式: {code: 200, msg: "success", data: {total: number, data: [...]}}
+      const responseData = res.data.data || {};
+      const data = responseData.data || [];
+      const total = responseData.total || 0;
       const files = data.map((prev) => {
         const createdAt = dayjs(prev.created_at);
         prev.created_at = createdAt.format("YYYY-MM-DD HH:mm:ss");
         prev.file_type = MatchFileType(prev.file_type);
         return prev;
       });
-      console.log(res.data.total);
       setFileList(files);
-      setPagination({ ...pagination, total: res.data.total });
+      setPagination({ ...pagination, total: total });
     } catch (err) {
       console.error(err);
       if (err.response?.status === 401) {
