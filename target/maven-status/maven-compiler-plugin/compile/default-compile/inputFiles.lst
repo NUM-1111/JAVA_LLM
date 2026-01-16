@@ -13,9 +13,12 @@
 /root/go/src/Go_LLM_Web/src/main/java/com/heu/rag/core/controller/ConversationController.java
 /root/go/src/Go_LLM_Web/src/main/java/com/heu/rag/core/controller/DocumentController.java
 /root/go/src/Go_LLM_Web/src/main/java/com/heu/rag/core/controller/KnowledgeBaseController.java
+/root/go/src/Go_LLM_Web/src/main/java/com/heu/rag/core/controller/UserSettingsController.java
 /root/go/src/Go_LLM_Web/src/main/java/com/heu/rag/core/controller/dto/BaseCreateRequest.java
 /root/go/src/Go_LLM_Web/src/main/java/com/heu/rag/core/controller/dto/BaseSearchRequest.java
 /root/go/src/Go_LLM_Web/src/main/java/com/heu/rag/core/controller/dto/BaseUpdateRequest.java
+/root/go/src/Go_LLM_Web/src/main/java/com/heu/rag/core/controller/dto/ChangeEmailRequest.java
+/root/go/src/Go_LLM_Web/src/main/java/com/heu/rag/core/controller/dto/ChangeUsernameRequest.java
 /root/go/src/Go_LLM_Web/src/main/java/com/heu/rag/core/controller/dto/ChatRequest.java
 /root/go/src/Go_LLM_Web/src/main/java/com/heu/rag/core/controller/dto/CheckCodeRequest.java
 /root/go/src/Go_LLM_Web/src/main/java/com/heu/rag/core/controller/dto/ConversationDTO.java

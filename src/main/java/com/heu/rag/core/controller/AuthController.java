@@ -1,7 +1,11 @@
 package com.heu.rag.core.controller;
 
 import com.heu.rag.common.Result;
-import com.heu.rag.core.controller.dto.*;
+import com.heu.rag.core.controller.dto.CheckCodeRequest;
+import com.heu.rag.core.controller.dto.LoginRequest;
+import com.heu.rag.core.controller.dto.RegisterRequest;
+import com.heu.rag.core.controller.dto.ResetPasswordRequest;
+import com.heu.rag.core.controller.dto.SendEmailRequest;
 import com.heu.rag.core.domain.User;
 import com.heu.rag.core.repository.UserRepository;
 import com.heu.rag.core.service.EmailService;
@@ -10,8 +14,6 @@ import com.heu.rag.core.util.JwtTokenUtil;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.security.core.Authentication;
-import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.web.bind.annotation.*;
 
@@ -246,27 +248,4 @@ public class AuthController {
         return Result.success("Password reset successfully");
     }
 
-    /**
-     * Get user information
-     * GET /api/user/info
-     * Requires JWT authentication
-     */
-    @GetMapping("/user/info")
-    public Result<UserInfoResponse> getUserInfo() {
-        // Get user ID from SecurityContext (set by JwtAuthenticationFilter)
-        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-        if (authentication == null || !(authentication.getPrincipal() instanceof Long)) {
-            return Result.error(401, "Unauthorized");
-        }
-
-        Long userId = (Long) authentication.getPrincipal();
-        User user = userRepository.findById(userId).orElse(null);
-
-        if (user == null) {
-            return Result.error(404, "User not found");
-        }
-
-        UserInfoResponse response = new UserInfoResponse(user.getUsername());
-        return Result.success(response);
-    }
 }
