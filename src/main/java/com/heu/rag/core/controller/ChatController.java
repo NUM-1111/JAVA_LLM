@@ -46,7 +46,7 @@ public class ChatController {
         log.info("New chat message: conversationId={}, baseId={}, userId={}", 
                 request.getConversation_id(), request.getBaseId(), userId);
         
-        String query = request.getMessage();
+        String query = request.getMessageText();
         String conversationId = request.getConversation_id();
         Long baseId = request.getBaseId();
         

@@ -10,6 +10,7 @@
 /root/go/src/Go_LLM_Web/src/main/java/com/heu/rag/core/config/SecurityConfig.java
 /root/go/src/Go_LLM_Web/src/main/java/com/heu/rag/core/controller/AuthController.java
 /root/go/src/Go_LLM_Web/src/main/java/com/heu/rag/core/controller/ChatController.java
+/root/go/src/Go_LLM_Web/src/main/java/com/heu/rag/core/controller/ConversationController.java
 /root/go/src/Go_LLM_Web/src/main/java/com/heu/rag/core/controller/DocumentController.java
 /root/go/src/Go_LLM_Web/src/main/java/com/heu/rag/core/controller/KnowledgeBaseController.java
 /root/go/src/Go_LLM_Web/src/main/java/com/heu/rag/core/controller/dto/BaseCreateRequest.java
@@ -17,13 +18,18 @@
 /root/go/src/Go_LLM_Web/src/main/java/com/heu/rag/core/controller/dto/BaseUpdateRequest.java
 /root/go/src/Go_LLM_Web/src/main/java/com/heu/rag/core/controller/dto/ChatRequest.java
 /root/go/src/Go_LLM_Web/src/main/java/com/heu/rag/core/controller/dto/CheckCodeRequest.java
+/root/go/src/Go_LLM_Web/src/main/java/com/heu/rag/core/controller/dto/ConversationDTO.java
+/root/go/src/Go_LLM_Web/src/main/java/com/heu/rag/core/controller/dto/ConversationDeleteRequest.java
+/root/go/src/Go_LLM_Web/src/main/java/com/heu/rag/core/controller/dto/ConversationRenameRequest.java
 /root/go/src/Go_LLM_Web/src/main/java/com/heu/rag/core/controller/dto/DocumentChangeStatusRequest.java
 /root/go/src/Go_LLM_Web/src/main/java/com/heu/rag/core/controller/dto/DocumentChunkDTO.java
 /root/go/src/Go_LLM_Web/src/main/java/com/heu/rag/core/controller/dto/DocumentDTO.java
 /root/go/src/Go_LLM_Web/src/main/java/com/heu/rag/core/controller/dto/DocumentDeleteRequest.java
 /root/go/src/Go_LLM_Web/src/main/java/com/heu/rag/core/controller/dto/DocumentRenameRequest.java
 /root/go/src/Go_LLM_Web/src/main/java/com/heu/rag/core/controller/dto/KnowledgeBaseDTO.java
+/root/go/src/Go_LLM_Web/src/main/java/com/heu/rag/core/controller/dto/LatestIdRequest.java
 /root/go/src/Go_LLM_Web/src/main/java/com/heu/rag/core/controller/dto/LoginRequest.java
+/root/go/src/Go_LLM_Web/src/main/java/com/heu/rag/core/controller/dto/MessageQueryRequest.java
 /root/go/src/Go_LLM_Web/src/main/java/com/heu/rag/core/controller/dto/RegisterRequest.java
 /root/go/src/Go_LLM_Web/src/main/java/com/heu/rag/core/controller/dto/ResetPasswordRequest.java
 /root/go/src/Go_LLM_Web/src/main/java/com/heu/rag/core/controller/dto/SendEmailRequest.java

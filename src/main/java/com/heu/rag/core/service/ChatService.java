@@ -27,6 +27,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.UUID;
 import java.util.stream.Collectors;
 
@@ -73,7 +74,7 @@ public class ChatService {
         final String finalConversationId;
         Conversation conversation;
         if (conversationId == null || conversationId.isEmpty()) {
-            // Create new conversation
+            // Create new conversation with generated ID
             finalConversationId = UUID.randomUUID().toString();
             String title = generateTitle(query);
             conversation = Conversation.builder()
@@ -91,15 +92,38 @@ public class ChatService {
             log.info("Created new conversation: conversationId={}", finalConversationId);
         } else {
             finalConversationId = conversationId;
-            // Verify conversation belongs to user
-            conversation = conversationRepository.findByConversationIdAndUserId(finalConversationId, userId)
-                    .orElseThrow(() -> new ResourceNotFoundException("Conversation not found"));
-            // Update conversation
-            conversation.setUpdatedAt(LocalDateTime.now());
-            if (baseId != null) {
-                conversation.setBaseId(baseId);
+            // Try to find existing conversation
+            Optional<Conversation> existingConversation = conversationRepository
+                    .findByConversationIdAndUserId(finalConversationId, userId);
+
+            if (existingConversation.isPresent()) {
+                // Update existing conversation
+                conversation = existingConversation.get();
+                conversation.setUpdatedAt(LocalDateTime.now());
+                if (baseId != null) {
+                    conversation.setBaseId(baseId);
+                }
+                conversation = conversationRepository.save(conversation);
+                log.info("Updated existing conversation: conversationId={}", finalConversationId);
+            } else {
+                // Conversation doesn't exist, create new one with the provided ID
+                // This happens when frontend generates a new conversationId but it's not in DB
+                // yet
+                String title = generateTitle(query);
+                conversation = Conversation.builder()
+                        .conversationId(finalConversationId)
+                        .userId(userId)
+                        .title(title)
+                        .baseId(baseId)
+                        .currentNode(null)
+                        .defaultModel(null)
+                        .isArchived(false)
+                        .createdAt(LocalDateTime.now())
+                        .updatedAt(LocalDateTime.now())
+                        .build();
+                conversation = conversationRepository.save(conversation);
+                log.info("Created new conversation with provided ID: conversationId={}", finalConversationId);
             }
-            conversation = conversationRepository.save(conversation);
         }
         final Conversation finalConversation = conversation;
 
@@ -212,9 +236,25 @@ public class ChatService {
                 .doOnNext(chunk -> log.trace("Streaming chunk: {}", chunk))
                 .doOnComplete(() -> log.info("Streaming completed for query"));
 
-        // 9. Add status event at the end
-        Flux<String> finalResponseFlux = jsonEventFlux
-                .concatWith(Flux.just("{\"type\":\"status\",\"message\":\"ANSWER_DONE\"}"));
+        // 9. Add conversation_id event at the start (if it's a new conversation)
+        // and status event at the end
+        Flux<String> finalResponseFlux;
+        if (conversationId == null || conversationId.isEmpty()) {
+            // New conversation: send conversation_id event first
+            // Note: conversationId is a UUID, so it doesn't need JSON escaping, but we'll
+            // do it for safety
+            String escapedConversationId = escapeJson(finalConversationId);
+            String conversationIdEvent = String.format("{\"type\":\"conversation_id\",\"conversation_id\":\"%s\"}",
+                    escapedConversationId);
+            finalResponseFlux = Flux.just(conversationIdEvent)
+                    .concatWith(jsonEventFlux)
+                    .concatWith(Flux.just("{\"type\":\"status\",\"message\":\"ANSWER_DONE\"}"));
+            log.info("Sending conversation_id event: conversationId={}", finalConversationId);
+        } else {
+            // Existing conversation: just add status event at the end
+            finalResponseFlux = jsonEventFlux
+                    .concatWith(Flux.just("{\"type\":\"status\",\"message\":\"ANSWER_DONE\"}"));
+        }
 
         // 10. Persistence: Async save the User query and final AI response to MongoDB
         Mono<String> fullResponseMono = contentFlux

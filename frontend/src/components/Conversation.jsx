@@ -95,7 +95,8 @@ function ChatPage() {
   // 处理初始消息（独立 effect）
   useEffect(() => {
     const initialMessage = location.state?.initialMessage;
-    if (!conversationId) return;
+    // 允许 conversationId 为空（新对话）
+    // if (!conversationId) return;
     if (initialMessage) {
       // 立即清理 location.state
       navigate(location.pathname, {
@@ -150,7 +151,9 @@ function ChatPage() {
           if (!response.ok) throw new Error("服务器返回错误");
           // 切分解析ai文本
           const data = await response.json();
-          const messages = processMessages(data.current_id, data.messages);
+          // 后端返回 Result 格式: {code: 200, msg: "success", data: {current_id: "...", messages: [...]}}
+          const responseData = data.code === 200 && data.data ? data.data : data;
+          const messages = processMessages(responseData.current_id, responseData.messages || []);
           setMessages(messages || []);
         } catch (error) {
           console.error("请求失败:", error);
@@ -217,7 +220,7 @@ function ChatPage() {
           action: "next",
           message: userMessage.message,
           message_id: userMessage.message_id,
-          conversation_id: userMessage.conversation_id,
+          conversation_id: userMessage.conversation_id || null, // 空字符串转为 null
           baseId: baseIdRef.current,
           parent: userMessage.parent,
           model: aiMessage.message.model,
@@ -230,8 +233,32 @@ function ChatPage() {
       const contentType = response.headers.get("Content-Type") || "";
       if (contentType.includes("application/json")) {
         const data = await response.json();
-        console.log("错误:", data);
-        return;
+        console.error("服务器返回错误:", data);
+        // 更新 AI 消息状态为错误
+        setMessages((prev) => {
+          const newMessages = [...prev];
+          const aiMsg = newMessages[newMessages.length - 1];
+          if (aiMsg && aiMsg.message.author.role === "assistant") {
+            aiMsg.message.status = "error";
+            aiMsg.message.thinking = false;
+          }
+          return newMessages;
+        });
+        return null;
+      }
+      
+      if (!response.ok) {
+        console.error("请求失败，状态码:", response.status);
+        setMessages((prev) => {
+          const newMessages = [...prev];
+          const aiMsg = newMessages[newMessages.length - 1];
+          if (aiMsg && aiMsg.message.author.role === "assistant") {
+            aiMsg.message.status = "error";
+            aiMsg.message.thinking = false;
+          }
+          return newMessages;
+        });
+        return null;
       }
 
       if (contentType.includes("text/event-stream") && response.body) {
@@ -240,14 +267,38 @@ function ChatPage() {
           .pipeThrough(new EventSourceParserStream()) // 解析 SSE
           .getReader();
 
-        await processSSE(reader, aiMessage, setMessages, abortController);
+        const newConversationId = await processSSE(
+          reader, 
+          aiMessage, 
+          setMessages, 
+          abortController,
+          setConversationId,
+          navigate
+        );
         aiMessage.message.thinking = false;
+        
+        // 如果收到新的 conversationId，更新 userMessage 和 aiMessage
+        if (newConversationId) {
+          setMessages((prev) => {
+            return prev.map((msg) => {
+              if (msg.message_id === userMessage.message_id || msg.message_id === aiMessage.message_id) {
+                return { ...msg, conversation_id: newConversationId };
+              }
+              return msg;
+            });
+          });
+        }
+        
+        return newConversationId; // 返回新的 conversationId
       }
+      
+      return null;
     } catch (error) {
       if (error.name !== "AbortError") {
         console.error("请求失败:", error);
         aiMessage.message.thinking = false;
       }
+      return null;
     }
   };
 
@@ -264,7 +315,7 @@ function ChatPage() {
       }
       const userMessage =
         initialMessage ||
-        createUserMessage(inputText, messages, conversationId);
+        createUserMessage(inputText, messages, conversationId || "");
       if (!userMessage) return;
 
       if (!initialMessage) {
@@ -277,39 +328,51 @@ function ChatPage() {
       setMessages((prev) => [...prev, aiMessage]);
       setShowThinkText((prev) => ({ ...prev, [aiMessage.message_id]: true }));
 
-      await sendMessageToServer(
+      const newConversationId = await sendMessageToServer(
         userMessage,
         aiMessage,
         deepThink,
         abortController
       );
       setFinishText(true);
+      
       // 流式结束后获取最新消息ID
+      // 注意：conversationId 可能已经在 processSSE 中更新了
       try {
-        const response = await fetch("/api/get/latest/id", {
-          method: "POST",
-          headers: {
-            Authorization: localStorage.auth,
-          },
-          body: JSON.stringify({
-            conversation_id: conversationId,
-          }),
-        });
-
-        if (response.ok) {
-          const { current_id } = await response.json();
-
-          // 更新占位消息的ID
-          setMessages((prev) => {
-            const newMessages = [...prev];
-            const lastMessage = newMessages[newMessages.length - 1];
-            if (lastMessage.message.author.role === "assistant") {
-              lastMessage.message_id = current_id;
-              lastMessage.message.thinking = false;
-              lastMessage.message.status = "finished_successfully";
-            }
-            return newMessages;
+        const conversationIdToUse = newConversationId || conversationId || userMessage.conversation_id;
+        
+        if (conversationIdToUse) {
+          const response = await fetch("/api/get/latest/id", {
+            method: "POST",
+            headers: {
+              Authorization: localStorage.auth,
+              "Content-Type": "application/json",
+            },
+            body: JSON.stringify({
+              conversation_id: conversationIdToUse,
+            }),
           });
+
+          if (response.ok) {
+            const data = await response.json();
+            // 后端返回 Result 格式: {code: 200, msg: "success", data: {current_id: "..."}}
+            const responseData = data.code === 200 && data.data ? data.data : data;
+            const current_id = responseData.current_id;
+
+            // 更新占位消息的ID
+            if (current_id) {
+              setMessages((prev) => {
+                const newMessages = [...prev];
+                const lastMessage = newMessages[newMessages.length - 1];
+                if (lastMessage && lastMessage.message.author.role === "assistant") {
+                  lastMessage.message_id = current_id;
+                  lastMessage.message.thinking = false;
+                  lastMessage.message.status = "finished_successfully";
+                }
+                return newMessages;
+              });
+            }
+          }
         }
       } catch (error) {
         console.error("获取最新消息ID失败:", error);
@@ -317,7 +380,7 @@ function ChatPage() {
         setFinishText(true);
       }
     },
-    [inputText, messages, conversationId, selectedCode, deepThink]
+    [inputText, messages, conversationId, selectedCode, deepThink, navigate]
   );
 
   // 切换显示思考文本

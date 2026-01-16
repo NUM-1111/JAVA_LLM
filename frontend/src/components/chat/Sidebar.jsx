@@ -167,7 +167,7 @@ export default function SideBar({ isOpen, setIsOpen, finishText }) {
 
         {/* 侧边栏对话列表 */}
         <div className="mt-6">
-          {conversations.length === 0 ? (
+          {(conversations?.length ?? 0) === 0 ? (
             <p className="text-gray-500 text-center">暂无对话</p>
           ) : (
             conversations.map((conversation) => (
@@ -302,7 +302,11 @@ async function fetchConversations() {
     // 解析 JSON 数据
     const data = await response.json();
 
-    return data.sessions; // 返回会话列表
+    // 后端返回 Result 格式: {code: 200, msg: "success", data: {sessions: [...]}}
+    if (data.code === 200 && data.data && data.data.sessions) {
+      return data.data.sessions; // 返回会话列表
+    }
+    return []; // 如果格式不匹配，返回空数组
   } catch (error) {
     console.error("获取会话失败:", error);
     return []; // 发生错误时返回空数组，防止程序崩溃
