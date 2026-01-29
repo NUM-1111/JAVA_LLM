@@ -1,6 +1,6 @@
 # 对话模块开发文档 (Chat Module)
 
-> 本文档描述对话模块的完整实现需求，包括当前已完成功能和待实现功能。
+> 本文档用于驱动“对话与 RAG 问答”模块的迭代：明确已实现能力、当前缺口、以及可直接交给 Cursor 的下一步任务拆解。
 
 ---
 
@@ -26,95 +26,66 @@
 - **文件位置**: 
   - Controller: `src/main/java/com/heu/rag/core/controller/ChatController.java`
   - Service: `src/main/java/com/heu/rag/core/service/ChatService.java`
-- **实现状态**: ✅ 基础实现完成
+- **实现状态**: ✅ 已实现（SSE + JSON 事件流）
 - **当前功能**:
-  - 支持 SSE (Server-Sent Events) 流式响应
-  - 向量检索（Milvus）
-  - LLM 调用（Ollama）
-  - 历史消息集成（最后5条）
-  - 消息持久化到 MongoDB
+  - **SSE (text/event-stream)**：服务端输出 `data: {json}\n\n`
+  - **RAG 检索**：使用 `VectorStore.similaritySearch(topK=4, threshold=0.7)`
+  - **LLM 流式生成**：`ChatModel.stream(prompt)`（Ollama）
+  - **对话历史拼接**：读取该 conversation 最近 5 条消息作为上下文（简化版）
+  - **消息持久化**：将 user/assistant 消息写入 MongoDB，并更新 Conversation.currentNode
 - **当前问题**:
-  1. **请求格式不匹配**: 
-     - 当前请求: `{"message": "string", "conversation_id": "string", "baseId": "Long"}`
-     - 前端期望: 复杂结构（见 3.1.1 详细说明）
-  2. **响应格式不匹配**:
-     - 当前响应: 纯文本流 (`data: text`)
-     - 前端期望: JSON 格式事件流 (`data: {"type": "...", "content": "..."}`)
-  3. **消息ID生成**: 使用简单的时间戳，应使用 UUID
-  4. **缺少 conversationId 创建逻辑**: 首次对话需要创建 Conversation 实体
-  5. **缺少 baseId 关联**: 需要验证 baseId 与用户的关系
-  6. **缺少思考过程处理**: 前端期望 `</think>` 标记分隔思考文本和回答文本
+  1. **知识库隔离不完整（重要）**：当前向量检索未按 `baseId` 过滤，存在跨知识库“串库检索”风险（需按 metadata/baseId 过滤或分集合）。
+  2. **文档启用状态未纳入检索**：`Document.isEnabled` 目前不影响 RAG 检索（需在写入 metadata 或检索过滤）。
+  3. **思考过程/模型字段未对齐**：消息返回结构中 `thinking/model/thinkText` 目前是简化占位。
+  4. **消息树 children 未维护**：MongoDB 中 `children` 字段目前多数为空列表。
+
+#### 2.1.2 对话管理接口（ConversationController）
+以下接口均已实现（并做了 userId ownership 校验）：
+- `GET /api/get/conversation/{conversationId}`
+- `GET /api/query/conversation`
+- `POST /api/delete/conversation`
+- `PUT /api/rename/conversation`
+- `POST /api/delete/chat`
+- `POST /api/query/messages`
+- `POST /api/get/latest/id`
+
+---
+
+## 3. 前端契约（当前支持的最小字段）
+
+### 3.1 `/api/new/message`（建议维持简化请求）
+- **请求**（当前后端 `ChatRequest` 可兼容）：
+  - `message`/`messageText`（以 DTO 为准）
+  - `conversation_id`（空则后端创建并通过 SSE 首帧返回）
+  - `baseId`（可空）
+
+### 3.2 SSE 事件协议（已实现）
+- `{"type":"conversation_id","conversation_id":"..."}`
+- `{"type":"answer_chunk","content":"..."}`
+- `{"type":"status","message":"ANSWER_DONE"}`
+- 错误：`{"type":"error","message":"..."}`
 
 ---
 
 ## 3. 待实现功能 ⚠️
 
-### 3.1 消息发送接口优化
+### 3.1 RAG 检索隔离（P0）
+- **目标**：检索结果必须限定在当前 `baseId`（且可进一步限定 `docId/isEnabled`）
+- **方案 A（推荐）**：使用 Milvus Java SDK 的 Query/Search + expr 过滤（见 `MILVUS_OPTIMIZATION_NOTES.md`）
+- **方案 B（可选）**：按知识库分集合（collection per baseId），隔离最彻底但运维成本更高
+- **验收**：
+  - 同一 query 在不同 baseId 下检索结果不同且不互相泄漏
+  - 无 baseId 时不做向量检索（仅走纯 LLM）
 
-#### 3.1.1 请求格式调整
-- **前端实际请求格式** (`frontend/FRONTEND_ARCH.md` 3.1.1):
-  ```json
-  {
-    "action": "next",
-    "message": {
-      "author": { "role": "user" },
-      "content": {
-        "content_type": "text",
-        "text": "用户输入的消息内容"
-      },
-      "status": "finished_successfully"
-    },
-    "message_id": "uuid()",
-    "conversation_id": "string",
-    "baseId": "string | null",
-    "parent": "string | null",
-    "model": "DeepSeek-R1 | QwQ-32B",
-    "use_deep_think": true | false,
-    "created_at": "ISO 8601 时间戳"
-  }
-  ```
-- **简化方案**: 为了兼容性，可以提取关键字段:
-  ```json
-  {
-    "message": "string",           // 必需
-    "conversation_id": "string",   // 可选，为空时创建新对话
-    "baseId": "Long",              // 可选，null 表示不使用知识库
-    "parent": "string"             // 可选，父消息ID
-  }
-  ```
-- **建议**: 
-  - 第一阶段使用简化方案，保持与当前实现兼容
-  - 后续可根据需要支持完整前端格式
+### 3.2 思考过程与消息结构对齐（P1）
+- **目标**：支持 `</think>` 分割，将 thinkText 与 answerText 分离存储与返回
+- **验收**：
+  - `query/messages` 返回 assistant 消息时，`message.content.thinkText` 可选存在
+  - 前端 “深度思考” UI 可正常渲染
 
-#### 3.1.2 响应格式调整
-- **前端期望格式** (`frontend/FRONTEND_ARCH.md` 6.2):
-  ```
-  data: {"type": "answer_chunk", "content": "这是"}
-  data: {"type": "answer_chunk", "content": "关于"}
-  data: {"type": "status", "message": "ANSWER_DONE"}
-  ```
-- **当前实现**: 纯文本流
-- **优化方案**:
-  ```java
-  // ChatService.java 中修改流式响应格式
-  Flux<String> responseFlux = chatResponseFlux
-      .map(chatResponse -> {
-          String content = extractContent(chatResponse);
-          // 包装为 JSON 格式
-          return String.format("{\"type\":\"answer_chunk\",\"content\":\"%s\"}", 
-              escapeJson(content));
-      })
-      .concatWith(Flux.just("{\"type\":\"status\",\"message\":\"ANSWER_DONE\"}"));
-  ```
-
-#### 3.1.3 思考过程处理
-- **前端需求**: 支持思考文本（`thinkText`）和回答文本（`text`）分离
-- **标记**: `</think>` 用于分隔
-- **实现方案**:
-  1. 检测 LLM 响应中是否包含 `</think>` 标记
-  2. 分离思考部分和回答部分
-  3. 在消息存储时分别保存
-  4. 流式响应中，思考部分可通过 `status` 事件发送
+### 3.3 children 字段维护（P2）
+- **目标**：形成可追溯的消息树（parent/children）
+- **验收**：插入新消息时，父消息 children 自动追加
 
 ### 3.2 对话管理功能
 
@@ -402,14 +373,14 @@ Flux<String> responseFlux = chatResponseFlux
 
 | 接口 | 方法 | 路径 | 认证 | 状态 |
 |------|------|------|------|------|
-| 发送消息 | POST | `/api/new/message` | ✅ | ✅ 需优化 |
-| 获取对话信息 | GET | `/api/get/conversation/:id` | ✅ | ⚠️ 待实现 |
-| 查询消息列表 | POST | `/api/query/messages` | ✅ | ⚠️ 待实现 |
-| 获取最新消息ID | POST | `/api/get/latest/id` | ✅ | ⚠️ 待实现 |
-| 查询对话列表 | GET | `/api/query/conversation` | ✅ | ⚠️ 待实现 |
-| 删除对话 | POST | `/api/delete/conversation` | ✅ | ⚠️ 待实现 |
-| 重命名对话 | PUT | `/api/rename/conversation` | ✅ | ⚠️ 待实现 |
-| 删除所有聊天记录 | POST | `/api/delete/chat` | ✅ | ⚠️ 待实现 |
+| 发送消息（SSE） | POST | `/api/new/message` | ✅ | ✅ 已实现（P0：补 baseId 隔离） |
+| 获取对话信息 | GET | `/api/get/conversation/{id}` | ✅ | ✅ 已实现 |
+| 查询消息列表 | POST | `/api/query/messages` | ✅ | ✅ 已实现（结构简化） |
+| 获取最新消息ID | POST | `/api/get/latest/id` | ✅ | ✅ 已实现 |
+| 查询对话列表 | GET | `/api/query/conversation` | ✅ | ✅ 已实现 |
+| 删除对话 | POST | `/api/delete/conversation` | ✅ | ✅ 已实现 |
+| 重命名对话 | PUT | `/api/rename/conversation` | ✅ | ✅ 已实现 |
+| 删除所有聊天记录 | POST | `/api/delete/chat` | ✅ | ✅ 已实现 |
 
 ---
 
@@ -441,26 +412,25 @@ Flux<String> responseFlux = chatResponseFlux
 ## 8. 开发优先级
 
 1. **P0 (必须)**:
-   - 优化 `/api/new/message` 响应格式（JSON 事件流）
-   - 对话创建逻辑
-   - baseId 验证
-   - 消息ID使用 UUID
+   - ✅ `/api/new/message` JSON 事件流
+   - ✅ 对话创建逻辑
+   - ✅ baseId ownership 校验（注意：检索隔离仍需补）
+   - ✅ 消息ID使用 UUID
+   - **补齐**：按 `baseId` 进行向量检索隔离（防串库）
 
 2. **P1 (重要)**:
-   - 获取对话信息
-   - 查询对话列表
-   - 查询消息列表
-   - 获取最新消息ID
+   - ✅ 获取对话信息 / 列表 / 消息列表 / latest id
+   - 思考过程 `</think>` 支持
+   - 消息结构对齐（thinking/model/thinkText）
 
 3. **P2 (可选)**:
-   - 删除对话
-   - 重命名对话
-   - 删除所有聊天记录
-   - 思考过程支持
+   - ✅ 删除对话 / 重命名 / 清空聊天
+   - children 字段维护（消息树）
+   - 对话分页、归档、搜索
 
 ---
 
 **文档版本**: 1.0  
-**最后更新**: 2024  
+**最后更新**: 2026-01  
 **维护者**: Java 后端开发团队
 

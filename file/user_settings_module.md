@@ -20,9 +20,27 @@
 
 ### 2.1 已实现功能 ✅
 
-**无**
+> ✅ 该模块在 Java 后端已实现（此前文档为“计划稿”，现按代码现状更新）。
 
-所有用户设置相关功能均未实现。
+- **修改用户名**：`POST /api/change/username`
+- **修改邮箱**：`POST /api/change/email`
+- **获取用户信息**：`GET /api/user/info`（当前返回 `username`）
+- **删除所有聊天记录（备用路由）**：`POST /api/user-settings/delete/chat`  
+  - 主路由在对话模块：`POST /api/delete/chat`
+- **注销账号（级联删除）**：`POST /api/delete/account`
+
+**代码位置**:
+- `src/main/java/com/heu/rag/core/controller/UserSettingsController.java`
+
+**实现要点**:
+- **JWT 用户身份获取**：通过 `JwtAuthenticationFilter` 将 `userId` 注入 `SecurityContext`（principal 为 `Long`），Controller 内统一从 `SecurityContext` 取 userId。
+- **校验规则**：
+  - 用户名：3~20 位、字母/数字/下划线、唯一性校验
+  - 邮箱：必须为 `@hrbeu.edu.cn` 域、唯一性校验
+- **级联删除范围**：
+  - MongoDB：Conversation + ChatMessage
+  - PostgreSQL：KnowledgeBase + Document + User
+  - Milvus：目前仅记录日志提示，**向量删除未实现**（见 `MILVUS_OPTIMIZATION_NOTES.md`）
 
 ---
 
@@ -177,27 +195,11 @@
 
 **当前问题**: 用户设置功能分散
 
-**实施方案**:
-1. **创建 `UserSettingsController.java`**:
-   ```java
-   @RestController
-   @RequestMapping("/api")
-   @RequiredArgsConstructor
-   @Slf4j
-   public class UserSettingsController {
-       private final UserRepository userRepository;
-       private final ConversationRepository conversationRepository;
-       private final ChatMessageRepository chatMessageRepository;
-       private final KnowledgeBaseRepository knowledgeBaseRepository;
-       private final DocumentRepository documentRepository;
-       // ...
-   }
-   ```
-
-2. **功能分类**:
-   - `UserSettingsController`: 用户信息修改、注销账号
-   - `ChatController`: 删除所有聊天记录（属于对话模块，但前端放在设置页面）
-   - `AuthController`: 获取用户信息（或移至 UserSettingsController）
+**实施方案（按现状修正）**:
+- 当前已存在 `UserSettingsController`，建议后续保持职责边界：
+  - `UserSettingsController`: 用户信息修改、注销账号、（可选）设置页专用“清空聊天记录”别名路由
+  - `ConversationController`: 对话与消息管理、清空聊天记录主路由
+  - `AuthController`: 登录注册、邮箱验证码、密码重置；`GET /api/user/info` 可统一归口（可选重构）
 
 ### 4.2 用户认证集成 ⭐
 
@@ -365,11 +367,12 @@ private void deleteVectorsByDocId(Long docId) {
 
 | 接口 | 方法 | 路径 | 认证 | 状态 |
 |------|------|------|------|------|
-| 修改用户名 | POST | `/api/change/username` | ✅ | ⚠️ 待实现 |
-| 修改邮箱 | POST | `/api/change/email` | ✅ | ⚠️ 待实现 |
-| 获取用户信息 | GET | `/api/user/info` | ✅ | ⚠️ 待实现（见 auth_module.md） |
-| 删除所有聊天记录 | POST | `/api/delete/chat` | ✅ | ⚠️ 待实现（见 chat_module.md） |
-| 注销账号 | POST | `/api/delete/account` | ✅ | ⚠️ 待实现 |
+| 修改用户名 | POST | `/api/change/username` | ✅ | ✅ 已实现 |
+| 修改邮箱 | POST | `/api/change/email` | ✅ | ✅ 已实现 |
+| 获取用户信息 | GET | `/api/user/info` | ✅ | ✅ 已实现（当前返回 username） |
+| 删除所有聊天记录（主路由） | POST | `/api/delete/chat` | ✅ | ✅ 已实现（见对话模块） |
+| 删除所有聊天记录（备用路由） | POST | `/api/user-settings/delete/chat` | ✅ | ✅ 已实现 |
+| 注销账号 | POST | `/api/delete/account` | ✅ | ✅ 已实现（Milvus 向量清理待补） |
 
 ---
 
@@ -409,23 +412,23 @@ private void deleteVectorsByDocId(Long docId) {
 ## 8. 开发优先级
 
 1. **P0 (必须)**:
-   - 修改用户名
-   - 修改邮箱
-   - 获取用户信息（或在 auth_module 中实现）
+   - ✅ 修改用户名
+   - ✅ 修改邮箱
+   - ✅ 获取用户信息
+   - ✅ 注销账号（级联删除已实现；Milvus 向量清理待补）
 
 2. **P1 (重要)**:
-   - 删除所有聊天记录（或在 chat_module 中实现）
-   - 注销账号（级联删除实现）
+   - 补齐“注销账号时 Milvus 向量清理”（见 `MILVUS_OPTIMIZATION_NOTES.md`）
+   - 注销账号二次确认（密码或邮箱验证码）
 
 3. **P2 (可选)**:
    - 邮箱修改时验证码验证
-   - 注销账号时密码确认
    - 操作日志记录
    - 用户信息扩展（返回更多字段）
 
 ---
 
 **文档版本**: 1.0  
-**最后更新**: 2024  
+**最后更新**: 2026-01  
 **维护者**: Java 后端开发团队
 

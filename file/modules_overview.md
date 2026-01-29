@@ -25,82 +25,79 @@
 
 | 模块 | 已完成功能 | 待实现功能 | 需优化功能 | 完成度 |
 |------|-----------|-----------|-----------|--------|
-| 用户认证模块 | 2 | 4 | 2 | 25% |
-| 对话模块 | 1 | 7 | 1 | 12.5% |
-| 知识库模块 | 4 | 2 | 3 | 44% |
-| 文档管理模块 | 2 | 5 | 2 | 22% |
-| 用户设置模块 | 0 | 4 | 0 | 0% |
+| 用户认证模块 | 5 | 0 | 4 | 75% |
+| 对话模块 | 8 | 0 | 3 | 72% |
+| 知识库模块 | 5 | 0 | 3 | 70% |
+| 文档管理模块 | 6 | 0 | 4 | 70% |
+| 用户设置模块 | 5 | 0 | 2 | 80% |
 
 ### 2.2 各模块详细状态
 
 #### 用户认证模块 (auth_module.md)
 - ✅ **已完成**: 
-  - 基础登录 (POST /api/login) - 需优化
-  - 基础注册 (POST /api/register) - 需优化
-- ⚠️ **待实现**: 
+  - 登录（JWT）(POST /api/login)
+  - 注册（可开关验证码）(POST /api/register)
   - 发送邮箱验证码 (POST /api/send/email)
-  - 验证邮箱验证码 (POST /api/checkcode)
+  - 验证验证码并签发 reset token (POST /api/checkcode)
   - 重置密码 (POST /api/reset/password)
-  - 获取用户信息 (GET /api/user/info)
+- ⚠️ **待实现**: 无（核心闭环已完成）
 - 🔧 **需优化**: 
-  - JWT 认证替代 UUID token
-  - 密码加密（BCrypt）
+  - 邮件验证码接口防刷/限流（Redis 计数或 Lua 原子限流）
+  - 敏感配置治理（SMTP/JWT secret 全部走环境变量）
+  - token 体验（refresh token/登出/黑名单：可选）
+  - `/api/user/info` 归口统一（目前在 UserSettingsController）
 
 #### 对话模块 (chat_module.md)
 - ✅ **已完成**: 
-  - 发送消息（流式响应）(POST /api/new/message) - 需优化
-- ⚠️ **待实现**: 
-  - 获取对话信息 (GET /api/get/conversation/:id)
+  - 发送消息（SSE + JSON 事件流）(POST /api/new/message)
+  - 获取对话信息 (GET /api/get/conversation/{id})
   - 查询消息列表 (POST /api/query/messages)
   - 获取最新消息ID (POST /api/get/latest/id)
   - 查询对话列表 (GET /api/query/conversation)
   - 删除对话 (POST /api/delete/conversation)
   - 重命名对话 (PUT /api/rename/conversation)
   - 删除所有聊天记录 (POST /api/delete/chat)
+- ⚠️ **待实现**: 无（接口闭环已完成）
 - 🔧 **需优化**: 
-  - 响应格式（JSON 事件流）
-  - 对话创建逻辑
-  - baseId 验证
+  - RAG 检索隔离：按 baseId 过滤向量，避免“串库检索”（P0）
+  - 文档启用状态 isEnabled 纳入检索过滤（P1）
+  - 思考过程 `</think>` 分离与返回（P1）
 
 #### 知识库模块 (knowledge_base_module.md)
 - ✅ **已完成**: 
-  - 创建知识库 (POST /api/knowledge/create) - 需优化
-  - 获取知识库列表 (GET /api/knowledge/list) - 需优化
-  - 删除知识库 (DELETE /api/knowledge/delete/:id) - 需优化
-  - 获取文档列表 (GET /api/knowledge/document/list) - 应移至文档模块
-- ⚠️ **待实现**: 
-  - 获取知识库详情 (GET /api/knowledge/info/:baseId)
+  - 创建知识库 (POST /api/knowledge/create)
+  - 获取知识库列表 (GET /api/knowledge/list)
+  - 获取知识库详情 (GET /api/knowledge/info/{baseId})
+  - 编辑知识库 (PUT /api/knowledge/edit/{baseId})
   - 搜索知识库 (POST /api/knowledge/search)
-  - 编辑知识库 (PUT /api/knowledge/edit/:baseId)
 - 🔧 **需优化**: 
-  - JWT 认证集成
-  - 响应格式（DTO 转换，snake_case）
-  - 删除时关联数据清理
+  - 删除知识库时的 Milvus 向量清理（P0）
+  - 分页/排序（list/search）
+  - 统一异常与错误码
 
 #### 文档管理模块 (document_module.md)
 - ✅ **已完成**: 
-  - 文件上传 (POST /api/knowledge/upload/file) - 需优化
-  - 获取文档列表 (GET /api/knowledge/document/list) - 需优化
-- ⚠️ **待实现**: 
-  - 获取文档信息 (GET /api/knowledge/document/:docId)
+  - 文件上传&解析&向量化 (POST /api/knowledge/upload/file)
+  - 获取文档列表（分页+搜索）(GET /api/knowledge/document/list)
+  - 获取文档信息 (GET /api/knowledge/document/{docId})
   - 获取文档切片详情 (GET /api/knowledge/document/detail)
   - 修改文档启用状态 (POST /api/knowledge/document/change/status)
   - 重命名文档 (POST /api/knowledge/document/rename)
-  - 删除文档 (POST /api/knowledge/delete/document)
 - 🔧 **需优化**: 
-  - 模块拆分（创建 DocumentController）
-  - JWT 认证集成
-  - 响应格式（DTO 转换）
-  - 分页和搜索
+  - 删除文档/知识库时的 Milvus 向量清理（P0）
+  - 切片查询性能：避免 topK 全量拉取后内存过滤（P0/P1）
+  - upload 路由归口说明（目前在 KnowledgeBaseController，属于兼容设计）
 
 #### 用户设置模块 (user_settings_module.md)
-- ✅ **已完成**: 无
-- ⚠️ **待实现**: 
+- ✅ **已完成**:
   - 修改用户名 (POST /api/change/username)
   - 修改邮箱 (POST /api/change/email)
-  - 获取用户信息 (GET /api/user/info) - 与认证模块重复
-  - 删除所有聊天记录 (POST /api/delete/chat) - 与对话模块重复
-  - 注销账号 (POST /api/delete/account)
+  - 获取用户信息 (GET /api/user/info)
+  - 注销账号（级联删除）(POST /api/delete/account)
+  - 清空聊天记录（备用路由）(POST /api/user-settings/delete/chat)
+- 🔧 **需优化**:
+  - 注销账号时的 Milvus 向量清理（当前仅日志提示）
+  - 二次确认（密码/邮箱验证码）与操作审计日志（可选）
 
 ---
 
@@ -108,34 +105,16 @@
 
 ### 3.1 P0 优先级（必须完成，基础功能）
 
-1. **JWT 认证系统** (auth_module.md)
-   - 实现 JWT token 生成和验证
-   - 替换 UUID token
-   - 创建 JWT 认证过滤器
-   - **影响**: 所有模块都需要 JWT 认证
+1. **RAG 检索隔离（防串库）** (chat_module.md)
+   - 向量检索按 `baseId`（必要时按 `docId/isEnabled`）过滤
+   - 方案：Milvus Java SDK Query/Search + expr（推荐）
 
-2. **密码加密** (auth_module.md)
-   - 使用 BCrypt 加密密码
-   - 注册和登录时使用加密
+2. **Milvus 向量数据生命周期管理** (document_module.md / knowledge_base_module.md / user_settings_module.md)
+   - 删除文档/知识库/账号时同步删除 Milvus 向量
+   - 优化切片查询：避免 `topK(10000)` 全量拉取后内存过滤
 
-3. **用户认证接口优化** (auth_module.md)
-   - 登录接口支持邮箱/用户名
-   - 注册接口支持验证码
-
-4. **对话接口优化** (chat_module.md)
-   - 优化 `/api/new/message` 响应格式（JSON 事件流）
-   - 对话创建逻辑
-   - baseId 验证
-
-5. **知识库接口优化** (knowledge_base_module.md)
-   - JWT 认证集成
-   - 响应格式优化（DTO 转换）
-   - 创建知识库接口优化
-
-6. **文档模块拆分** (document_module.md)
-   - 创建 DocumentController 和 DocumentService
-   - JWT 认证集成
-   - 响应格式优化
+3. **邮件验证码防刷/限流** (auth_module.md)
+   - Redis 计数或 Lua 原子限流（与简历亮点可对齐）
 
 ### 3.2 P1 优先级（重要功能）
 

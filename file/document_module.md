@@ -34,32 +34,65 @@
   - 向量化存储（Milvus）
   - 数据库记录（PostgreSQL）
 - **当前问题**:
-  1. **接口位置**: 放在 `KnowledgeBaseController` 中，建议移至 `DocumentController`
-  2. **请求格式**: 使用 `@RequestParam`，符合前端期望（multipart/form-data）
-  3. **userId 传递**: 通过参数传递，应从 JWT 获取
-  4. **响应格式**: 需要转换为前端期望的格式
+  1. **接口位置**: 仍在 `KnowledgeBaseController`（用于兼容），可评估是否迁移/保留
+  2. **userId 获取**: ✅ 已从 JWT 获取（不再通过参数传递）
+  3. **异常与状态**: ✅ 有 ParseStatus 与 totalChunks 写回（失败标记 Failure）
+  4. **向量元数据**: ✅ 注入 `docId/baseId/fileName/chunkIndex`，并解决 Milvus `metadata_json` 必填问题
 
-#### 2.1.2 获取文档列表 (GET /api/knowledge/document/list)
-- **文件位置**: `src/main/java/com/heu/rag/core/controller/KnowledgeBaseController.java`
-- **实现状态**: ✅ 基础实现完成
-- **当前问题**:
-  1. **接口位置**: 应移至 `DocumentController`
-  2. **请求格式不匹配**:
-     - 当前: `@RequestParam Long baseId`
-     - 前端期望: `?baseId={baseId}&search={search}&limit={limit}&offset={offset}`
-  3. **响应格式不匹配**:
-     - 当前: `List<Document>`
-     - 前端期望: `{"total": number, "data": [...]}` 且字段名为 snake_case
-  4. **缺少搜索功能**: 需要支持 `search` 参数（文档名模糊查询）
-  5. **缺少分页**: 需要支持 `limit` 和 `offset` 参数
+#### 2.1.2 文档列表（分页 + 搜索）(GET /api/knowledge/document/list)
+- **文件位置**: `src/main/java/com/heu/rag/core/controller/DocumentController.java`
+- **实现状态**: ✅ 已实现
+- **能力**:
+  - `baseId + search + limit + offset`
+  - 返回 `{"total": n, "data": [...]}`（DTO 输出 snake_case）
+
+#### 2.1.3 获取文档信息 (GET /api/knowledge/document/{docId})
+- **实现状态**: ✅ 已实现（返回 docName）
+
+#### 2.1.4 获取文档切片详情 (GET /api/knowledge/document/detail)
+- **实现状态**: ✅ 已实现（limit/offset/search）
+- **重要限制**: 由于 Spring AI VectorStore 不支持 metadata 过滤，当前做法是 `topK(10000)` 拉全量后在内存按 docId 过滤（性能风险；见 `MILVUS_OPTIMIZATION_NOTES.md`）
+
+#### 2.1.5 修改文档启用状态 (POST /api/knowledge/document/change/status)
+- **实现状态**: ✅ 已实现（更新 PostgreSQL 字段 `isEnabled`）
+- **待补**: RAG 检索时过滤禁用文档（需在检索侧生效）
+
+#### 2.1.6 重命名文档 (POST /api/knowledge/document/rename)
+- **实现状态**: ✅ 已实现
 
 ---
 
 ## 3. 待实现功能 ⚠️
 
-### 3.1 文档查询功能
+### 3.1 缺口与优化（按代码现状）
 
-#### 3.1.1 获取文档列表（优化版）(GET /api/knowledge/document/list)
+#### 3.1.1 删除文档时的 Milvus 向量清理（P0）
+- **现状**：`DocumentService.deleteDocument()` 仅删除 PostgreSQL 记录，Milvus 向量残留（孤立数据）
+- **建议**：引入 Milvus Java SDK 按 metadata/docId 删除（或分集合）
+- **验收**：删除后 `docId` 对应向量不可被检索/查询到
+
+#### 3.1.2 切片查询性能优化（P0/P1）
+- **现状**：`topK(10000)` 全量拉取后内存过滤
+- **建议**：使用 Milvus Query API `expr`：`metadata_json["docId"] == "..."`（具体 expr 取决于 schema/写入方式）
+- **验收**：切片查询在大数据量下延迟显著降低（不随全量向量线性增长）
+
+#### 3.1.3 上传入口的 Controller 归口（P2）
+- **现状**：上传接口在 `KnowledgeBaseController`（兼容）
+- **建议**：评估迁移到 `DocumentController` 或保留但补充清晰说明
+
+---
+
+## 4. API 接口规范总结（按现状）
+
+| 接口 | 方法 | 路径 | 认证 | 状态 |
+|------|------|------|------|------|
+| 上传文件 | POST | `/api/knowledge/upload/file` | ✅ | ✅ 已实现（兼容入口） |
+| 获取文档列表 | GET | `/api/knowledge/document/list` | ✅ | ✅ 已实现 |
+| 获取文档信息 | GET | `/api/knowledge/document/{docId}` | ✅ | ✅ 已实现 |
+| 获取文档切片详情 | GET | `/api/knowledge/document/detail` | ✅ | ✅ 已实现（性能待优化） |
+| 修改文档启用状态 | POST | `/api/knowledge/document/change/status` | ✅ | ✅ 已实现（检索侧待生效） |
+| 重命名文档 | POST | `/api/knowledge/document/rename` | ✅ | ✅ 已实现 |
+| 删除文档 | POST | `/api/knowledge/delete/document` | ✅ | ✅ 已实现（Milvus 清理待补） |
 - **前端需求**: `frontend/FRONTEND_ARCH.md` 3.4.1
 - **查询参数**:
   ```
@@ -426,17 +459,7 @@ vectorStore.delete(List.of(docId.toString())); // 可能需要实现自定义删
 
 ---
 
-## 6. API 接口规范总结
-
-| 接口 | 方法 | 路径 | 认证 | 状态 |
-|------|------|------|------|------|
-| 上传文件 | POST | `/api/knowledge/upload/file` | ✅ | ✅ 需优化 |
-| 获取文档列表 | GET | `/api/knowledge/document/list` | ✅ | ✅ 需优化 |
-| 获取文档信息 | GET | `/api/knowledge/document/:docId` | ✅ | ⚠️ 待实现 |
-| 获取文档切片详情 | GET | `/api/knowledge/document/detail` | ✅ | ⚠️ 待实现 |
-| 修改文档启用状态 | POST | `/api/knowledge/document/change/status` | ✅ | ⚠️ 待实现 |
-| 重命名文档 | POST | `/api/knowledge/document/rename` | ✅ | ⚠️ 待实现 |
-| 删除文档 | POST | `/api/knowledge/delete/document` | ✅ | ⚠️ 待实现 |
+## 5. 数据库设计
 
 ---
 
@@ -470,25 +493,26 @@ vectorStore.delete(List.of(docId.toString())); // 可能需要实现自定义删
 ## 8. 开发优先级
 
 1. **P0 (必须)**:
-   - 模块拆分（创建 DocumentController 和 DocumentService）
-   - JWT 认证集成（userId 从 token 获取）
-   - 响应格式优化（DTO 转换，snake_case）
-   - 获取文档列表优化（分页、搜索）
+   - ✅ 模块拆分（已存在 `DocumentController` / `DocumentService`）
+   - ✅ JWT 认证集成（userId 从 token 获取）
+   - ✅ 文档列表（分页、搜索）+ DTO（snake_case）
+   - **补齐**：删除文档/删除知识库时的 Milvus 向量清理
+   - **补齐**：切片查询走 Milvus expr 过滤（避免全量拉取）
 
 2. **P1 (重要)**:
-   - 获取文档信息
-   - 修改文档启用状态
-   - 重命名文档
-   - 删除文档（包含 Milvus 数据清理）
+   - ✅ 获取文档信息
+   - ✅ 修改启用状态（RAG 检索侧生效待补）
+   - ✅ 重命名文档
+   - 删除文档（补 Milvus 数据清理）
 
 3. **P2 (可选)**:
-   - 获取文档切片详情（Milvus 查询实现）
+   - 上传入口归口（Controller 路由整理）
    - 文档统计信息（总大小、平均切片数等）
    - 批量操作（批量启用/禁用、批量删除）
 
 ---
 
 **文档版本**: 1.0  
-**最后更新**: 2024  
+**最后更新**: 2026-01  
 **维护者**: Java 后端开发团队
 

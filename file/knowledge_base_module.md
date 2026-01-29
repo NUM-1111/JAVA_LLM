@@ -26,47 +26,70 @@
 - **当前功能**:
   - 使用 Snowflake ID 生成 baseId
   - 保存到 PostgreSQL
-- **当前问题**:
-  1. **请求格式不匹配**:
-     - 当前: `@RequestParam Long userId` + `@RequestBody BaseCreateRequest`
-     - 前端期望: `{"base_name": "string", "base_desc": "string"}` (userId 从 JWT 获取)
-  2. **缺少用户验证**: 应从 JWT token 获取 userId，而不是通过参数传递
+- **现状（已对齐前端）**:
+  - userId 从 JWT `SecurityContext` 获取
+  - 请求体使用 `BaseCreateRequest`（snake_case 字段：`base_name/base_desc`）
 
 #### 2.1.2 获取知识库列表 (GET /api/knowledge/list)
 - **文件位置**: `src/main/java/com/heu/rag/core/controller/KnowledgeBaseController.java`
 - **实现状态**: ✅ 基础实现完成
-- **当前问题**:
-  1. **请求格式不匹配**:
-     - 当前: `@RequestParam Long userId`
-     - 前端期望: 无参数（userId 从 JWT 获取）
-  2. **响应格式**:
-     - 当前: `List<KnowledgeBase>`
-     - 前端期望: `{"total": number, "data": [...]}`
-  3. **字段名不一致**:
-     - 数据库: `baseName`, `baseDesc`
-     - 前端期望: `base_name`, `base_desc` (snake_case)
+- **现状（已对齐前端）**:
+  - 无需 userId 参数（从 JWT 获取）
+  - 返回 `{"total": n, "data": [...]}`（DTO 输出 snake_case）
 
 #### 2.1.3 删除知识库 (DELETE /api/knowledge/delete/{id})
 - **文件位置**: `src/main/java/com/heu/rag/core/controller/KnowledgeBaseController.java`
 - **实现状态**: ✅ 基础实现完成
-- **当前问题**:
-  1. **缺少用户权限验证**: 应验证知识库是否属于当前用户
-  2. **缺少关联数据清理**: 删除知识库时应删除关联的文档和向量数据
+- **现状**:
+  - ✅ 已做 ownership 校验（baseId 必须属于当前 user）
+  - ✅ 会删除 PostgreSQL 中关联的 Document 记录
+  - ⚠️ **未删除 Milvus 向量数据**（存在孤立向量；见 `MILVUS_OPTIMIZATION_NOTES.md`）
 
 #### 2.1.4 获取文档列表 (GET /api/knowledge/document/list)
-- **文件位置**: `src/main/java/com/heu/rag/core/controller/KnowledgeBaseController.java`
-- **实现状态**: ✅ 基础实现完成
-- **当前问题**:
-  - 该接口实际属于文档管理模块，但放在知识库 Controller 中
-  - 应移至文档管理模块
+- **现状（已拆分）**:
+  - 文档列表已在 `DocumentController` 实现：`GET /api/knowledge/document/list`
+  - `KnowledgeBaseController` 目前主要负责知识库 CRUD + 上传入口（兼容）
+
+#### 2.1.5 获取知识库详情 (GET /api/knowledge/info/{baseId})
+- **现状**: ✅ 已实现（ownership 校验 + DTO 输出）
+
+#### 2.1.6 编辑知识库 (PUT /api/knowledge/edit/{baseId})
+- **现状**: ✅ 已实现（ownership 校验 + DTO 输出）
+
+#### 2.1.7 搜索知识库 (POST /api/knowledge/search)
+- **现状**: ✅ 已实现（按 userId 过滤 + baseName 模糊匹配）
 
 ---
 
 ## 3. 待实现功能 ⚠️
 
-### 3.1 知识库查询功能
+### 3.1 待补齐/优化项（按真实缺口）
 
-#### 3.1.1 获取知识库详情 (GET /api/knowledge/info/:baseId)
+#### 3.1.1 删除知识库的向量清理（P0）
+- **问题**：删除知识库仅删除 PostgreSQL 的 Document 记录，Milvus 向量仍残留
+- **建议**：引入 Milvus Java SDK 按 metadata/baseId 或 docId 清理
+- **验收**：删除 KB 后，再次检索不应命中其向量；Milvus collection 中无对应数据
+
+#### 3.1.2 分页与排序（P1）
+- **问题**：目前 list/search 返回全量（适合数据量小）
+- **建议**：引入分页参数（limit/offset）并按 updated_at 排序
+
+#### 3.1.3 统一异常与错误码（P2）
+- **问题**：部分错误通过 `IllegalArgumentException` 抛出，缺少统一错误码/异常映射
+- **建议**：全局 `@ControllerAdvice` 统一输出 `Result<T>`（含 code/msg）
+
+---
+
+## 4. API 接口规范总结（按现状）
+
+| 接口 | 方法 | 路径 | 认证 | 状态 |
+|------|------|------|------|------|
+| 创建知识库 | POST | `/api/knowledge/create` | ✅ | ✅ 已实现 |
+| 获取知识库列表 | GET | `/api/knowledge/list` | ✅ | ✅ 已实现 |
+| 获取知识库详情 | GET | `/api/knowledge/info/{baseId}` | ✅ | ✅ 已实现 |
+| 编辑知识库 | PUT | `/api/knowledge/edit/{baseId}` | ✅ | ✅ 已实现 |
+| 删除知识库 | DELETE | `/api/knowledge/delete/{baseId}` | ✅ | ✅ 已实现（Milvus 清理待补） |
+| 搜索知识库 | POST | `/api/knowledge/search` | ✅ | ✅ 已实现 |
 - **前端需求**: `frontend/FRONTEND_ARCH.md` 3.3.6
 - **路径参数**: `baseId` (Long)
 - **请求头**: `Authorization: JWT_TOKEN`
@@ -317,16 +340,7 @@ public Result<Map<String, Object>> listKnowledgeBases(
 
 ---
 
-## 6. API 接口规范总结
-
-| 接口 | 方法 | 路径 | 认证 | 状态 |
-|------|------|------|------|------|
-| 创建知识库 | POST | `/api/knowledge/create` | ✅ | ✅ 需优化 |
-| 获取知识库列表 | GET | `/api/knowledge/list` | ✅ | ✅ 需优化 |
-| 获取知识库详情 | GET | `/api/knowledge/info/:baseId` | ✅ | ⚠️ 待实现 |
-| 编辑知识库 | PUT | `/api/knowledge/edit/:baseId` | ✅ | ⚠️ 待实现 |
-| 删除知识库 | DELETE | `/api/knowledge/delete/:baseId` | ✅ | ✅ 需优化 |
-| 搜索知识库 | POST | `/api/knowledge/search` | ✅ | ⚠️ 待实现 |
+## 5. 数据库设计（现状）
 
 ---
 
@@ -355,18 +369,17 @@ public Result<Map<String, Object>> listKnowledgeBases(
 
 ---
 
-## 8. 开发优先级
+## 6. 开发优先级（建议）
 
 1. **P0 (必须)**:
-   - JWT 认证集成（userId 从 token 获取）
-   - 响应格式优化（DTO 转换，snake_case）
-   - 创建知识库接口优化
+   - ✅ JWT 认证集成（userId 从 token 获取）
+   - ✅ 响应格式（DTO 输出 snake_case）
+   - ✅ create/list/info/edit/search 基本闭环
+   - **补齐**：删除知识库时的 Milvus 向量清理
 
 2. **P1 (重要)**:
-   - 获取知识库详情
-   - 编辑知识库
-   - 搜索知识库
-   - 删除时关联数据清理
+   - 分页与排序（list/search）
+   - 删除时关联数据清理的完整闭环（含 Milvus）
 
 3. **P2 (可选)**:
    - 分页支持
@@ -376,6 +389,6 @@ public Result<Map<String, Object>> listKnowledgeBases(
 ---
 
 **文档版本**: 1.0  
-**最后更新**: 2024  
+**最后更新**: 2026-01  
 **维护者**: Java 后端开发团队
 
