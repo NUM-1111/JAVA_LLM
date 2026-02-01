@@ -204,6 +204,7 @@ public class KnowledgeBaseService {
                 metadata.put("baseId", baseId.toString());
                 metadata.put("fileName", fileName);
                 metadata.put("chunkIndex", String.valueOf(chunkIndex));
+                metadata.put("isEnabled", String.valueOf(dbDocument.getIsEnabled())); // Add isEnabled for filtering
 
                 // Create document with guaranteed non-null metadata
                 org.springframework.ai.document.Document docWithMetadata = new org.springframework.ai.document.Document(

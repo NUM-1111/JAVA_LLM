@@ -51,17 +51,45 @@
 
 ## 4. 关键设计决策（可写进简历/面试）
 
-- **混合存储**：PostgreSQL 管元数据、MongoDB 管对话、Milvus 管向量，避免“一个数据库干所有事”的性能/建模妥协。
-- **无状态鉴权**：JWT + Security FilterChain，方便水平扩展；`Authorization` 头不加 Bearer 前缀以匹配前端约定。
+- **混合存储**：PostgreSQL 管元数据、MongoDB 管对话、Milvus 管向量，避免"一个数据库干所有事"的性能/建模妥协。
+- **无状态鉴权**：JWT + Spring Security FilterChain，通过 `JwtAuthenticationFilter` 拦截请求并设置 `SecurityContext`，方便水平扩展；`Authorization` 头不加 Bearer 前缀以匹配前端约定。
 - **Milvus schema 自检**：启动时校验 embedding dimension，不一致自动重建 collection，避免线上插入失败。
 - **流式体验**：SSE + JSON 事件协议，前端可实现打字机效果与状态机驱动 UI。
+- **RAG 检索隔离**：通过 `MilvusService.similaritySearchWithBaseId()` 使用 JSON_EXTRACT 表达式按 baseId 和 isEnabled 过滤，避免"串库"风险。
+- **向量生命周期管理**：删除文档/知识库/账号时通过 `MilvusService.deleteChunksByDocId()` 同步清理 Milvus 向量，避免孤立数据。
 
 ---
 
-## 5. 已知风险与 Roadmap（架构层）
+## 5. 已实现的关键功能（2026-01 状态）
 
-- **RAG 检索隔离（P0）**：当前检索未按 baseId 过滤，存在“串库”风险；需做 metadata 过滤或分集合。
-- **向量生命周期管理（P0）**：删除文档/知识库/账号时 Milvus 向量未清理，易产生孤立数据与检索污染。
-- **切片查询性能（P0/P1）**：`topK(10000)` 拉全量后内存过滤不可扩展，建议 Milvus Query/expr。
+### 5.1 认证与安全
+- ✅ JWT 认证：使用 `JwtTokenUtil` 生成/验证 token，`JwtAuthenticationFilter` 拦截请求
+- ✅ 密码加密：使用 Spring Security `BCryptPasswordEncoder`
+- ✅ 邮箱验证码：支持开关控制（`email.verification.enabled`），Redis 存储验证码
+- ✅ 权限验证：所有 Controller 通过 `SecurityContextHolder` 获取 userId，验证资源所有权
+
+### 5.2 RAG 检索优化
+- ✅ 检索隔离：`MilvusService.similaritySearchWithBaseId()` 按 baseId 过滤，支持 isEnabled 状态过滤
+- ✅ 向量清理：删除文档/知识库/账号时自动清理 Milvus 向量数据
+- ✅ 切片查询优化：使用 Milvus Query API 替代 topK(10000) 全量扫描
+
+### 5.3 数据模型
+- ✅ PostgreSQL 实体：User, KnowledgeBase, Document（使用 Snowflake ID）
+- ✅ MongoDB 文档：Conversation, ChatMessage（支持树结构扩展）
+- ✅ Milvus 向量：metadata_json 包含 baseId, docId, isEnabled, chunkIndex 等字段
+
+---
+
+## 6. 已知风险与 Roadmap（架构层）
+
+### 6.1 已解决（✅）
+- ✅ **RAG 检索隔离**：已实现按 baseId 和 isEnabled 过滤
+- ✅ **向量生命周期管理**：已实现删除时自动清理向量
+- ✅ **切片查询性能**：已优化为使用 Milvus Query API
+
+### 6.2 待优化（P1/P2）
+- **文档状态变更**：禁用已上传文档后，Milvus 中的旧向量仍会参与检索（需重新上传或实现 metadata 更新）
+- **邮件验证码防刷**：当前无限流，建议添加 Redis 计数或 Lua 原子限流
+- **敏感配置治理**：SMTP/JWT secret 应全部走环境变量，避免硬编码
 
 

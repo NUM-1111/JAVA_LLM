@@ -80,13 +80,13 @@
 - `DELETE /api/knowledge/delete/{baseId}`
 
 ### 6.3 Document
-- `POST /api/knowledge/upload/file`
-- `GET /api/knowledge/document/list`
+- `POST /api/knowledge/upload/file`（在 KnowledgeBaseController，兼容设计）
+- `GET /api/knowledge/document/list`（分页+搜索）
 - `GET /api/knowledge/document/{docId}`
-- `GET /api/knowledge/document/detail`
+- `GET /api/knowledge/document/detail`（切片查询，已优化为 Milvus Query API）
 - `POST /api/knowledge/document/change/status`
 - `POST /api/knowledge/document/rename`
-- `POST /api/knowledge/delete/document`
+- `POST /api/knowledge/delete/document`（删除时自动清理 Milvus 向量）
 
 ### 6.4 Chat / Conversation
 - `POST /api/new/message`（SSE）

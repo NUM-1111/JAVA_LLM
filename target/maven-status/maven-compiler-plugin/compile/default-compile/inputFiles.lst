@@ -3,7 +3,9 @@
 /root/go/src/Go_LLM_Web/src/main/java/com/heu/rag/config/CorsConfig.java
 /root/go/src/Go_LLM_Web/src/main/java/com/heu/rag/config/EmbeddingDimensionValidator.java
 /root/go/src/Go_LLM_Web/src/main/java/com/heu/rag/config/GlobalExceptionHandler.java
+/root/go/src/Go_LLM_Web/src/main/java/com/heu/rag/config/JacksonConfig.java
 /root/go/src/Go_LLM_Web/src/main/java/com/heu/rag/config/MilvusConfig.java
+/root/go/src/Go_LLM_Web/src/main/java/com/heu/rag/config/MilvusServiceConfig.java
 /root/go/src/Go_LLM_Web/src/main/java/com/heu/rag/config/MultipartConfig.java
 /root/go/src/Go_LLM_Web/src/main/java/com/heu/rag/config/SnowflakeIdGenerator.java
 /root/go/src/Go_LLM_Web/src/main/java/com/heu/rag/core/config/JwtConfig.java
@@ -55,6 +57,7 @@
 /root/go/src/Go_LLM_Web/src/main/java/com/heu/rag/core/service/DocumentService.java
 /root/go/src/Go_LLM_Web/src/main/java/com/heu/rag/core/service/EmailService.java
 /root/go/src/Go_LLM_Web/src/main/java/com/heu/rag/core/service/KnowledgeBaseService.java
+/root/go/src/Go_LLM_Web/src/main/java/com/heu/rag/core/service/MilvusService.java
 /root/go/src/Go_LLM_Web/src/main/java/com/heu/rag/core/util/EmailValidator.java
 /root/go/src/Go_LLM_Web/src/main/java/com/heu/rag/core/util/JwtTokenUtil.java
 /root/go/src/Go_LLM_Web/src/main/java/com/heu/rag/core/util/SecurityUtil.java

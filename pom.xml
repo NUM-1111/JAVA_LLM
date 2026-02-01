@@ -107,6 +107,13 @@
             <artifactId>spring-ai-tika-document-reader</artifactId>
         </dependency>
 
+        <!-- Milvus Java SDK for direct operations -->
+        <dependency>
+            <groupId>io.milvus</groupId>
+            <artifactId>milvus-sdk-java</artifactId>
+            <version>2.3.4</version>
+        </dependency>
+
         <!-- Utils -->
         <dependency>
             <groupId>cn.hutool</groupId>

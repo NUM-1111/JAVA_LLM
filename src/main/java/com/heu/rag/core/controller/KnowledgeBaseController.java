@@ -14,6 +14,7 @@ import com.heu.rag.core.exception.ResourceNotFoundException;
 import com.heu.rag.core.repository.DocumentRepository;
 import com.heu.rag.core.repository.KnowledgeBaseRepository;
 import com.heu.rag.core.service.KnowledgeBaseService;
+import com.heu.rag.core.service.MilvusService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.core.Authentication;
@@ -43,6 +44,7 @@ public class KnowledgeBaseController {
     private final KnowledgeBaseService knowledgeBaseService;
     private final DocumentService documentService;
     private final SnowflakeIdGenerator snowflakeIdGenerator;
+    private final MilvusService milvusService;
 
     /**
      * Get user ID from SecurityContext (set by JwtAuthenticationFilter)
@@ -244,18 +246,26 @@ public class KnowledgeBaseController {
 
         verifyOwnership(baseId, userId);
 
-        // Delete associated documents
+        // Delete associated documents and their vector data
         List<Document> documents = documentRepository.findByBaseId(baseId);
         log.info("Deleting {} documents for knowledge base: baseId={}", documents.size(), baseId);
 
-        // TODO: Delete vector data from Milvus for each document
-        // The VectorStore interface may not have a delete method
-        // This would require using Milvus client directly to delete by metadata
-        // (baseId)
-        // For now, we only delete the document records from the database
+        // Delete vector data from Milvus for each document before deleting database records
+        long totalDeletedChunks = 0;
+        for (Document doc : documents) {
+            try {
+                long deletedCount = milvusService.deleteChunksByDocId(doc.getDocId());
+                totalDeletedChunks += deletedCount;
+                log.info("Deleted {} vector chunks for docId {}", deletedCount, doc.getDocId());
+            } catch (Exception e) {
+                log.error("Failed to delete vectors for docId {}: {}", doc.getDocId(), e.getMessage(), e);
+                // Continue with other documents even if one fails
+            }
+        }
 
+        // Delete document records from database
         documentRepository.deleteAll(documents);
-        log.info("Deleted {} documents", documents.size());
+        log.info("Deleted {} documents and {} vector chunks from Milvus", documents.size(), totalDeletedChunks);
 
         // Delete the knowledge base
         knowledgeBaseRepository.delete(knowledgeBase);

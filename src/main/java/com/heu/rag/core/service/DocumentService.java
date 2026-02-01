@@ -7,7 +7,6 @@ import com.heu.rag.core.repository.DocumentRepository;
 import com.heu.rag.core.repository.KnowledgeBaseRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.ai.vectorstore.SearchRequest;
 import org.springframework.ai.vectorstore.VectorStore;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
@@ -30,6 +29,7 @@ public class DocumentService {
     private final DocumentRepository documentRepository;
     private final KnowledgeBaseRepository knowledgeBaseRepository;
     private final VectorStore vectorStore;
+    private final MilvusService milvusService;
 
     /**
      * Verify that the knowledge base belongs to the current user
@@ -134,32 +134,12 @@ public class DocumentService {
         // Verify ownership
         verifyDocumentOwnership(docId, userId);
 
-        // Query Milvus with metadata filter
-        // Note: Spring AI VectorStore may not support direct metadata filtering in
-        // SearchRequest
-        // We'll query all chunks for the document and filter in memory if needed
-        // TODO: Use Milvus client directly to filter by metadata for better performance
+        // Use MilvusService to query chunks by docId with metadata filtering
+        // This avoids topK(10000) full scan and filters at Milvus level
+        List<org.springframework.ai.document.Document> filteredChunks = milvusService.queryChunksByDocId(
+                docId, limit, offset);
 
-        SearchRequest searchRequest = SearchRequest.builder()
-                .query("") // Empty query to get all chunks
-                .topK(10000) // Large number to get all chunks
-                .similarityThreshold(0.0) // No similarity threshold
-                .build();
-
-        // Note: Spring AI VectorStore may not support filterExpression directly
-        // This is a limitation - we may need to use Milvus client directly
-        // For now, we'll query all and filter in memory
-        List<org.springframework.ai.document.Document> allChunks = vectorStore.similaritySearch(searchRequest);
-
-        // Filter by docId metadata
-        List<org.springframework.ai.document.Document> filteredChunks = allChunks.stream()
-                .filter(chunk -> {
-                    Object docIdMeta = chunk.getMetadata().get("docId");
-                    return docIdMeta != null && docIdMeta.toString().equals(docId.toString());
-                })
-                .collect(Collectors.toList());
-
-        log.info("Found {} chunks for document {}", filteredChunks.size(), docId);
+        log.info("Found {} chunks for document {} (with pagination)", filteredChunks.size(), docId);
 
         // Apply content search filter if provided
         if (search != null && !search.trim().isEmpty()) {
@@ -247,13 +227,14 @@ public class DocumentService {
             throw new IllegalArgumentException("Document does not belong to the specified knowledge base");
         }
 
-        // TODO: Delete chunks from Milvus
-        // Spring AI VectorStore interface may not have a delete method
-        // This would require using Milvus client directly to delete by metadata filter
-        // For now, we only delete the document record from the database
-        // The vector data will remain in Milvus (orphaned data)
-        log.warn(
-                "Vector data deletion from Milvus not implemented yet. Document record will be deleted, but chunks remain in Milvus.");
+        // Delete chunks from Milvus using MilvusService (metadata-filtered delete)
+        try {
+            long deletedCount = milvusService.deleteChunksByDocId(docId);
+            log.info("Deleted {} vector chunks from Milvus for docId {}", deletedCount, docId);
+        } catch (Exception e) {
+            log.error("Failed to delete chunks from Milvus for docId {}: {}", docId, e.getMessage(), e);
+            // Continue with database deletion even if Milvus deletion fails
+        }
 
         // Delete document from database
         documentRepository.delete(document);

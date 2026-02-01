@@ -6,10 +6,11 @@
 
 ## 1. 项目级文档
 
-- `file/ARCHITECTURE_OVERVIEW.md`：总体架构、数据流（Write Path / Read Path）、关键设计决策
+- `file/ARCHITECTURE_OVERVIEW.md`：总体架构、数据流（Write Path / Read Path）、关键设计决策、已实现功能状态
 - `file/LOCAL_DEV_RUNBOOK.md`：本地启动、依赖服务、端口、常见故障排查
 - `file/API_CONTRACT.md`：统一响应/鉴权/字段命名/SSE 协议（前后端对接契约）
-- `file/RESUME_HIGHLIGHTS_MAPPING.md`：简历亮点 → 代码落点 / 可量化点 / Roadmap（避免“过度包装”）
+- `file/RESUME_HIGHLIGHTS_MAPPING.md`：简历亮点 → 代码落点 / 可量化点 / Roadmap（避免"过度包装"）
+- `file/PROJECT_DETAILED_DESCRIPTION.md`：**项目详细技术描述**，供功能性AI分析使用（技术栈、业务流程、数据模型、API清单等）
 
 ## 2. 分模块文档（开发驱动）
 

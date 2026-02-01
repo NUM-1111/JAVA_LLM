@@ -15,7 +15,6 @@ import org.springframework.ai.chat.model.ChatModel;
 import org.springframework.ai.chat.model.ChatResponse;
 import org.springframework.ai.chat.prompt.Prompt;
 import org.springframework.ai.document.Document;
-import org.springframework.ai.vectorstore.SearchRequest;
 import org.springframework.ai.vectorstore.VectorStore;
 import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
@@ -46,6 +45,7 @@ public class ChatService {
     private final ChatMessageRepository chatMessageRepository;
     private final ConversationRepository conversationRepository;
     private final KnowledgeBaseRepository knowledgeBaseRepository;
+    private final MilvusService milvusService;
 
     /**
      * Process a chat query with RAG: retrieve context, generate response, and
@@ -131,15 +131,11 @@ public class ChatService {
         // provided)
         String context = "";
         if (baseId != null) {
-            log.debug("Retrieving similar documents from vector store...");
-            SearchRequest searchRequest = SearchRequest.builder()
-                    .query(query)
-                    .topK(4)
-                    .similarityThreshold(0.7)
-                    .build();
-
-            List<Document> similarDocuments = vectorStore.similaritySearch(searchRequest);
-            log.info("Retrieved {} chunks for query", similarDocuments.size());
+            log.debug("Retrieving similar documents from vector store with baseId filter...");
+            // Use MilvusService for baseId-filtered search to prevent cross-base retrieval
+            List<Document> similarDocuments = milvusService.similaritySearchWithBaseId(
+                    query, baseId, 4, 0.7);
+            log.info("Retrieved {} chunks for query (filtered by baseId={})", similarDocuments.size(), baseId);
 
             context = similarDocuments.stream()
                     .map(doc -> {

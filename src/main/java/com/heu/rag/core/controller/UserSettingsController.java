@@ -15,6 +15,7 @@ import com.heu.rag.core.repository.ConversationRepository;
 import com.heu.rag.core.repository.DocumentRepository;
 import com.heu.rag.core.repository.KnowledgeBaseRepository;
 import com.heu.rag.core.repository.UserRepository;
+import com.heu.rag.core.service.MilvusService;
 import com.heu.rag.core.util.EmailValidator;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -41,6 +42,7 @@ public class UserSettingsController {
     private final ChatMessageRepository chatMessageRepository;
     private final KnowledgeBaseRepository knowledgeBaseRepository;
     private final DocumentRepository documentRepository;
+    private final MilvusService milvusService;
 
     /**
      * Get user ID from SecurityContext (set by JwtAuthenticationFilter)
@@ -209,25 +211,26 @@ public class UserSettingsController {
 
         // 2. Delete all KnowledgeBases and Documents (PostgreSQL)
         List<KnowledgeBase> knowledgeBases = knowledgeBaseRepository.findByUserId(userId);
+        long totalDeletedChunks = 0;
         for (KnowledgeBase kb : knowledgeBases) {
             // Delete all documents for this knowledge base
             List<Document> documents = documentRepository.findByBaseId(kb.getBaseId());
             for (Document doc : documents) {
-                // Delete vectors from Milvus (if docId is stored in metadata)
-                // Note: This is a simplified implementation. In production, you may need
-                // to query vectors by metadata filter and delete them properly.
+                // Delete vectors from Milvus using MilvusService
                 try {
-                    // Spring AI VectorStore doesn't have a direct delete by metadata method
-                    // This would need to be implemented based on your VectorStore implementation
-                    // For now, we'll log a warning and continue
-                    log.warn("Vector deletion for docId={} is not implemented. Manual cleanup may be required.",
-                            doc.getDocId());
+                    long deletedCount = milvusService.deleteChunksByDocId(doc.getDocId());
+                    totalDeletedChunks += deletedCount;
+                    log.debug("Deleted {} vector chunks for docId {}", deletedCount, doc.getDocId());
                 } catch (Exception e) {
-                    log.error("Error deleting vectors for docId={}: {}", doc.getDocId(), e.getMessage());
+                    log.error("Error deleting vectors for docId={}: {}", doc.getDocId(), e.getMessage(), e);
+                    // Continue with other documents even if one fails
                 }
             }
             documentRepository.deleteAll(documents);
             log.debug("Deleted {} documents for knowledge base: {}", documents.size(), kb.getBaseId());
+        }
+        if (totalDeletedChunks > 0) {
+            log.info("Deleted {} total vector chunks from Milvus for user: {}", totalDeletedChunks, userId);
         }
         if (!knowledgeBases.isEmpty()) {
             knowledgeBaseRepository.deleteAll(knowledgeBases);

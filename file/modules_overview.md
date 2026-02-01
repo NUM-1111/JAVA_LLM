@@ -25,11 +25,11 @@
 
 | 模块 | 已完成功能 | 待实现功能 | 需优化功能 | 完成度 |
 |------|-----------|-----------|-----------|--------|
-| 用户认证模块 | 5 | 0 | 4 | 75% |
-| 对话模块 | 8 | 0 | 3 | 72% |
-| 知识库模块 | 5 | 0 | 3 | 70% |
-| 文档管理模块 | 6 | 0 | 4 | 70% |
-| 用户设置模块 | 5 | 0 | 2 | 80% |
+| 用户认证模块 | 5 | 0 | 3 | 85% |
+| 对话模块 | 8 | 0 | 1 | 90% |
+| 知识库模块 | 6 | 0 | 2 | 85% |
+| 文档管理模块 | 7 | 0 | 1 | 90% |
+| 用户设置模块 | 5 | 0 | 1 | 90% |
 
 ### 2.2 各模块详细状态
 
@@ -45,7 +45,6 @@
   - 邮件验证码接口防刷/限流（Redis 计数或 Lua 原子限流）
   - 敏感配置治理（SMTP/JWT secret 全部走环境变量）
   - token 体验（refresh token/登出/黑名单：可选）
-  - `/api/user/info` 归口统一（目前在 UserSettingsController）
 
 #### 对话模块 (chat_module.md)
 - ✅ **已完成**: 
@@ -59,9 +58,8 @@
   - 删除所有聊天记录 (POST /api/delete/chat)
 - ⚠️ **待实现**: 无（接口闭环已完成）
 - 🔧 **需优化**: 
-  - RAG 检索隔离：按 baseId 过滤向量，避免“串库检索”（P0）
-  - 文档启用状态 isEnabled 纳入检索过滤（P1）
-  - 思考过程 `</think>` 分离与返回（P1）
+  - ✅ RAG 检索隔离：已实现按 baseId 和 isEnabled 过滤（通过 MilvusService）
+  - 思考过程 `</think>` 分离与返回（P1，可选功能）
 
 #### 知识库模块 (knowledge_base_module.md)
 - ✅ **已完成**: 
@@ -70,8 +68,10 @@
   - 获取知识库详情 (GET /api/knowledge/info/{baseId})
   - 编辑知识库 (PUT /api/knowledge/edit/{baseId})
   - 搜索知识库 (POST /api/knowledge/search)
+- ✅ **已完成**:
+  - 删除知识库 (DELETE /api/knowledge/delete/{baseId})
 - 🔧 **需优化**: 
-  - 删除知识库时的 Milvus 向量清理（P0）
+  - ✅ 删除知识库时的 Milvus 向量清理（已实现）
   - 分页/排序（list/search）
   - 统一异常与错误码
 
@@ -83,9 +83,11 @@
   - 获取文档切片详情 (GET /api/knowledge/document/detail)
   - 修改文档启用状态 (POST /api/knowledge/document/change/status)
   - 重命名文档 (POST /api/knowledge/document/rename)
+- ✅ **已完成**:
+  - 删除文档 (POST /api/knowledge/delete/document)
 - 🔧 **需优化**: 
-  - 删除文档/知识库时的 Milvus 向量清理（P0）
-  - 切片查询性能：避免 topK 全量拉取后内存过滤（P0/P1）
+  - ✅ 删除文档时的 Milvus 向量清理（已实现）
+  - ✅ 切片查询性能：已优化为使用 Milvus Query API
   - upload 路由归口说明（目前在 KnowledgeBaseController，属于兼容设计）
 
 #### 用户设置模块 (user_settings_module.md)
@@ -96,7 +98,7 @@
   - 注销账号（级联删除）(POST /api/delete/account)
   - 清空聊天记录（备用路由）(POST /api/user-settings/delete/chat)
 - 🔧 **需优化**:
-  - 注销账号时的 Milvus 向量清理（当前仅日志提示）
+  - ✅ 注销账号时的 Milvus 向量清理（已实现）
   - 二次确认（密码/邮箱验证码）与操作审计日志（可选）
 
 ---
@@ -105,15 +107,15 @@
 
 ### 3.1 P0 优先级（必须完成，基础功能）
 
-1. **RAG 检索隔离（防串库）** (chat_module.md)
-   - 向量检索按 `baseId`（必要时按 `docId/isEnabled`）过滤
-   - 方案：Milvus Java SDK Query/Search + expr（推荐）
+1. ✅ **RAG 检索隔离（防串库）** (chat_module.md) - **已完成**
+   - ✅ 向量检索按 `baseId` 和 `isEnabled` 过滤
+   - ✅ 方案：Milvus Java SDK Query/Search + JSON_EXTRACT 表达式
 
-2. **Milvus 向量数据生命周期管理** (document_module.md / knowledge_base_module.md / user_settings_module.md)
-   - 删除文档/知识库/账号时同步删除 Milvus 向量
-   - 优化切片查询：避免 `topK(10000)` 全量拉取后内存过滤
+2. ✅ **Milvus 向量数据生命周期管理** (document_module.md / knowledge_base_module.md / user_settings_module.md) - **已完成**
+   - ✅ 删除文档/知识库/账号时同步删除 Milvus 向量
+   - ✅ 优化切片查询：使用 Milvus Query API 替代 topK(10000) 全量扫描
 
-3. **邮件验证码防刷/限流** (auth_module.md)
+3. **邮件验证码防刷/限流** (auth_module.md) - **待实现**
    - Redis 计数或 Lua 原子限流（与简历亮点可对齐）
 
 ### 3.2 P1 优先级（重要功能）
