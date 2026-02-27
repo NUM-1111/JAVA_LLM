@@ -17,6 +17,7 @@ import org.springframework.ai.chat.prompt.Prompt;
 import org.springframework.ai.document.Document;
 import org.springframework.ai.vectorstore.VectorStore;
 import org.springframework.data.domain.Sort;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Service;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
@@ -28,6 +29,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.UUID;
+import java.util.concurrent.ThreadPoolExecutor;
 import java.util.stream.Collectors;
 
 /**
@@ -46,6 +48,8 @@ public class ChatService {
     private final ConversationRepository conversationRepository;
     private final KnowledgeBaseRepository knowledgeBaseRepository;
     private final MilvusService milvusService;
+    @Qualifier("chatPersistenceExecutor")
+    private final ThreadPoolExecutor chatPersistenceExecutor;
 
     /**
      * Process a chat query with RAG: retrieve context, generate response, and
@@ -242,8 +246,8 @@ public class ChatService {
             String escapedConversationId = escapeJson(finalConversationId);
             String conversationIdEvent = String.format("{\"type\":\"conversation_id\",\"conversation_id\":\"%s\"}",
                     escapedConversationId);
-            finalResponseFlux = Flux.just(conversationIdEvent)
-                    .concatWith(jsonEventFlux)
+            finalResponseFlux = Flux.just(conversationIdEvent)// 创建包含固定数据的 Flux 流
+                    .concatWith(jsonEventFlux)// 串行拼接多个 Flux 流（顺序执行）
                     .concatWith(Flux.just("{\"type\":\"status\",\"message\":\"ANSWER_DONE\"}"));
             log.info("Sending conversation_id event: conversationId={}", finalConversationId);
         } else {
@@ -253,13 +257,24 @@ public class ChatService {
         }
 
         // 10. Persistence: Async save the User query and final AI response to MongoDB
+        // Use CompletableFuture.runAsync() with dedicated thread pool to ensure
+        // persistence doesn't block SSE streaming response
         Mono<String> fullResponseMono = contentFlux
                 .collect(Collectors.joining())
                 .cache();
 
+        // Convert Mono to CompletableFuture and execute persistence asynchronously
+        // This ensures the persistence task runs in a separate thread pool and doesn't
+        // block the SSE streaming response
         fullResponseMono
-                .flatMap(fullResponse -> {
+                .toFuture()
+                .thenAcceptAsync(fullResponse -> {
                     try {
+                        if (fullResponse == null || fullResponse.isEmpty()) {
+                            log.warn("Empty response, skipping persistence: conversationId={}", finalConversationId);
+                            return;
+                        }
+
                         // Save user message
                         String userMessageId = UUID.randomUUID().toString();
                         ChatMessage userMsg = ChatMessage.builder()
@@ -294,11 +309,14 @@ public class ChatService {
 
                         log.info("Saved chat messages to MongoDB: conversationId={}", finalConversationId);
                     } catch (Exception e) {
-                        log.error("Error saving chat messages", e);
+                        log.error("Error saving chat messages: conversationId={}", finalConversationId, e);
                     }
-                    return Mono.empty();
-                })
-                .subscribe(); // Fire and forget
+                }, chatPersistenceExecutor)
+                .exceptionally(throwable -> {
+                    log.error("Unexpected error in persistence task: conversationId={}", finalConversationId,
+                            throwable);
+                    return null;
+                });
 
         // Return the streaming response
         return finalResponseFlux;
