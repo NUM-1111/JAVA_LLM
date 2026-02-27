@@ -504,5 +504,5 @@ public Flux<String> newMessage(@RequestBody ChatRequest request) {
 ---
 
 **文档维护者**: Java 后端开发团队  
-**参考文档**: 见 `file/PROJECT_INDEX.md`
+**参考文档**: 见 `file/overview/PROJECT_INDEX.md`
 

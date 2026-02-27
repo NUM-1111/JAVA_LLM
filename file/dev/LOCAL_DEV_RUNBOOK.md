@@ -72,9 +72,9 @@ cd /root/go/src/Go_LLM_Web
 - 确认 `application.yml` 的 `id-field-name` / `metadata-field-name` 与 `MilvusConfig` schema 一致
 - 确认写入时 metadata 非 null（`KnowledgeBaseService` 已做保护）
 
-### 4.2 切片查询很慢 / 内存占用高
-- 现状是 `topK(10000)` 拉全量后过滤（见 `DocumentService.getDocumentChunks`）
-- 优化方案见 `MILVUS_OPTIMIZATION_NOTES.md`
+### 4.2 切片查询性能 ✅ 已优化
+- 已优化为使用 Milvus Query API + 分页查询（见 `MilvusService.queryChunksByDocId()`）
+- 详情见 `file/milvus/MILVUS_IMPLEMENTATION_STATUS.md`
 
 ### 4.3 SSE 前端收不到数据
 - 确认后端返回 `Content-Type: text/event-stream`

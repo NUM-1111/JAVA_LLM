@@ -40,7 +40,7 @@
 - **级联删除范围**：
   - MongoDB：Conversation + ChatMessage
   - PostgreSQL：KnowledgeBase + Document + User
-  - Milvus：目前仅记录日志提示，**向量删除未实现**（见 `MILVUS_OPTIMIZATION_NOTES.md`）
+  - Milvus：✅ **向量删除已实现**，删除账号时自动清理所有关联向量（见 `file/milvus/MILVUS_IMPLEMENTATION_STATUS.md`）
 
 ---
 
@@ -372,7 +372,7 @@ private void deleteVectorsByDocId(Long docId) {
 | 获取用户信息 | GET | `/api/user/info` | ✅ | ✅ 已实现（当前返回 username） |
 | 删除所有聊天记录（主路由） | POST | `/api/delete/chat` | ✅ | ✅ 已实现（见对话模块） |
 | 删除所有聊天记录（备用路由） | POST | `/api/user-settings/delete/chat` | ✅ | ✅ 已实现 |
-| 注销账号 | POST | `/api/delete/account` | ✅ | ✅ 已实现（Milvus 向量清理待补） |
+| 注销账号 | POST | `/api/delete/account` | ✅ | ✅ 已实现（Milvus 向量清理已实现） |
 
 ---
 
@@ -415,10 +415,10 @@ private void deleteVectorsByDocId(Long docId) {
    - ✅ 修改用户名
    - ✅ 修改邮箱
    - ✅ 获取用户信息
-   - ✅ 注销账号（级联删除已实现；Milvus 向量清理待补）
+   - ✅ 注销账号（级联删除已实现；Milvus 向量清理已实现）
 
 2. **P1 (重要)**:
-   - 补齐“注销账号时 Milvus 向量清理”（见 `MILVUS_OPTIMIZATION_NOTES.md`）
+   - ✅ 注销账号时 Milvus 向量清理（已实现，见 `file/milvus/MILVUS_IMPLEMENTATION_STATUS.md`）
    - 注销账号二次确认（密码或邮箱验证码）
 
 3. **P2 (可选)**:

@@ -1,43 +1,62 @@
 # Milvus 优化说明 (Milvus Optimization Notes)
 
+> **⚠️ 重要提示**：本文档描述的问题已全部解决。请参考 `file/milvus/MILVUS_IMPLEMENTATION_STATUS.md` 查看当前实现状态。
+
 ## 概述
 
-本文档说明文档管理模块中关于 Milvus 数据删除和文档切片查询性能的当前状态和优化建议。
+本文档记录了文档管理模块中关于 Milvus 数据删除和文档切片查询性能的历史问题和优化方案。**这些问题已在 2026-01 全部解决**。
 
-## 当前状态
+## ✅ 已解决的问题
 
-### 1. Milvus 数据删除功能
+### 1. Milvus 数据删除功能 ✅ 已实现
 
-**状态**: ⚠️ **未实现**
-
-**当前实现**:
+**原问题**:
 - `DocumentService.deleteDocument()` 方法只删除 PostgreSQL 中的文档记录
 - Milvus 中的向量数据未被删除，成为孤立数据
 
-**原因**:
-- Spring AI 的 `VectorStore` 接口不提供删除方法
-- Spring AI 的 `VectorStore` 接口不支持基于 metadata 的过滤删除
+**解决方案**:
+- ✅ 已实现 `MilvusService.deleteChunksByDocId()` 方法
+- ✅ 已在删除文档、知识库、账号时自动清理 Milvus 向量数据
+- ✅ 使用 Milvus Delete API + metadata 过滤实现精确删除
 
-**影响**:
-- Milvus 中的向量数据会累积，占用存储空间
-- 删除的文档对应的向量数据仍然存在，可能影响查询性能
+**实现位置**:
+- `MilvusService.deleteChunksByDocId()`
+- `DocumentService.deleteDocument()`
+- `KnowledgeBaseController.deleteKnowledgeBase()`
+- `UserSettingsController.deleteAccount()`
 
-### 2. 文档切片查询性能
+### 2. 文档切片查询性能 ✅ 已优化
 
-**状态**: ⚠️ **性能不佳**
+**原问题**:
+- `DocumentService.getDocumentChunks()` 使用 `topK(10000)` 全量扫描后内存过滤
+- 性能较差，内存占用高
 
-**当前实现**:
-- `DocumentService.getDocumentChunks()` 使用 `vectorStore.similaritySearch()` 查询所有向量
-- 然后在内存中根据 `docId` metadata 过滤
-- 查询 `topK(10000)` 然后在内存中过滤
+**解决方案**:
+- ✅ 已实现 `MilvusService.queryChunksByDocId()` 方法
+- ✅ 使用 Milvus Query API 替代 similaritySearch
+- ✅ 支持按 docId 精确查询并支持分页（limit/offset）
 
-**问题**:
-- 需要查询所有向量，然后过滤，性能较差
-- 对于大量文档，查询所有向量会消耗大量内存和CPU
+**实现位置**:
+- `MilvusService.queryChunksByDocId()`
+- `DocumentService.getDocumentChunks()`
 
-**原因**:
-- Spring AI 的 `SearchRequest` 可能不支持 `filterExpression` 进行 metadata 过滤
-- 当前只能通过相似性搜索，无法直接通过 metadata 过滤
+### 3. RAG 检索隔离 ✅ 已实现
+
+**原问题**:
+- 相似度检索未按 baseId 过滤，可能跨知识库召回
+
+**解决方案**:
+- ✅ 已实现 `MilvusService.similaritySearchWithBaseId()` 方法
+- ✅ 使用 JSON_EXTRACT 表达式实现 baseId 和 isEnabled 过滤
+- ✅ 已在 `ChatService.chatStream()` 中集成
+
+**实现位置**:
+- `MilvusService.similaritySearchWithBaseId()`
+- `ChatService.chatStream()`
+
+---
+
+## 历史优化方案（已实施）
 
 ## 优化方案
 
@@ -159,22 +178,16 @@ SearchRequest searchRequest = SearchRequest.builder()
 - 添加 TODO 注释说明限制
 - 定期手动清理 Milvus 中的孤立数据
 
-## 推荐实施步骤
+## 实施结果
 
-1. **短期（可选）**:
-   - 保持当前实现
-   - 添加日志和监控，跟踪 Milvus 数据增长
-   - 定期评估是否需要优化
+✅ **已全部完成**（2026-01）
 
-2. **中期（推荐）**:
-   - 实施方案 1（使用 Milvus Java 客户端）
-   - 实现删除功能
-   - 优化查询性能
+1. ✅ **已实施**：使用 Milvus Java 客户端（方案 1）
+2. ✅ **已实现**：删除功能（`MilvusService.deleteChunksByDocId()`）
+3. ✅ **已优化**：查询性能（`MilvusService.queryChunksByDocId()`）
+4. ✅ **已实现**：RAG 检索隔离（`MilvusService.similaritySearchWithBaseId()`）
 
-3. **长期（可选）**:
-   - 考虑使用 Spring AI 的新版本（如果支持 metadata 过滤）
-   - 优化索引策略
-   - 实施数据压缩策略
+**详细实现状态请参考**: `file/milvus/MILVUS_IMPLEMENTATION_STATUS.md`
 
 ## 注意事项
 
@@ -204,6 +217,7 @@ SearchRequest searchRequest = SearchRequest.builder()
 
 ---
 
-**最后更新**: 2024  
+**最后更新**: 2026-01  
+**状态**: 所有问题已解决，详见 `file/milvus/MILVUS_IMPLEMENTATION_STATUS.md`  
 **维护者**: Java 后端开发团队
 

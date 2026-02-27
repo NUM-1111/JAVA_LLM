@@ -38,20 +38,25 @@
 
 ---
 
-## 2. 当前存在的“硬核难点”（面试防守点）
+## 2. 已解决的技术难点（可作为简历亮点）✅
 
-### 2.1 向量生命周期管理缺口（P0）
-- **现状**：删除文档/知识库/账号时，Milvus 向量未清理（存在孤立向量与检索污染）
-- **你可以怎么讲**：Spring AI VectorStore 抽象不覆盖“按 metadata 删除/查询”，需要引入 Milvus SDK 或扩展 VectorStore 实现。
-- **证据**：`MILVUS_OPTIMIZATION_NOTES.md` + 多处 TODO 注释
+### 2.1 向量生命周期管理 ✅
+- **解决方案**：实现了删除文档/知识库/账号时自动清理 Milvus 向量数据
+- **技术实现**：引入 Milvus Java SDK，实现 `MilvusService.deleteChunksByDocId()`，使用 metadata 过滤删除
+- **代码证据**：`MilvusService`、`DocumentService.deleteDocument()`、`KnowledgeBaseController.deleteKnowledgeBase()`、`UserSettingsController.deleteAccount()`
+- **你可以怎么写**：设计并实现了向量数据的完整生命周期管理，确保删除操作时自动清理 Milvus 中的向量数据，避免孤立数据和存储浪费。
 
-### 2.2 RAG 检索隔离不足（P0）
-- **现状**：相似度检索未按 baseId 过滤，可能跨知识库召回
-- **你可以怎么讲**：这是 RAG 质量与权限隔离的典型坑，下一步通过 metadata filter / expr / 分集合解决。
+### 2.2 RAG 检索隔离 ✅
+- **解决方案**：实现了按 baseId 和 isEnabled 过滤的相似度检索，避免跨知识库召回
+- **技术实现**：使用 Milvus Query API + JSON_EXTRACT 表达式实现 metadata 过滤
+- **代码证据**：`MilvusService.similaritySearchWithBaseId()`、`ChatService.chatStream()`
+- **你可以怎么写**：实现了多租户 RAG 检索隔离，通过 Milvus metadata 过滤确保检索结果严格按知识库隔离，防止数据泄露。
 
-### 2.3 切片查询性能（P0/P1）
-- **现状**：`DocumentService.getDocumentChunks()` 走 `topK(10000)` 拉全量再内存过滤
-- **你可以怎么讲**：抽象层的限制导致“无法下推过滤条件”，需要下沉到 Milvus Query API。
+### 2.3 切片查询性能优化 ✅
+- **解决方案**：使用 Milvus Query API 替代 topK(10000) 全量扫描，支持分页查询
+- **技术实现**：实现 `MilvusService.queryChunksByDocId()`，使用 Query API + limit/offset 分页
+- **代码证据**：`MilvusService.queryChunksByDocId()`、`DocumentService.getDocumentChunks()`
+- **你可以怎么写**：优化了文档切片查询性能，从全量扫描改为按 docId 精确查询并支持分页，显著降低内存占用和查询延迟。
 
 ---
 
@@ -61,9 +66,10 @@
 - **目标**：邮件验证码接口防刷、避免资源被打爆
 - **落地方式**：Lua 脚本实现原子自增 + TTL + 阈值判断
 
-### 3.2 Milvus SDK 接入（删除 + metadata 过滤查询）
+### 3.2 Milvus SDK 接入（删除 + metadata 过滤查询）✅ 已完成
 - **目标**：补齐删除闭环、优化切片查询性能、实现 baseId/docId 过滤
-- **落地方式**：新增 `MilvusService`（Query/Delete），并在 Document/KB/User 删除路径集成
+- **落地方式**：已实现 `MilvusService`（Query/Delete），并在 Document/KB/User 删除路径集成
+- **状态**：已完成，详见 `file/milvus/MILVUS_IMPLEMENTATION_STATUS.md`
 
 ### 3.3 思考过程与消息树
 - **目标**：支持 `</think>` 解析与返回、完善 children 字段维护，形成可追溯的对话树

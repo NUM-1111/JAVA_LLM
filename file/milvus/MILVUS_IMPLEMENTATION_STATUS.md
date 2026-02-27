@@ -1,6 +1,6 @@
 # Milvus 功能实现状态检查报告
 
-> 对比 `MILVUS_OPTIMIZATION_NOTES.md` 和 `chat_module.md` 的要求，检查代码实现完善度
+> 对比 `file/milvus/MILVUS_OPTIMIZATION_NOTES.md` 和 `file/modules/chat_module.md` 的要求，检查代码实现完善度
 
 **检查日期**: 2026-01  
 **检查范围**: MilvusService, ChatService, DocumentService, KnowledgeBaseController, UserSettingsController

@@ -173,37 +173,27 @@
 
 ### 4.1 全局技术债务
 
-1. **认证系统统一** ⭐⭐⭐
-   - **问题**: 当前使用 UUID token，应使用 JWT
-   - **影响**: 所有需要认证的接口
-   - **优先级**: P0
-   - **模块**: auth_module.md
-
-2. **响应格式统一** ⭐⭐⭐
-   - **问题**: 字段名使用 camelCase，前端期望 snake_case
-   - **影响**: 所有接口
-   - **优先级**: P0
+1. **响应格式统一** ⭐⭐
+   - **问题**: 部分接口字段名使用 camelCase，前端期望 snake_case
+   - **影响**: 部分接口
+   - **优先级**: P1
    - **模块**: knowledge_base_module.md, document_module.md
+   - **状态**: 部分已实现（KnowledgeBaseDTO/DocumentDTO 已使用 @JsonProperty 转换）
 
-3. **用户ID获取方式统一** ⭐⭐⭐
-   - **问题**: 当前通过请求参数传递 userId，应从 JWT 获取
-   - **影响**: 所有需要用户ID的接口
-   - **优先级**: P0
-   - **模块**: 所有模块
-
-4. **模块拆分** ⭐⭐
-   - **问题**: 文档相关接口放在 KnowledgeBaseController 中
+2. **模块拆分** ⭐⭐
+   - **问题**: 文档相关接口放在 KnowledgeBaseController 中（兼容设计）
    - **影响**: 文档管理模块
-   - **优先级**: P0
+   - **优先级**: P2
    - **模块**: document_module.md
+   - **状态**: 当前为兼容设计，可接受
 
-5. **密码加密** ⭐⭐⭐
-   - **问题**: 密码明文存储
-   - **影响**: 用户安全
-   - **优先级**: P0
-   - **模块**: auth_module.md
+### 4.2 已解决的技术债务 ✅
 
-### 4.2 模块间依赖关系
+1. ✅ **认证系统统一** - 已实现 JWT 认证（JwtTokenUtil + JwtAuthenticationFilter）
+2. ✅ **用户ID获取方式统一** - 已从 SecurityContext 获取 userId（所有 Controller 已实现）
+3. ✅ **密码加密** - 已使用 BCrypt 加密（PasswordEncoder）
+
+### 4.3 模块间依赖关系
 
 1. **JWT 认证系统** → 所有模块
    - 必须先实现 JWT 认证，其他模块才能集成
@@ -262,10 +252,10 @@
 
 ### 6.1 开发顺序建议
 
-1. **第一阶段（P0）**: 
-   - 实现 JWT 认证系统
-   - 密码加密
-   - 优化现有接口（认证集成、响应格式）
+1. **第一阶段（已完成）**: 
+   - ✅ 实现 JWT 认证系统
+   - ✅ 密码加密
+   - ✅ 优化现有接口（认证集成、响应格式）
 
 2. **第二阶段（P1）**: 
    - 实现用户认证完整功能（邮箱验证码、密码重置）
@@ -347,7 +337,7 @@
 
 - **前端架构文档**: `frontend/FRONTEND_ARCH.md`
 - **API 文档**: `API.md`
-- **模块文档**: `file/auth_module.md`, `file/chat_module.md`, `file/knowledge_base_module.md`, `file/document_module.md`, `file/user_settings_module.md`
+- **模块文档**: `file/modules/auth_module.md`, `file/modules/chat_module.md`, `file/modules/knowledge_base_module.md`, `file/modules/document_module.md`, `file/modules/user_settings_module.md`
 
 ---
 

@@ -43,7 +43,7 @@
 - **现状**:
   - ✅ 已做 ownership 校验（baseId 必须属于当前 user）
   - ✅ 会删除 PostgreSQL 中关联的 Document 记录
-  - ⚠️ **未删除 Milvus 向量数据**（存在孤立向量；见 `MILVUS_OPTIMIZATION_NOTES.md`）
+  - ✅ **已删除 Milvus 向量数据**（已实现向量清理；见 `file/milvus/MILVUS_IMPLEMENTATION_STATUS.md`）
 
 #### 2.1.4 获取文档列表 (GET /api/knowledge/document/list)
 - **现状（已拆分）**:
@@ -88,7 +88,7 @@
 | 获取知识库列表 | GET | `/api/knowledge/list` | ✅ | ✅ 已实现 |
 | 获取知识库详情 | GET | `/api/knowledge/info/{baseId}` | ✅ | ✅ 已实现 |
 | 编辑知识库 | PUT | `/api/knowledge/edit/{baseId}` | ✅ | ✅ 已实现 |
-| 删除知识库 | DELETE | `/api/knowledge/delete/{baseId}` | ✅ | ✅ 已实现（Milvus 清理待补） |
+| 删除知识库 | DELETE | `/api/knowledge/delete/{baseId}` | ✅ | ✅ 已实现（Milvus 清理已实现） |
 | 搜索知识库 | POST | `/api/knowledge/search` | ✅ | ✅ 已实现 |
 - **前端需求**: `frontend/FRONTEND_ARCH.md` 3.3.6
 - **路径参数**: `baseId` (Long)

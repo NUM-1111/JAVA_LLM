@@ -71,7 +71,7 @@
 
 ### 3.1 RAG 检索隔离（P0）
 - **目标**：检索结果必须限定在当前 `baseId`（且可进一步限定 `docId/isEnabled`）
-- **方案 A（推荐）**：使用 Milvus Java SDK 的 Query/Search + expr 过滤（见 `MILVUS_OPTIMIZATION_NOTES.md`）
+- **方案 A（推荐）**：使用 Milvus Java SDK 的 Query/Search + expr 过滤（已实现，见 `file/milvus/MILVUS_IMPLEMENTATION_STATUS.md`）
 - **方案 B（可选）**：按知识库分集合（collection per baseId），隔离最彻底但运维成本更高
 - **验收**：
   - 同一 query 在不同 baseId 下检索结果不同且不互相泄漏

@@ -51,11 +51,11 @@
 
 #### 2.1.4 获取文档切片详情 (GET /api/knowledge/document/detail)
 - **实现状态**: ✅ 已实现（limit/offset/search）
-- **重要限制**: 由于 Spring AI VectorStore 不支持 metadata 过滤，当前做法是 `topK(10000)` 拉全量后在内存按 docId 过滤（性能风险；见 `MILVUS_OPTIMIZATION_NOTES.md`）
+- **性能优化**: ✅ 已优化为使用 Milvus Query API + 分页查询，避免全量扫描（详见 `file/milvus/MILVUS_IMPLEMENTATION_STATUS.md`）
 
 #### 2.1.5 修改文档启用状态 (POST /api/knowledge/document/change/status)
 - **实现状态**: ✅ 已实现（更新 PostgreSQL 字段 `isEnabled`）
-- **待补**: RAG 检索时过滤禁用文档（需在检索侧生效）
+- **RAG 检索过滤**: ✅ 已实现，RAG 检索时自动过滤禁用文档（`isEnabled == 'true'`，见 `MilvusService.similaritySearchWithBaseId()`）
 
 #### 2.1.6 重命名文档 (POST /api/knowledge/document/rename)
 - **实现状态**: ✅ 已实现
@@ -66,15 +66,15 @@
 
 ### 3.1 缺口与优化（按代码现状）
 
-#### 3.1.1 删除文档时的 Milvus 向量清理（P0）
-- **现状**：`DocumentService.deleteDocument()` 仅删除 PostgreSQL 记录，Milvus 向量残留（孤立数据）
-- **建议**：引入 Milvus Java SDK 按 metadata/docId 删除（或分集合）
-- **验收**：删除后 `docId` 对应向量不可被检索/查询到
+#### 3.1.1 删除文档时的 Milvus 向量清理 ✅ 已实现
+- **状态**：✅ 已实现 `MilvusService.deleteChunksByDocId()`，删除文档时自动清理向量
+- **实现位置**：`DocumentService.deleteDocument()` 调用 `milvusService.deleteChunksByDocId()`
+- **验收**：✅ 删除后 `docId` 对应向量不可被检索/查询到
 
-#### 3.1.2 切片查询性能优化（P0/P1）
-- **现状**：`topK(10000)` 全量拉取后内存过滤
-- **建议**：使用 Milvus Query API `expr`：`metadata_json["docId"] == "..."`（具体 expr 取决于 schema/写入方式）
-- **验收**：切片查询在大数据量下延迟显著降低（不随全量向量线性增长）
+#### 3.1.2 切片查询性能优化 ✅ 已实现
+- **状态**：✅ 已优化为使用 Milvus Query API + 分页查询
+- **实现位置**：`MilvusService.queryChunksByDocId()` 使用 Query API 替代 similaritySearch
+- **验收**：✅ 切片查询支持分页，不随全量向量线性增长
 
 #### 3.1.3 上传入口的 Controller 归口（P2）
 - **现状**：上传接口在 `KnowledgeBaseController`（兼容）
@@ -90,9 +90,9 @@
 | 获取文档列表 | GET | `/api/knowledge/document/list` | ✅ | ✅ 已实现 |
 | 获取文档信息 | GET | `/api/knowledge/document/{docId}` | ✅ | ✅ 已实现 |
 | 获取文档切片详情 | GET | `/api/knowledge/document/detail` | ✅ | ✅ 已实现（性能待优化） |
-| 修改文档启用状态 | POST | `/api/knowledge/document/change/status` | ✅ | ✅ 已实现（检索侧待生效） |
+| 修改文档启用状态 | POST | `/api/knowledge/document/change/status` | ✅ | ✅ 已实现（RAG 检索侧已生效） |
 | 重命名文档 | POST | `/api/knowledge/document/rename` | ✅ | ✅ 已实现 |
-| 删除文档 | POST | `/api/knowledge/delete/document` | ✅ | ✅ 已实现（Milvus 清理待补） |
+| 删除文档 | POST | `/api/knowledge/delete/document` | ✅ | ✅ 已实现（Milvus 清理已实现） |
 - **前端需求**: `frontend/FRONTEND_ARCH.md` 3.4.1
 - **查询参数**:
   ```
@@ -397,41 +397,34 @@
 
 **当前问题**: 需要从 Milvus 查询文档的所有切片
 
-**实施方案**:
-1. **Spring AI VectorStore API**:
+**实施方案**（已实现）:
+1. **Milvus Query API**（已实现）:
    ```java
-   // 查询指定文档的所有向量
-   SearchRequest searchRequest = SearchRequest.builder()
-       .query("") // 空查询
-       .filterExpression("docId == \"" + docId + "\"") // metadata 过滤
-       .topK(10000) // 足够大的数量
-       .build();
-   List<Document> chunks = vectorStore.similaritySearch(searchRequest);
+   // 使用 MilvusService.queryChunksByDocId() 查询指定文档的所有向量
+   List<Document> chunks = milvusService.queryChunksByDocId(docId, limit, offset);
    ```
+   - ✅ 已实现：使用 Milvus Query API + JSON_EXTRACT 表达式过滤
+   - ✅ 支持分页查询（limit/offset）
+   - ✅ 避免全量扫描，性能优化
 
 2. **内容搜索**:
-   - 如果 Milvus 支持文本搜索，使用搜索表达式
-   - 否则，查询所有切片后在内存中过滤
+   - 在查询结果基础上进行内存过滤（search 参数）
 
-### 4.6 Milvus 切片删除
+### 4.6 Milvus 切片删除 ✅ 已实现
 
-**当前问题**: 需要删除文档的所有向量数据
+**实现状态**: ✅ 已实现 `MilvusService.deleteChunksByDocId()`
 
-**实施方案**:
+**实现方案**:
 ```java
-// Spring AI VectorStore 可能没有直接删除接口
-// 需要直接使用 Milvus Client
-milvusClient.delete(DeleteParam.newBuilder()
-    .withCollectionName("vector_collection")
-    .withExpr("docId == \"" + docId + "\"")
-    .build());
+// 已实现：使用 MilvusService 删除文档的所有向量数据
+long deletedCount = milvusService.deleteChunksByDocId(docId);
 ```
 
-或者：
-```java
-// 使用 Spring AI 的 delete 方法（如果支持）
-vectorStore.delete(List.of(docId.toString())); // 可能需要实现自定义删除逻辑
-```
+**实现位置**:
+- `MilvusService.deleteChunksByDocId()` - 使用 Milvus Delete API + metadata 过滤
+- `DocumentService.deleteDocument()` - 删除文档时自动调用
+- `KnowledgeBaseController.deleteKnowledgeBase()` - 删除知识库时自动清理所有文档向量
+- `UserSettingsController.deleteAccount()` - 注销账号时自动清理所有向量
 
 ---
 
@@ -501,9 +494,9 @@ vectorStore.delete(List.of(docId.toString())); // 可能需要实现自定义删
 
 2. **P1 (重要)**:
    - ✅ 获取文档信息
-   - ✅ 修改启用状态（RAG 检索侧生效待补）
+   - ✅ 修改启用状态（RAG 检索侧已生效）
    - ✅ 重命名文档
-   - 删除文档（补 Milvus 数据清理）
+   - ✅ 删除文档（Milvus 数据清理已实现）
 
 3. **P2 (可选)**:
    - 上传入口归口（Controller 路由整理）
