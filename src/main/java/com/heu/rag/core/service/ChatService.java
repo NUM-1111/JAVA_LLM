@@ -6,6 +6,7 @@ import com.heu.rag.core.exception.ResourceNotFoundException;
 import com.heu.rag.core.repository.ChatMessageRepository;
 import com.heu.rag.core.repository.ConversationRepository;
 import com.heu.rag.core.repository.KnowledgeBaseRepository;
+import com.heu.rag.config.SnowflakeIdGenerator;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.ai.chat.messages.Message;
@@ -28,7 +29,6 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
-import java.util.UUID;
 import java.util.concurrent.ThreadPoolExecutor;
 import java.util.stream.Collectors;
 
@@ -50,6 +50,7 @@ public class ChatService {
     private final MilvusService milvusService;
     @Qualifier("chatPersistenceExecutor")
     private final ThreadPoolExecutor chatPersistenceExecutor;
+    private final SnowflakeIdGenerator snowflakeIdGenerator;
 
     /**
      * Process a chat query with RAG: retrieve context, generate response, and
@@ -78,8 +79,8 @@ public class ChatService {
         final String finalConversationId;
         Conversation conversation;
         if (conversationId == null || conversationId.isEmpty()) {
-            // Create new conversation with generated ID
-            finalConversationId = UUID.randomUUID().toString();
+            // Create new conversation with generated ID using Snowflake algorithm
+            finalConversationId = String.valueOf(snowflakeIdGenerator.nextId());
             String title = generateTitle(query);
             conversation = Conversation.builder()
                     .conversationId(finalConversationId)
@@ -154,21 +155,13 @@ public class ChatService {
 
             if (context.isEmpty()) {
                 log.warn("No context retrieved for query, proceeding without context");
-                context = "No relevant context found.";
+                context = ""; // Keep empty string for buildSystemPrompt to handle appropriately
             }
         }
 
-        // 4. Prompt Construction: System prompt with context + User query
-        String systemText;
-        if (!context.isEmpty()) {
-            systemText = String.format(
-                    "You are a helpful assistant. Use the following context to answer the user's question. " +
-                            "If the context doesn't contain relevant information, say so.\n\nContext:\n%s",
-                    context);
-        } else {
-            systemText = "You are a helpful assistant.";
-        }
-
+        // 4. Prompt Construction: Build professional system prompt using Prompt
+        // Engineering principles
+        String systemText = buildSystemPrompt(context);
         SystemMessage systemMessage = new SystemMessage(systemText);
         UserMessage userMessage = new UserMessage(query);
 
@@ -276,7 +269,7 @@ public class ChatService {
                         }
 
                         // Save user message
-                        String userMessageId = UUID.randomUUID().toString();
+                        String userMessageId = String.valueOf(snowflakeIdGenerator.nextId());
                         ChatMessage userMsg = ChatMessage.builder()
                                 .messageId(userMessageId)
                                 .conversationId(finalConversationId)
@@ -288,7 +281,7 @@ public class ChatService {
                                 .build();
 
                         // Save assistant message
-                        String assistantMessageId = UUID.randomUUID().toString();
+                        String assistantMessageId = String.valueOf(snowflakeIdGenerator.nextId());
                         ChatMessage assistantMsg = ChatMessage.builder()
                                 .messageId(assistantMessageId)
                                 .conversationId(finalConversationId)
@@ -302,12 +295,40 @@ public class ChatService {
                         chatMessageRepository.save(userMsg);
                         chatMessageRepository.save(assistantMsg);
 
+                        // Update parent node's children list to maintain conversation tree structure
+                        // This ensures bidirectional links in the conversation tree (parent <->
+                        // children)
+                        try {
+                            // Initialize children list if null (defensive programming)
+                            if (userMsg.getChildren() == null) {
+                                userMsg.setChildren(new ArrayList<>());
+                            }
+                            // Add assistant message ID to parent's children list
+                            if (!userMsg.getChildren().contains(assistantMessageId)) {
+                                userMsg.getChildren().add(assistantMessageId);
+                                userMsg.setUpdatedAt(LocalDateTime.now());
+                                chatMessageRepository.save(userMsg);
+                                log.debug("Updated parent message children list: parentId={}, childId={}",
+                                        userMessageId, assistantMessageId);
+                            } else {
+                                log.warn("Assistant message ID already exists in parent's children list: " +
+                                        "parentId={}, childId={}", userMessageId, assistantMessageId);
+                            }
+                        } catch (Exception e) {
+                            // Log error but don't fail the entire persistence operation
+                            // The parent-child relationship is important but not critical for basic
+                            // functionality
+                            log.error("Error updating parent message children list: parentId={}, childId={}, " +
+                                    "conversationId={}", userMessageId, assistantMessageId, finalConversationId, e);
+                        }
+
                         // Update conversation currentNode
                         finalConversation.setCurrentNode(assistantMessageId);
                         finalConversation.setUpdatedAt(LocalDateTime.now());
                         conversationRepository.save(finalConversation);
 
-                        log.info("Saved chat messages to MongoDB: conversationId={}", finalConversationId);
+                        log.info("Saved chat messages to MongoDB: conversationId={}, userMessageId={}, " +
+                                "assistantMessageId={}", finalConversationId, userMessageId, assistantMessageId);
                     } catch (Exception e) {
                         log.error("Error saving chat messages: conversationId={}", finalConversationId, e);
                     }
@@ -333,6 +354,80 @@ public class ChatService {
         // For backward compatibility, create a simple text response (not JSON events)
         log.warn("Using deprecated chatStream method without userId and baseId");
         return Flux.just("Error: This method is deprecated. Please use the new method with userId and baseId.");
+    }
+
+    /**
+     * Build professional system prompt using Prompt Engineering best practices.
+     * 
+     * This method implements key Prompt Engineering principles:
+     * 1. Role Definition: Clearly defines the AI's role and expertise
+     * 2. Output Format: Specifies response structure and format requirements
+     * 3. Hallucination Prevention: Strictly limits answers to provided context
+     * 4. Tone & Style: Sets professional, accurate, and helpful communication style
+     * 5. Context Usage Rules: Defines how to use retrieved context effectively
+     * 
+     * @param context The retrieved context from vector search (can be empty)
+     * @return A well-structured system prompt string
+     */
+    private String buildSystemPrompt(String context) {
+        StringBuilder prompt = new StringBuilder();
+
+        // 1. Role Definition: Define AI's identity and expertise
+        prompt.append("You are a professional RAG (Retrieval-Augmented Generation) assistant " +
+                "specialized in answering questions based on provided knowledge base documents. " +
+                "Your role is to help users find accurate information and provide clear, " +
+                "well-structured answers.\n\n");
+
+        // 2. Output Format Requirements
+        prompt.append("## Output Format Requirements:\n");
+        prompt.append("- Provide clear, well-organized answers with proper structure\n");
+        prompt.append("- Use markdown formatting when appropriate (headings, lists, code blocks)\n");
+        prompt.append("- Break down complex answers into logical sections\n");
+        prompt.append("- Keep responses concise but comprehensive\n\n");
+
+        // 3. Hallucination Prevention & Context Usage Rules
+        if (context != null && !context.trim().isEmpty()) {
+            prompt.append("## Critical Rules for Answering:\n");
+            prompt.append("1. **STRICTLY base your answer ONLY on the provided context below**\n");
+            prompt.append("2. **DO NOT** make up information, speculate, or use knowledge outside the context\n");
+            prompt.append("3. **DO NOT** assume facts not explicitly stated in the context\n");
+            prompt.append("4. If the context does not contain enough information to answer the question, " +
+                    "explicitly state: \"Based on the provided context, I cannot find sufficient information " +
+                    "to answer this question. Please provide more relevant documents or rephrase your question.\"\n");
+            prompt.append("5. If the context is partially relevant, acknowledge what you can answer " +
+                    "and what you cannot\n");
+            prompt.append(
+                    "6. Cite specific parts of the context when possible (e.g., \"According to the context...\")\n\n");
+
+            // 4. Context Section
+            prompt.append("## Provided Context:\n");
+            prompt.append("The following context has been retrieved from the knowledge base:\n\n");
+            prompt.append("---\n");
+            prompt.append(context);
+            prompt.append("\n---\n\n");
+        } else {
+            // No context available
+            prompt.append("## Important Notice:\n");
+            prompt.append("No relevant context was retrieved from the knowledge base for this query. " +
+                    "Please inform the user that you cannot provide a specific answer based on the knowledge base, " +
+                    "and suggest they:\n");
+            prompt.append("- Rephrase their question\n");
+            prompt.append("- Provide more specific keywords\n");
+            prompt.append("- Check if relevant documents have been uploaded to the knowledge base\n\n");
+        }
+
+        // 5. Tone & Style Guidelines
+        prompt.append("## Communication Style:\n");
+        prompt.append("- Maintain a professional, friendly, and helpful tone\n");
+        prompt.append("- Be accurate and precise in your answers\n");
+        prompt.append("- Use clear, accessible language while maintaining technical accuracy\n");
+        prompt.append("- If technical terms are used, provide brief explanations when helpful\n");
+        prompt.append("- Be honest about limitations and uncertainties\n\n");
+
+        // 6. Final Instructions
+        prompt.append("Now, please answer the user's question following all the rules and guidelines above.");
+
+        return prompt.toString();
     }
 
     /**
