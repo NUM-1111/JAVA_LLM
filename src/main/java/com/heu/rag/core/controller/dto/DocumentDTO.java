@@ -1,6 +1,8 @@
 package com.heu.rag.core.controller.dto;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
+import com.fasterxml.jackson.databind.annotation.JsonSerialize;
+import com.fasterxml.jackson.databind.ser.std.ToStringSerializer;
 import com.heu.rag.core.domain.Document;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -20,7 +22,12 @@ import java.time.format.DateTimeFormatter;
 public class DocumentDTO {
 
     @JsonProperty("docId")
+    @JsonSerialize(using = ToStringSerializer.class)
     private Long docId;
+
+    @JsonProperty("baseId")
+    @JsonSerialize(using = ToStringSerializer.class)
+    private Long baseId;
 
     @JsonProperty("doc_name")
     private String docName;
@@ -55,6 +62,7 @@ public class DocumentDTO {
         
         return DocumentDTO.builder()
                 .docId(document.getDocId())
+                .baseId(document.getBaseId())
                 .docName(document.getDocName())
                 .fileType(document.getFileType() != null ? document.getFileType().name() : null)
                 .createdAt(createdAtStr)

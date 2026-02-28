@@ -1,6 +1,6 @@
 import DocSideBar from "./document/SideBar";
 import { useSearchParams, useNavigate } from "react-router-dom";
-import { Button, Input, Space, Card, Pagination } from "antd";
+import { Button, Input, Space, Card, Pagination, message } from "antd";
 import { FileTextOutlined, ArrowLeftOutlined } from "@ant-design/icons";
 import axios from "axios";
 import { useEffect, useState } from "react";
@@ -10,11 +10,14 @@ const onSearch = (value, _e, info) =>
   console.log(info === null || info === void 0 ? void 0 : info.source, value);
 
 function FileShowPage() {
+  const [messageApi, contextHolder] = message.useMessage();
   const [baseinfo, setBaseInfo] = useState({});
   const [docName, setDocName] = useState("");
   const [searchParams] = useSearchParams();
   const docId = searchParams.get("docId");
   const baseId = searchParams.get("baseId");
+  const safeBaseId =
+    baseId && baseId !== "undefined" && baseId !== "null" ? baseId : null;
   const navigate = useNavigate();
   const [docSlice, setDocSlice] = useState([]);
   const [totalSlice, setTotalSlice] = useState(0); // 总数
@@ -26,7 +29,11 @@ function FileShowPage() {
   const GetBaseInfo = async () => {
     try {
       setLoading(true);
-      const res = await axios.get(`/api/knowledge/info/${baseId}`, {
+      if (!safeBaseId) {
+        messageApi.error("缺少知识库ID，请从数据集页面重新进入文档详情");
+        return;
+      }
+      const res = await axios.get(`/api/knowledge/info/${safeBaseId}`, {
         headers: {
           Authorization: localStorage.auth,
         },
@@ -72,21 +79,27 @@ function FileShowPage() {
           },
         }
       );
-      const data = res.data;
-      setDocSlice(data.data || []);
-      setTotalSlice(data.total || 0);
+      const result = res.data || {};
+      const payload = result.code === 200 && result.data ? result.data : {};
+      setDocSlice(payload.data || []);
+      setTotalSlice(payload.total || 0);
     } catch (err) {
       console.error(err);
+      const errMsg = err?.response?.data?.msg || err?.message || "获取文档内容失败";
+      messageApi.error(errMsg);
+      if (errMsg.includes("Document not found")) {
+        navigate(`/knowledge/dataset?baseId=${safeBaseId || ""}`);
+      }
     } finally {
       setLoading(false);
     }
   };
 
   useEffect(() => {
-    if (baseId) {
+    if (safeBaseId) {
       GetBaseInfo();
     }
-  }, [baseId]);
+  }, [safeBaseId]);
 
   useEffect(() => {
     if (docId) {
@@ -101,6 +114,7 @@ function FileShowPage() {
 
   return (
     <div className="flex flex-row w-full h-full">
+      {contextHolder}
       {/*侧边栏 */}
       <div className="flex flex-row h-screen mx-4">
         <div className="flex flex-col h-full w-60 mr-10">
@@ -117,7 +131,7 @@ function FileShowPage() {
             }}
           ></div>
           <div className="flex flex-col h-4/5 overflow-x-hidden justify-between">
-            <DocSideBar baseId={baseId} />
+            <DocSideBar baseId={safeBaseId || ""} />
             <Button
               type="primary"
               className="mb-14 mx-2"

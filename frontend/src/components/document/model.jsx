@@ -11,9 +11,10 @@ export const docColumns = [
     fixed: "left",
     align: "center",
     render: (_, record) => {
+      const baseId = record.baseId ?? record.base_id ?? "";
       return (
         <Link
-          to={`./detail?baseId=${record.baseId}&docId=${record.docId}`}
+          to={`./detail?baseId=${baseId}&docId=${record.docId}`}
           className="text-blue-500"
         >
           {record.doc_name}
@@ -46,16 +47,19 @@ export const docColumns = [
       let color;
       switch (record.status) {
         case 0:
+        case "None":
           color = "geekblue";
           break;
         case 1:
+        case "Success":
           color = "green";
           break;
         case 2:
+        case "Failure":
           color = "volcano";
           break;
         default:
-          return;
+          color = "default";
       }
       return (
         <Tag className="scale-105" color={color} key={record.status}>

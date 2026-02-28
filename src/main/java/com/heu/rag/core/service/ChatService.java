@@ -17,6 +17,7 @@ import org.springframework.ai.chat.model.ChatResponse;
 import org.springframework.ai.chat.prompt.Prompt;
 import org.springframework.ai.document.Document;
 import org.springframework.ai.vectorstore.VectorStore;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.domain.Sort;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Service;
@@ -51,6 +52,15 @@ public class ChatService {
     @Qualifier("chatPersistenceExecutor")
     private final ThreadPoolExecutor chatPersistenceExecutor;
     private final SnowflakeIdGenerator snowflakeIdGenerator;
+    
+    @Value("${rag.retrieval.top-k:8}")
+    private int retrievalTopK;
+
+    @Value("${rag.retrieval.similarity-threshold:0.45}")
+    private double retrievalThreshold;
+
+    @Value("${rag.retrieval.fallback-threshold:0.2}")
+    private double fallbackThreshold;
 
     /**
      * Process a chat query with RAG: retrieve context, generate response, and
@@ -140,7 +150,16 @@ public class ChatService {
             try {
                 // Use MilvusService for baseId-filtered search to prevent cross-base retrieval
                 List<Document> similarDocuments = milvusService.similaritySearchWithBaseId(
-                        query, baseId, 4, 0.7);
+                        query, baseId, retrievalTopK, retrievalThreshold);
+                
+                // Fallback retrieval with lower threshold to improve recall for vague queries.
+                if (similarDocuments.isEmpty() && fallbackThreshold < retrievalThreshold) {
+                    log.info("Primary retrieval returned 0 docs, retrying with fallback threshold: {} -> {}",
+                            retrievalThreshold, fallbackThreshold);
+                    similarDocuments = milvusService.similaritySearchWithBaseId(
+                            query, baseId, retrievalTopK, fallbackThreshold);
+                }
+
                 log.info("Retrieved {} chunks for query (filtered by baseId={})", similarDocuments.size(), baseId);
 
                 context = similarDocuments.stream()

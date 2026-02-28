@@ -111,3 +111,10 @@ email:
     token:
       expire: 900 # Reset token expiration in seconds (15 minutes)
 
+# RAG retrieval configuration
+rag:
+  retrieval:
+    top-k: 8
+    similarity-threshold: 0.45
+    fallback-threshold: 0.2
+

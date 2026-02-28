@@ -93,7 +93,7 @@ public class ConversationController {
                     Map<String, Object> session = new HashMap<>();
                     session.put("conversation_id", conv.getConversationId());
                     session.put("title", conv.getTitle());
-                    session.put("baseId", conv.getBaseId());
+                    session.put("baseId", conv.getBaseId() != null ? String.valueOf(conv.getBaseId()) : null);
                     return session;
                 })
                 .collect(Collectors.toList());

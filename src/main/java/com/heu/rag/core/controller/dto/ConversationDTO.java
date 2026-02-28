@@ -1,6 +1,8 @@
 package com.heu.rag.core.controller.dto;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
+import com.fasterxml.jackson.databind.annotation.JsonSerialize;
+import com.fasterxml.jackson.databind.ser.std.ToStringSerializer;
 import com.heu.rag.core.domain.Conversation;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -25,6 +27,7 @@ public class ConversationDTO {
     private String title;
     
     @JsonProperty("baseId")
+    @JsonSerialize(using = ToStringSerializer.class)
     private Long baseId;
     
     @JsonProperty("created_at")

@@ -44,6 +44,12 @@ public class MilvusConfig implements CommandLineRunner {
     private static final String CONTENT_FIELD = "content";
     private static final String VECTOR_FIELD = "embedding";
     private static final String METADATA_FIELD = "metadata_json";
+    
+    private enum DimensionValidationResult {
+        MATCHED,
+        MISMATCHED,
+        UNKNOWN
+    }
 
     @Override
     public void run(String... args) {
@@ -91,15 +97,23 @@ public class MilvusConfig implements CommandLineRunner {
             if (hasCollection.getData() != null && hasCollection.getData()) {
                 log.info("Collection '{}' already exists, validating dimension...", COLLECTION_NAME);
 
-                // Validate embedding dimension matches configuration
-                if (!validateCollectionDimension(client)) {
+                DimensionValidationResult validationResult = validateCollectionDimension(client);
+                if (validationResult == DimensionValidationResult.MATCHED) {
+                    log.info("Collection '{}' dimension validation passed (dim={})", COLLECTION_NAME,
+                            embeddingDimension);
+                    return;
+                }
+
+                // Only allow destructive rebuild when mismatch is explicitly confirmed.
+                if (validationResult == DimensionValidationResult.MISMATCHED) {
                     log.warn("Collection '{}' has mismatched embedding dimension. Dropping and recreating...",
                             COLLECTION_NAME);
                     dropCollection(client);
                     // Continue to create new collection below
                 } else {
-                    log.info("Collection '{}' dimension validation passed (dim={})", COLLECTION_NAME,
-                            embeddingDimension);
+                    log.warn(
+                            "Collection '{}' dimension validation is UNKNOWN, skip drop/recreate to protect existing vectors",
+                            COLLECTION_NAME);
                     return;
                 }
             }
@@ -169,7 +183,7 @@ public class MilvusConfig implements CommandLineRunner {
      * 
      * @return true if dimension matches, false otherwise
      */
-    private boolean validateCollectionDimension(MilvusServiceClient client) {
+    private DimensionValidationResult validateCollectionDimension(MilvusServiceClient client) {
         try {
             R<?> describeResult = client.describeCollection(
                     DescribeCollectionParam.newBuilder()
@@ -178,14 +192,14 @@ public class MilvusConfig implements CommandLineRunner {
 
             if (describeResult.getStatus() != R.Status.Success.getCode()) {
                 log.error("Failed to describe collection '{}': {}", COLLECTION_NAME, describeResult.getMessage());
-                return false;
+                return DimensionValidationResult.UNKNOWN;
             }
 
             // Get the response data and extract fields
             Object data = describeResult.getData();
             if (data == null) {
                 log.error("Describe collection returned null data");
-                return false;
+                return DimensionValidationResult.UNKNOWN;
             }
 
             // Use reflection or type casting to get fields
@@ -198,7 +212,7 @@ public class MilvusConfig implements CommandLineRunner {
 
                 if (fields == null || fields.isEmpty()) {
                     log.warn("Collection '{}' has no fields", COLLECTION_NAME);
-                    return false;
+                    return DimensionValidationResult.UNKNOWN;
                 }
 
                 // Find the embedding field and check its dimension
@@ -212,22 +226,21 @@ public class MilvusConfig implements CommandLineRunner {
                             log.error("Dimension mismatch! Collection has dim={}, but configuration requires dim={}. " +
                                     "This will cause insertion failures. Collection needs to be recreated.",
                                     actualDimension, embeddingDimension);
-                            return false;
+                            return DimensionValidationResult.MISMATCHED;
                         }
-                        return true;
+                        return DimensionValidationResult.MATCHED;
                     }
                 }
 
                 log.warn("Could not find embedding field '{}' in collection schema", VECTOR_FIELD);
-                return false;
+                return DimensionValidationResult.UNKNOWN;
             } catch (Exception e) {
-                log.warn("Could not extract fields from collection description, assuming dimension mismatch", e);
-                // If we can't validate, it's safer to assume mismatch and recreate
-                return false;
+                log.warn("Could not extract fields from collection description, validation result is UNKNOWN", e);
+                return DimensionValidationResult.UNKNOWN;
             }
         } catch (Exception e) {
             log.error("Error validating collection dimension", e);
-            return false;
+            return DimensionValidationResult.UNKNOWN;
         }
     }
 
