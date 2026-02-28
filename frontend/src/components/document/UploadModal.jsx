@@ -18,11 +18,6 @@ function UploadDocModal({ open, baseId, onRefresh, onCancel, messageApi }) {
 
     setUploading(true);
 
-    const formData = new FormData();
-    fileList.forEach((file) => {
-      formData.append("file", file.originFileObj); // 可根据后端要求调整字段名
-    });
-
     try {
       let successCount = 0;
       let failCount = 0;
@@ -32,7 +27,7 @@ function UploadDocModal({ open, baseId, onRefresh, onCancel, messageApi }) {
         try {
         const formData = new FormData();
         formData.append("file", file.originFileObj);
-        await axios.post(
+        const response = await axios.post(
           `/api/knowledge/upload/file?baseId=${baseId}`,
           formData,
           {
@@ -41,6 +36,9 @@ function UploadDocModal({ open, baseId, onRefresh, onCancel, messageApi }) {
             },
           }
         );
+          if (response.data?.code !== 200) {
+            throw new Error(response.data?.msg || "上传失败");
+          }
           successCount++;
         } catch (error) {
           failCount++;

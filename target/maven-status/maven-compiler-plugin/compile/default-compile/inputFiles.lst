@@ -61,4 +61,5 @@
 /root/go/src/Go_LLM_Web/src/main/java/com/heu/rag/core/service/MilvusService.java
 /root/go/src/Go_LLM_Web/src/main/java/com/heu/rag/core/util/EmailValidator.java
 /root/go/src/Go_LLM_Web/src/main/java/com/heu/rag/core/util/JwtTokenUtil.java
+/root/go/src/Go_LLM_Web/src/main/java/com/heu/rag/core/util/MilvusDocumentSanitizer.java
 /root/go/src/Go_LLM_Web/src/main/java/com/heu/rag/core/util/SecurityUtil.java

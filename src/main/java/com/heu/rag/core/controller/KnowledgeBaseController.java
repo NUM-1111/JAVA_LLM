@@ -110,20 +110,14 @@ public class KnowledgeBaseController {
         Long userId = getUserIdFromContext();
         log.info("File upload request: fileName={}, baseId={}, userId={}",
                 file.getOriginalFilename(), baseId, userId);
+        knowledgeBaseService.uploadAndProcess(file, baseId, userId);
 
-        try {
-            knowledgeBaseService.uploadAndProcess(file, baseId, userId);
+        Map<String, Object> response = new HashMap<>();
+        response.put("message", "File uploaded and processed successfully");
+        response.put("fileName", file.getOriginalFilename());
+        response.put("baseId", baseId);
 
-            Map<String, Object> response = new HashMap<>();
-            response.put("message", "File uploaded and processed successfully");
-            response.put("fileName", file.getOriginalFilename());
-            response.put("baseId", baseId);
-
-            return Result.success(response);
-        } catch (Exception e) {
-            log.error("File upload failed: fileName={}", file.getOriginalFilename(), e);
-            return Result.error("File upload failed: " + e.getMessage());
-        }
+        return Result.success(response);
     }
 
     /**

@@ -137,25 +137,31 @@ public class ChatService {
         String context = "";
         if (baseId != null) {
             log.debug("Retrieving similar documents from vector store with baseId filter...");
-            // Use MilvusService for baseId-filtered search to prevent cross-base retrieval
-            List<Document> similarDocuments = milvusService.similaritySearchWithBaseId(
-                    query, baseId, 4, 0.7);
-            log.info("Retrieved {} chunks for query (filtered by baseId={})", similarDocuments.size(), baseId);
+            try {
+                // Use MilvusService for baseId-filtered search to prevent cross-base retrieval
+                List<Document> similarDocuments = milvusService.similaritySearchWithBaseId(
+                        query, baseId, 4, 0.7);
+                log.info("Retrieved {} chunks for query (filtered by baseId={})", similarDocuments.size(), baseId);
 
-            context = similarDocuments.stream()
-                    .map(doc -> {
-                        try {
-                            return doc.getText() != null ? doc.getText() : doc.toString();
-                        } catch (Exception e) {
-                            return doc.toString();
-                        }
-                    })
-                    .filter(content -> content != null && !content.isEmpty())
-                    .collect(Collectors.joining("\n\n---\n\n"));
+                context = similarDocuments.stream()
+                        .map(doc -> {
+                            try {
+                                return doc.getText() != null ? doc.getText() : doc.toString();
+                            } catch (Exception e) {
+                                return doc.toString();
+                            }
+                        })
+                        .filter(content -> content != null && !content.isEmpty())
+                        .collect(Collectors.joining("\n\n---\n\n"));
 
-            if (context.isEmpty()) {
-                log.warn("No context retrieved for query, proceeding without context");
-                context = ""; // Keep empty string for buildSystemPrompt to handle appropriately
+                if (context.isEmpty()) {
+                    log.warn("No context retrieved for query, proceeding without context");
+                    context = ""; // Keep empty string for buildSystemPrompt to handle appropriately
+                }
+            } catch (Exception e) {
+                // Retrieval failures should not break the whole chat flow.
+                log.error("Vector retrieval failed, continuing chat without context: baseId={}", baseId, e);
+                context = "";
             }
         }
 

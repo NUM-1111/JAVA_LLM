@@ -4,9 +4,9 @@ import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import io.milvus.client.MilvusServiceClient;
 import io.milvus.common.clientenum.ConsistencyLevelEnum;
-import io.milvus.grpc.DataType;
 import io.milvus.param.ConnectParam;
 import io.milvus.param.R;
+import io.milvus.param.collection.LoadCollectionParam;
 import io.milvus.param.dml.DeleteParam;
 import io.milvus.param.dml.QueryParam;
 import io.milvus.param.dml.SearchParam;
@@ -20,7 +20,6 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
 import java.util.*;
-import java.util.stream.Collectors;
 
 /**
  * Service for direct Milvus operations with metadata filtering support.
@@ -37,6 +36,8 @@ public class MilvusService {
     private static final String CONTENT_FIELD = "content";
     private static final String VECTOR_FIELD = "embedding";
     private static final String METADATA_FIELD = "metadata_json";
+    private static final int SEARCH_RETRY_ATTEMPTS = 3;
+    private static final long RETRY_BACKOFF_MS = 500L;
 
     @Value("${spring.ai.vectorstore.milvus.client.host:localhost}")
     private String milvusHost;
@@ -103,7 +104,7 @@ public class MilvusService {
             // 'baseId'
             // Only retrieve chunks from enabled documents (isEnabled == 'true')
             String filterExpr = String.format(
-                    "JSON_EXTRACT(%s, '$.baseId') == '%s' && JSON_EXTRACT(%s, '$.isEnabled') == 'true'",
+                    "%s[\"baseId\"] == \"%s\" && %s[\"isEnabled\"] == \"true\"",
                     METADATA_FIELD, baseId, METADATA_FIELD);
 
             // 3. Build search parameters
@@ -118,8 +119,8 @@ public class MilvusService {
                     .withConsistencyLevel(ConsistencyLevelEnum.STRONG)
                     .build();
 
-            // 4. Execute search
-            R<?> searchResult = client.search(searchParam);
+            // 4. Execute search (auto load collection and retry if needed)
+            R<?> searchResult = executeSearchWithAutoLoad(client, searchParam);
 
             if (searchResult.getStatus() != R.Status.Success.getCode()) {
                 log.error("Milvus search failed: {}", searchResult.getMessage());
@@ -203,6 +204,67 @@ public class MilvusService {
     }
 
     /**
+     * Execute Milvus search with automatic collection loading and retry.
+     */
+    private R<?> executeSearchWithAutoLoad(MilvusServiceClient client, SearchParam searchParam) {
+        ensureCollectionLoaded(client);
+
+        Exception lastException = null;
+        for (int attempt = 1; attempt <= SEARCH_RETRY_ATTEMPTS; attempt++) {
+            try {
+                return client.search(searchParam);
+            } catch (Exception e) {
+                lastException = e;
+                if (!isCollectionNotLoadedError(e) || attempt == SEARCH_RETRY_ATTEMPTS) {
+                    throw e;
+                }
+
+                log.warn("Milvus collection is not loaded during search (attempt {}/{}), reloading collection",
+                        attempt, SEARCH_RETRY_ATTEMPTS);
+                ensureCollectionLoaded(client);
+                sleepBackoff(attempt);
+            }
+        }
+
+        throw new RuntimeException("Milvus search failed after retries", lastException);
+    }
+
+    /**
+     * Ensure target collection is loaded before search.
+     */
+    private void ensureCollectionLoaded(MilvusServiceClient client) {
+        R<?> loadResult = client.loadCollection(
+                LoadCollectionParam.newBuilder()
+                        .withCollectionName(COLLECTION_NAME)
+                        .build());
+
+        if (loadResult.getStatus() != R.Status.Success.getCode()) {
+            String message = loadResult.getMessage();
+            if (message != null && message.toLowerCase().contains("loaded")) {
+                return;
+            }
+            throw new RuntimeException("Failed to load Milvus collection: " + message);
+        }
+    }
+
+    private boolean isCollectionNotLoadedError(Exception e) {
+        if (e == null || e.getMessage() == null) {
+            return false;
+        }
+        String message = e.getMessage().toLowerCase();
+        return message.contains("collection not loaded");
+    }
+
+    private void sleepBackoff(int attempt) {
+        try {
+            Thread.sleep(RETRY_BACKOFF_MS * attempt);
+        } catch (InterruptedException interruptedException) {
+            Thread.currentThread().interrupt();
+            throw new RuntimeException("Interrupted while waiting for Milvus collection loading", interruptedException);
+        }
+    }
+
+    /**
      * Query document chunks by docId with pagination (for document detail view)
      * 
      * @param docId  Document ID to filter by
@@ -218,7 +280,7 @@ public class MilvusService {
             client = createClient();
 
             // Build filter expression: JSON path query for docId in metadata_json
-            String filterExpr = String.format("JSON_EXTRACT(%s, '$.docId') == '%s'", METADATA_FIELD, docId);
+            String filterExpr = String.format("%s[\"docId\"] == \"%s\"", METADATA_FIELD, docId);
 
             // Build query parameters
             QueryParam queryParam = QueryParam.newBuilder()
@@ -317,7 +379,7 @@ public class MilvusService {
             client = createClient();
 
             // Build filter expression: JSON path query for docId in metadata_json
-            String filterExpr = String.format("JSON_EXTRACT(%s, '$.docId') == '%s'", METADATA_FIELD, docId);
+            String filterExpr = String.format("%s[\"docId\"] == \"%s\"", METADATA_FIELD, docId);
 
             // Build delete parameters
             DeleteParam deleteParam = DeleteParam.newBuilder()
@@ -375,7 +437,7 @@ public class MilvusService {
             client = createClient();
 
             // Build filter expression
-            String filterExpr = String.format("JSON_EXTRACT(%s, '$.docId') == '%s'", METADATA_FIELD, docId);
+            String filterExpr = String.format("%s[\"docId\"] == \"%s\"", METADATA_FIELD, docId);
 
             // Note: Milvus doesn't have a direct count API, so we need to query all IDs
             // For efficiency, we can use a workaround: query with a large limit

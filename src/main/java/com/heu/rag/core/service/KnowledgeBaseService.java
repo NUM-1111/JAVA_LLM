@@ -7,6 +7,7 @@ import com.heu.rag.core.domain.ParseStatus;
 import com.heu.rag.core.exception.ResourceNotFoundException;
 import com.heu.rag.core.repository.DocumentRepository;
 import com.heu.rag.core.repository.KnowledgeBaseRepository;
+import com.heu.rag.core.util.MilvusDocumentSanitizer;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.ai.reader.tika.TikaDocumentReader;
@@ -18,7 +19,11 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.io.IOException;
+import java.lang.reflect.Array;
+import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.stream.Collectors;
 
 /**
@@ -35,6 +40,7 @@ public class KnowledgeBaseService {
     private final KnowledgeBaseRepository knowledgeBaseRepository;
     private final VectorStore vectorStore;
     private final SnowflakeIdGenerator snowflakeIdGenerator;
+    private final MilvusDocumentSanitizer milvusDocumentSanitizer;
 
     /**
      * Upload and process a file: parse, chunk, vectorize, and store in Milvus.
@@ -45,8 +51,10 @@ public class KnowledgeBaseService {
      */
     @Transactional
     public void uploadAndProcess(MultipartFile file, Long baseId, Long userId) {
+        String rawFileName = file.getOriginalFilename();
+        String fileName = sanitizeString(rawFileName, "unnamed-file");
         log.info("Starting file upload processing: fileName={}, baseId={}, userId={}",
-                file.getOriginalFilename(), baseId, userId);
+                fileName, baseId, userId);
 
         // 1. Validation: Check if KnowledgeBase exists
         var knowledgeBase = knowledgeBaseRepository.findById(baseId)
@@ -60,7 +68,6 @@ public class KnowledgeBaseService {
 
         // 2. DB Entry: Save a new Document entity with status NONE
         Long docId = snowflakeIdGenerator.nextId();
-        String fileName = file.getOriginalFilename();
         String fileSuffix = extractFileSuffix(fileName);
         FileType fileType = determineFileType(fileSuffix);
 
@@ -149,7 +156,7 @@ public class KnowledgeBaseService {
 
             // 5. Vectorization & Storage: Convert chunks and inject metadata
             log.debug("Starting vectorization and storage...");
-            List<org.springframework.ai.document.Document> chunksWithMetadata = new java.util.ArrayList<>();
+            List<org.springframework.ai.document.Document> chunksWithMetadata = new ArrayList<>();
             int chunkIndex = 0;
             long baseTimestamp = System.currentTimeMillis();
 
@@ -190,13 +197,13 @@ public class KnowledgeBaseService {
                 // Create document with metadata
                 // CRITICAL: Ensure metadata is never null - Milvus requires metadata_json field
                 // If chunk.getMetadata() is null, create a new HashMap to avoid "field is not provided" error
-                java.util.Map<String, Object> metadata = chunk.getMetadata();
+                Map<String, Object> metadata = chunk.getMetadata();
                 if (metadata == null) {
-                    metadata = new java.util.HashMap<>();
+                    metadata = new HashMap<>();
                     log.debug("Chunk at index {} had null metadata, creating new metadata map", chunkIndex);
                 } else {
                     // Create a copy to avoid modifying the original
-                    metadata = new java.util.HashMap<>(metadata);
+                    metadata = new HashMap<>(metadata);
                 }
 
                 // Inject metadata for retrieval filtering
@@ -222,21 +229,39 @@ public class KnowledgeBaseService {
                 try {
                     log.info("Attempting to store {} chunks in vector store (Milvus)...", chunksWithMetadata.size());
 
-                    // Validate all chunks have non-empty IDs before insertion
-                    for (int i = 0; i < chunksWithMetadata.size(); i++) {
-                        org.springframework.ai.document.Document doc = chunksWithMetadata.get(i);
-                        String id = doc.getId();
-                        if (id == null || id.trim().isEmpty()) {
-                            throw new IllegalStateException(
-                                    String.format(
-                                            "Chunk at index %d has empty ID. All chunks must have valid IDs for Milvus insertion.",
-                                            i));
-                        }
-                        log.debug("Chunk {} has ID: {}", i, id);
+                    MilvusDocumentSanitizer.SanitizeResult sanitizeResult = milvusDocumentSanitizer.sanitize(
+                            chunksWithMetadata,
+                            docId,
+                            baseId,
+                            fileName,
+                            dbDocument.getIsEnabled(),
+                            baseTimestamp);
+                    List<org.springframework.ai.document.Document> milvusSafeChunks = sanitizeResult.documents();
+                    List<String> validationWarnings = sanitizeResult.warnings();
+                    if (!validationWarnings.isEmpty()) {
+                        log.warn("Milvus payload sanitizer warnings: {}", String.join(" | ", validationWarnings));
                     }
 
-                    vectorStore.add(chunksWithMetadata);
-                    log.info("Successfully stored {} chunks in vector store (Milvus)", chunksWithMetadata.size());
+                    if (milvusSafeChunks.isEmpty()) {
+                        String validationMsg = validationWarnings.isEmpty() ? "unknown validation error"
+                                : String.join("; ", validationWarnings);
+                        throw new IllegalStateException(
+                                String.format("没有可写入Milvus的有效内容块。文档ID: %d, 文件名: %s, 详情: %s",
+                                        docId, fileName, validationMsg));
+                    }
+
+                    // 在 vectorStore.add(...) 前调用
+                    logMilvusPayloadProbe(milvusSafeChunks, docId, fileName);
+                    List<String> payloadErrors = validateMilvusPayload(milvusSafeChunks);
+                    if (!payloadErrors.isEmpty()) {
+                        throw new IllegalStateException(
+                                String.format("Milvus payload 校验失败，docId=%d, fileName=%s, errors=%s",
+                                        docId, fileName, String.join(" | ", payloadErrors)));
+                    }
+
+                    vectorStore.add(milvusSafeChunks);
+                    log.info("Successfully stored {} chunks in vector store (Milvus)", milvusSafeChunks.size());
+                    chunksWithMetadata = milvusSafeChunks;
                 } catch (Exception e) {
                     log.error("Failed to store chunks in Milvus vector store. Chunk count: {}, docId: {}, fileName: {}",
                             chunksWithMetadata.size(), docId, fileName, e);
@@ -251,6 +276,13 @@ public class KnowledgeBaseService {
                     } else if (errorMsg != null && errorMsg.contains("collection")) {
                         throw new IllegalStateException(
                                 String.format("Milvus集合访问失败。文档ID: %d, 文件名: %s。请检查Milvus连接和集合配置。",
+                                        docId, fileName),
+                                e);
+                    } else if (errorMsg != null
+                            && errorMsg.contains("String.length()")
+                            && errorMsg.contains("is null")) {
+                        throw new IllegalStateException(
+                                String.format("Milvus插入失败：存在空字符串字段（如id/content/metadata中的文本值）。文档ID: %d, 文件名: %s。",
                                         docId, fileName),
                                 e);
                     } else {
@@ -291,6 +323,14 @@ public class KnowledgeBaseService {
         return fileName.substring(fileName.lastIndexOf(".") + 1).toLowerCase();
     }
 
+    private String sanitizeString(String value, String defaultValue) {
+        if (value == null) {
+            return defaultValue;
+        }
+        String trimmed = value.trim();
+        return trimmed.isEmpty() ? defaultValue : trimmed;
+    }
+
     /**
      * Determine FileType enum from file suffix.
      */
@@ -305,5 +345,147 @@ public class KnowledgeBaseService {
             case "jpg", "jpeg", "png", "gif", "bmp" -> FileType.Image;
             default -> FileType.Other;
         };
+    }
+
+    // ====== Payload Probe Helpers ======
+
+    private void logMilvusPayloadProbe(List<org.springframework.ai.document.Document> docs, Long docId,
+            String fileName) {
+        if (!log.isInfoEnabled()) {
+            return;
+        }
+
+        log.info("Milvus payload probe start: docId={}, fileName={}, chunkCount={}",
+                docId, fileName, docs == null ? 0 : docs.size());
+
+        if (docs == null) {
+            log.warn("Milvus payload docs is null");
+            return;
+        }
+
+        for (int i = 0; i < docs.size(); i++) {
+            org.springframework.ai.document.Document d = docs.get(i);
+            if (d == null) {
+                log.warn("payload[{}]: document is null", i);
+                continue;
+            }
+
+            String id = d.getId();
+            String content = d.getText();
+            Map<String, Object> metadata = d.getMetadata();
+
+            boolean idNull = id == null;
+            boolean contentNull = content == null;
+            boolean metadataNull = metadata == null;
+
+            int contentLen = contentNull ? -1 : content.length();
+            int metadataSize = metadataNull ? -1 : metadata.size();
+
+            log.info(
+                    "payload[{}]: idNull={}, contentNull={}, metadataNull={}, contentLen={}, metadataSize={}, idPreview={}",
+                    i, idNull, contentNull, metadataNull, contentLen, metadataSize, safePreview(id, 64));
+
+            if (!metadataNull) {
+                for (Map.Entry<String, Object> entry : metadata.entrySet()) {
+                    String key = entry.getKey();
+                    Object value = entry.getValue();
+                    if (key == null) {
+                        log.warn("payload[{}].metadata has null key", i);
+                    }
+                    if (value == null) {
+                        log.warn("payload[{}].metadata[{}] is null", i, key);
+                    } else if (value instanceof String s && s.trim().isEmpty()) {
+                        log.debug("payload[{}].metadata[{}] is blank string", i, key);
+                    }
+                }
+            }
+        }
+
+        log.info("Milvus payload probe end: docId={}, fileName={}", docId, fileName);
+    }
+
+    private List<String> validateMilvusPayload(List<org.springframework.ai.document.Document> docs) {
+        List<String> errors = new ArrayList<>();
+        if (docs == null) {
+            errors.add("payload list is null");
+            return errors;
+        }
+
+        for (int i = 0; i < docs.size(); i++) {
+            org.springframework.ai.document.Document d = docs.get(i);
+            if (d == null) {
+                errors.add(String.format("payload[%d] document is null", i));
+                continue;
+            }
+
+            if (d.getId() == null || d.getId().trim().isEmpty()) {
+                errors.add(String.format("payload[%d].id is null/blank", i));
+            }
+
+            if (d.getText() == null || d.getText().trim().isEmpty()) {
+                errors.add(String.format("payload[%d].content is null/blank", i));
+            }
+
+            Map<String, Object> metadata = d.getMetadata();
+            if (metadata == null) {
+                errors.add(String.format("payload[%d].metadata is null", i));
+                continue;
+            }
+            List<String> nestedNullPaths = findNestedNullPaths(metadata, String.format("payload[%d].metadata", i));
+            errors.addAll(nestedNullPaths);
+        }
+
+        return errors;
+    }
+
+    private List<String> findNestedNullPaths(Object value, String path) {
+        List<String> errors = new ArrayList<>();
+        if (value == null) {
+            errors.add(path + " is null");
+            return errors;
+        }
+
+        if (value instanceof Map<?, ?> map) {
+            for (Map.Entry<?, ?> entry : map.entrySet()) {
+                Object key = entry.getKey();
+                String nextPath = path + "." + String.valueOf(key);
+                if (key == null) {
+                    errors.add(path + " has null key");
+                    continue;
+                }
+                errors.addAll(findNestedNullPaths(entry.getValue(), nextPath));
+            }
+            return errors;
+        }
+
+        if (value instanceof Iterable<?> iterable) {
+            int index = 0;
+            for (Object item : iterable) {
+                errors.addAll(findNestedNullPaths(item, String.format("%s[%d]", path, index)));
+                index++;
+            }
+            return errors;
+        }
+
+        if (value.getClass().isArray()) {
+            int len = Array.getLength(value);
+            for (int i = 0; i < len; i++) {
+                Object item = Array.get(value, i);
+                errors.addAll(findNestedNullPaths(item, String.format("%s[%d]", path, i)));
+            }
+        }
+
+        return errors;
+    }
+
+    private String safePreview(String value, int maxLen) {
+        if (value == null) {
+            return "<null>";
+        }
+        String v = value.replaceAll("\\s+", " ").trim();
+        if (v.length() <= maxLen) {
+            return v;
+        }
+        return v.substring(0, maxLen) + "...";
     }
 }
