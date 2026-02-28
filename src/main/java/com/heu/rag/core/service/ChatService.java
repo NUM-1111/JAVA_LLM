@@ -269,12 +269,14 @@ public class ChatService {
                         }
 
                         // Save user message
+                        // Link to previous current node so history can be reconstructed as a chain
+                        String previousNodeId = finalConversation.getCurrentNode();
                         String userMessageId = String.valueOf(snowflakeIdGenerator.nextId());
                         ChatMessage userMsg = ChatMessage.builder()
                                 .messageId(userMessageId)
                                 .conversationId(finalConversationId)
                                 .message(createMessageMap("user", query))
-                                .parent(null)
+                                .parent(previousNodeId)
                                 .children(new ArrayList<>())
                                 .createdAt(LocalDateTime.now())
                                 .updatedAt(LocalDateTime.now())

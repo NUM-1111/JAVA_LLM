@@ -89,6 +89,14 @@ function ChatPage() {
       messageChain.unshift(currentMessage); // 添加到数组开头
       currentId = currentMessage.parent;
     }
+    // Fallback for legacy/incomplete parent chains: display all messages chronologically.
+    if (messageChain.length !== messages.length) {
+      return [...messages].sort((a, b) => {
+        const timeA = new Date(a.created_at || 0).getTime();
+        const timeB = new Date(b.created_at || 0).getTime();
+        return timeA - timeB;
+      });
+    }
     return messageChain;
   };
 
