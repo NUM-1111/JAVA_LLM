@@ -22,7 +22,6 @@ import org.springframework.data.domain.Sort;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Service;
 import reactor.core.publisher.Flux;
-import reactor.core.publisher.Mono;
 
 import java.time.LocalDateTime;
 import java.util.ArrayList;
@@ -31,6 +30,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.concurrent.ThreadPoolExecutor;
+import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.stream.Collectors;
 
 /**
@@ -76,15 +76,6 @@ public class ChatService {
         log.info("Processing chat query: query={}, conversationId={}, baseId={}, userId={}",
                 query, conversationId, baseId, userId);
 
-        // 1. Validate baseId if provided
-        if (baseId != null) {
-            var knowledgeBase = knowledgeBaseRepository.findById(baseId)
-                    .orElseThrow(() -> new ResourceNotFoundException("Knowledge base not found"));
-            if (!knowledgeBase.getUserId().equals(userId)) {
-                throw new IllegalArgumentException("User does not have access to this knowledge base");
-            }
-        }
-
         // 2. Get or create conversation
         final String finalConversationId;
         Conversation conversation;
@@ -114,6 +105,12 @@ public class ChatService {
             if (existingConversation.isPresent()) {
                 // Update existing conversation
                 conversation = existingConversation.get();
+                if (baseId != null
+                        && conversation.getBaseId() != null
+                        && !conversation.getBaseId().equals(baseId)) {
+                    throw new IllegalArgumentException(
+                            "Cannot switch knowledge base in the same conversation. Please create a new conversation.");
+                }
                 conversation.setUpdatedAt(LocalDateTime.now());
                 if (baseId != null) {
                     conversation.setBaseId(baseId);
@@ -141,26 +138,27 @@ public class ChatService {
             }
         }
         final Conversation finalConversation = conversation;
+        final Long effectiveBaseId = resolveEffectiveBaseId(baseId, finalConversation, userId);
 
         // 3. Context Retrieval: Search Milvus for top-k similar chunks (if baseId
         // provided)
         String context = "";
-        if (baseId != null) {
+        if (effectiveBaseId != null) {
             log.debug("Retrieving similar documents from vector store with baseId filter...");
             try {
                 // Use MilvusService for baseId-filtered search to prevent cross-base retrieval
                 List<Document> similarDocuments = milvusService.similaritySearchWithBaseId(
-                        query, baseId, retrievalTopK, retrievalThreshold);
+                        query, effectiveBaseId, retrievalTopK, retrievalThreshold);
                 
                 // Fallback retrieval with lower threshold to improve recall for vague queries.
                 if (similarDocuments.isEmpty() && fallbackThreshold < retrievalThreshold) {
                     log.info("Primary retrieval returned 0 docs, retrying with fallback threshold: {} -> {}",
                             retrievalThreshold, fallbackThreshold);
                     similarDocuments = milvusService.similaritySearchWithBaseId(
-                            query, baseId, retrievalTopK, fallbackThreshold);
+                            query, effectiveBaseId, retrievalTopK, fallbackThreshold);
                 }
 
-                log.info("Retrieved {} chunks for query (filtered by baseId={})", similarDocuments.size(), baseId);
+                log.info("Retrieved {} chunks for query (filtered by baseId={})", similarDocuments.size(), effectiveBaseId);
 
                 context = similarDocuments.stream()
                         .map(doc -> {
@@ -179,7 +177,7 @@ public class ChatService {
                 }
             } catch (Exception e) {
                 // Retrieval failures should not break the whole chat flow.
-                log.error("Vector retrieval failed, continuing chat without context: baseId={}", baseId, e);
+                log.error("Vector retrieval failed, continuing chat without context: baseId={}", effectiveBaseId, e);
                 context = "";
             }
         }
@@ -244,15 +242,24 @@ public class ChatService {
                 })
                 .filter(content -> !content.isEmpty());
 
+        StringBuilder fullResponseBuilder = new StringBuilder();
+        AtomicBoolean persisted = new AtomicBoolean(false);
+
         // 8. Format as JSON events for SSE
         Flux<String> jsonEventFlux = contentFlux
+                .doOnNext(fullResponseBuilder::append)
                 .map(content -> {
                     // Escape JSON special characters
                     String escapedContent = escapeJson(content);
                     return String.format("{\"type\":\"answer_chunk\",\"content\":\"%s\"}", escapedContent);
                 })
                 .doOnNext(chunk -> log.trace("Streaming chunk: {}", chunk))
-                .doOnComplete(() -> log.info("Streaming completed for query"));
+                .doOnComplete(() -> {
+                    log.info("Streaming completed for query");
+                    if (persisted.compareAndSet(false, true)) {
+                        persistConversationAsync(query, finalConversationId, finalConversation, fullResponseBuilder.toString());
+                    }
+                });
 
         // 9. Add conversation_id event at the start (if it's a new conversation)
         // and status event at the end
@@ -274,100 +281,100 @@ public class ChatService {
                     .concatWith(Flux.just("{\"type\":\"status\",\"message\":\"ANSWER_DONE\"}"));
         }
 
-        // 10. Persistence: Async save the User query and final AI response to MongoDB
-        // Use CompletableFuture.runAsync() with dedicated thread pool to ensure
-        // persistence doesn't block SSE streaming response
-        Mono<String> fullResponseMono = contentFlux
-                .collect(Collectors.joining())
-                .cache();
-
-        // Convert Mono to CompletableFuture and execute persistence asynchronously
-        // This ensures the persistence task runs in a separate thread pool and doesn't
-        // block the SSE streaming response
-        fullResponseMono
-                .toFuture()
-                .thenAcceptAsync(fullResponse -> {
-                    try {
-                        if (fullResponse == null || fullResponse.isEmpty()) {
-                            log.warn("Empty response, skipping persistence: conversationId={}", finalConversationId);
-                            return;
-                        }
-
-                        // Save user message
-                        // Link to previous current node so history can be reconstructed as a chain
-                        String previousNodeId = finalConversation.getCurrentNode();
-                        String userMessageId = String.valueOf(snowflakeIdGenerator.nextId());
-                        ChatMessage userMsg = ChatMessage.builder()
-                                .messageId(userMessageId)
-                                .conversationId(finalConversationId)
-                                .message(createMessageMap("user", query))
-                                .parent(previousNodeId)
-                                .children(new ArrayList<>())
-                                .createdAt(LocalDateTime.now())
-                                .updatedAt(LocalDateTime.now())
-                                .build();
-
-                        // Save assistant message
-                        String assistantMessageId = String.valueOf(snowflakeIdGenerator.nextId());
-                        ChatMessage assistantMsg = ChatMessage.builder()
-                                .messageId(assistantMessageId)
-                                .conversationId(finalConversationId)
-                                .message(createMessageMap("assistant", fullResponse))
-                                .parent(userMessageId)
-                                .children(new ArrayList<>())
-                                .createdAt(LocalDateTime.now())
-                                .updatedAt(LocalDateTime.now())
-                                .build();
-
-                        chatMessageRepository.save(userMsg);
-                        chatMessageRepository.save(assistantMsg);
-
-                        // Update parent node's children list to maintain conversation tree structure
-                        // This ensures bidirectional links in the conversation tree (parent <->
-                        // children)
-                        try {
-                            // Initialize children list if null (defensive programming)
-                            if (userMsg.getChildren() == null) {
-                                userMsg.setChildren(new ArrayList<>());
-                            }
-                            // Add assistant message ID to parent's children list
-                            if (!userMsg.getChildren().contains(assistantMessageId)) {
-                                userMsg.getChildren().add(assistantMessageId);
-                                userMsg.setUpdatedAt(LocalDateTime.now());
-                                chatMessageRepository.save(userMsg);
-                                log.debug("Updated parent message children list: parentId={}, childId={}",
-                                        userMessageId, assistantMessageId);
-                            } else {
-                                log.warn("Assistant message ID already exists in parent's children list: " +
-                                        "parentId={}, childId={}", userMessageId, assistantMessageId);
-                            }
-                        } catch (Exception e) {
-                            // Log error but don't fail the entire persistence operation
-                            // The parent-child relationship is important but not critical for basic
-                            // functionality
-                            log.error("Error updating parent message children list: parentId={}, childId={}, " +
-                                    "conversationId={}", userMessageId, assistantMessageId, finalConversationId, e);
-                        }
-
-                        // Update conversation currentNode
-                        finalConversation.setCurrentNode(assistantMessageId);
-                        finalConversation.setUpdatedAt(LocalDateTime.now());
-                        conversationRepository.save(finalConversation);
-
-                        log.info("Saved chat messages to MongoDB: conversationId={}, userMessageId={}, " +
-                                "assistantMessageId={}", finalConversationId, userMessageId, assistantMessageId);
-                    } catch (Exception e) {
-                        log.error("Error saving chat messages: conversationId={}", finalConversationId, e);
-                    }
-                }, chatPersistenceExecutor)
-                .exceptionally(throwable -> {
-                    log.error("Unexpected error in persistence task: conversationId={}", finalConversationId,
-                            throwable);
-                    return null;
-                });
-
         // Return the streaming response
         return finalResponseFlux;
+    }
+
+    private Long resolveEffectiveBaseId(Long requestBaseId, Conversation conversation, Long userId) {
+        Long effectiveBaseId = requestBaseId != null ? requestBaseId : conversation.getBaseId();
+        if (effectiveBaseId != null) {
+            validateBaseAccess(effectiveBaseId, userId);
+        }
+        return effectiveBaseId;
+    }
+
+    private void validateBaseAccess(Long baseId, Long userId) {
+        var knowledgeBase = knowledgeBaseRepository.findById(baseId)
+                .orElseThrow(() -> new ResourceNotFoundException("Knowledge base not found"));
+        if (!knowledgeBase.getUserId().equals(userId)) {
+            throw new IllegalArgumentException("User does not have access to this knowledge base");
+        }
+    }
+
+    private void persistConversationAsync(String query, String conversationId, Conversation conversation, String fullResponse) {
+        chatPersistenceExecutor.execute(() -> {
+            try {
+                if (fullResponse == null || fullResponse.isEmpty()) {
+                    log.warn("Empty response, skipping persistence: conversationId={}", conversationId);
+                    return;
+                }
+
+                // Save user message
+                // Link to previous current node so history can be reconstructed as a chain
+                String previousNodeId = conversation.getCurrentNode();
+                String userMessageId = String.valueOf(snowflakeIdGenerator.nextId());
+                ChatMessage userMsg = ChatMessage.builder()
+                        .messageId(userMessageId)
+                        .conversationId(conversationId)
+                        .message(createMessageMap("user", query))
+                        .parent(previousNodeId)
+                        .children(new ArrayList<>())
+                        .createdAt(LocalDateTime.now())
+                        .updatedAt(LocalDateTime.now())
+                        .build();
+
+                // Save assistant message
+                String assistantMessageId = String.valueOf(snowflakeIdGenerator.nextId());
+                ChatMessage assistantMsg = ChatMessage.builder()
+                        .messageId(assistantMessageId)
+                        .conversationId(conversationId)
+                        .message(createMessageMap("assistant", fullResponse))
+                        .parent(userMessageId)
+                        .children(new ArrayList<>())
+                        .createdAt(LocalDateTime.now())
+                        .updatedAt(LocalDateTime.now())
+                        .build();
+
+                chatMessageRepository.save(userMsg);
+                chatMessageRepository.save(assistantMsg);
+
+                // Update parent node's children list to maintain conversation tree structure
+                // This ensures bidirectional links in the conversation tree (parent <-> children)
+                try {
+                    // Initialize children list if null (defensive programming)
+                    if (userMsg.getChildren() == null) {
+                        userMsg.setChildren(new ArrayList<>());
+                    }
+                    // Add assistant message ID to parent's children list
+                    if (!userMsg.getChildren().contains(assistantMessageId)) {
+                        userMsg.getChildren().add(assistantMessageId);
+                        userMsg.setUpdatedAt(LocalDateTime.now());
+                        chatMessageRepository.save(userMsg);
+                        log.debug("Updated parent message children list: parentId={}, childId={}",
+                                userMessageId, assistantMessageId);
+                    } else {
+                        log.warn("Assistant message ID already exists in parent's children list: " +
+                                "parentId={}, childId={}", userMessageId, assistantMessageId);
+                    }
+                } catch (Exception e) {
+                    // Log error but don't fail the entire persistence operation
+                    // The parent-child relationship is important but not critical for basic
+                    // functionality
+                    log.error("Error updating parent message children list: parentId={}, childId={}, " +
+                            "conversationId={}", userMessageId, assistantMessageId, conversationId, e);
+                }
+
+                // Update conversation currentNode
+                conversation.setCurrentNode(assistantMessageId);
+                conversation.setUpdatedAt(LocalDateTime.now());
+                conversationRepository.save(conversation);
+
+                log.info("Saved chat messages to MongoDB: conversationId={}, userMessageId={}, " +
+                        "assistantMessageId={}", conversationId, userMessageId, assistantMessageId);
+            } catch (Exception e) {
+                log.error("Error saving chat messages: conversationId={}", conversationId, e);
+            }
+        });
     }
 
     /**
