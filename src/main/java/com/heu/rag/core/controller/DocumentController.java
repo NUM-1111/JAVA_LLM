@@ -40,11 +40,11 @@ public class DocumentController {
         return (Long) authentication.getPrincipal();
     }
 
-
     /**
      * Get documents list with pagination and search
      * GET /api/knowledge/document/list
-     * Query params: baseId (required), search (optional), limit (optional, default 10), offset (optional, default 0)
+     * Query params: baseId (required), search (optional), limit (optional, default
+     * 10), offset (optional, default 0)
      */
     @GetMapping("/list")
     public Result<Map<String, Object>> listDocuments(
@@ -95,7 +95,8 @@ public class DocumentController {
     /**
      * Get document chunks detail
      * GET /api/knowledge/document/detail
-     * Query params: docId (required), search (optional), limit (optional, default 10), offset (optional, default 0)
+     * Query params: docId (required), search (optional), limit (optional, default
+     * 10), offset (optional, default 0)
      */
     @GetMapping("/detail")
     public Result<Map<String, Object>> getDocumentDetail(
@@ -107,7 +108,8 @@ public class DocumentController {
         log.info("Getting document detail: docId={}, search={}, limit={}, offset={}", docId, search, limit, offset);
 
         try {
-            List<org.springframework.ai.document.Document> chunks = documentService.getDocumentChunks(docId, search, limit, offset, userId);
+            List<org.springframework.ai.document.Document> chunks = documentService.getDocumentChunks(docId, search,
+                    limit, offset, userId);
 
             List<DocumentChunkDTO> chunkDTOs = chunks.stream()
                     .map(chunk -> DocumentChunkDTO.builder()
@@ -134,7 +136,7 @@ public class DocumentController {
     @PostMapping("/change/status")
     public Result<String> changeDocumentStatus(@RequestBody DocumentChangeStatusRequest request) {
         Long userId = getUserIdFromContext();
-        log.info("Changing document status: docId={}, isEnabled={}, userId={}", 
+        log.info("Changing document status: docId={}, isEnabled={}, userId={}",
                 request.getDocId(), request.getIsEnabled(), userId);
 
         try {
@@ -153,7 +155,7 @@ public class DocumentController {
     @PostMapping("/rename")
     public Result<String> renameDocument(@RequestBody DocumentRenameRequest request) {
         Long userId = getUserIdFromContext();
-        log.info("Renaming document: docId={}, newName={}, userId={}", 
+        log.info("Renaming document: docId={}, newName={}, userId={}",
                 request.getDocId(), request.getDocName(), userId);
 
         try {
@@ -166,4 +168,3 @@ public class DocumentController {
     }
 
 }
-

@@ -6,9 +6,10 @@
 
 ## 1. 项目级文档（overview/）
 
-- `file/overview/ARCHITECTURE_OVERVIEW.md`：总体架构、数据流（Write Path / Read Path）、关键设计决策、已实现功能状态
-- `file/overview/PROJECT_DETAILED_DESCRIPTION.md`：**项目详细技术描述**，供功能性AI分析使用（技术栈、业务流程、数据模型、API清单等）
-- `file/overview/modules_overview.md`：模块开发总览，汇总所有模块的开发状态和优先级
+- `file/overview/ARCHITECTURE_OVERVIEW.md`：总体架构、数据流（Write Path / Read Path）、关键设计决策、已实现功能状态（**架构速览/展示用摘要**）
+- `file/overview/PROJECT_DETAILED_DESCRIPTION.md`：**项目详细技术描述**，供功能性 AI 分析使用（技术栈、业务流程、数据模型、API 清单等，**后端技术单一事实来源**）
+- `file/overview/modules_overview.md`：模块开发总览，从项目管理视角汇总模块开发状态和优先级（Roadmap 视角）
+- `file/overview/FUTRUE_ADVICE.md`：项目深度演进与个人能力提升路线图（未来规划）
 
 ## 2. API 文档（api/）
 

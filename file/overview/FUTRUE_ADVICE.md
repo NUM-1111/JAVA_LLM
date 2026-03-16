@@ -1,5 +1,8 @@
 # Go_LLM_Web 项目深度演进与 Java 技术栈实战方案
 
+> 本文档聚焦于**未来演进路线与个人能力提升**，不描述当前实现细节。  
+> 当前项目的技术现状与已实现能力请以 `PROJECT_DETAILED_DESCRIPTION.md` 为准，文档总体索引见 `PROJECT_INDEX.md`。
+
 ## 1. 核心演进逻辑：从 RAG 到智能体 (Agentic Engineering)
 
 **当前状态**：项目已实现基于 Spring Boot + Spring AI 的基础 RAG 闭环（涵盖文档解析、向量化、检索及 SSE 流式响应）。

@@ -1,6 +1,7 @@
 # 项目详细描述文档 (Project Detailed Description)
 
-> 本文档提供项目的全面技术描述，供功能性AI（如代码分析、架构评估、功能扩展等）使用。
+> 本文档是后端技术说明的**单一事实来源（Single Source of Truth）**，供功能性 AI（代码分析、架构评估、功能扩展等）和开发者使用。  
+> 架构速览请参考 `ARCHITECTURE_OVERVIEW.md`，模块进度与优先级请参考 `modules_overview.md`，完整文档索引见 `PROJECT_INDEX.md`。
 
 **文档版本**: 1.0  
 **最后更新**: 2026-01  

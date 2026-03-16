@@ -1,5 +1,8 @@
 # 架构总览 (Architecture Overview)
 
+> 本文档用于快速理解系统整体架构与关键数据流，是**架构速览/展示用摘要**。  
+> 详细技术实现（数据模型、API 清单、配置等）以 `PROJECT_DETAILED_DESCRIPTION.md` 为准，整体文档入口见 `PROJECT_INDEX.md`。
+
 ## 1. 项目定位
 
 本项目是一个 **RAG（Retrieval-Augmented Generation）企业知识库与智能问答系统**：
